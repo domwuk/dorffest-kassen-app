@@ -22,16 +22,36 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+const APP_SHELL = ASSETS.map((asset) => new URL(asset, self.location.href).href);
+
 self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Nur eigene GET-Requests behandeln; alles andere normal ans Netz.
+  if (request.method !== 'GET' || url.origin !== self.location.origin) return;
+
+  // Navigationen (Seitenaufrufe) → App-Shell (index.html), offline-fähig.
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      caches.match('./index.html').then((cached) => cached || fetch(request))
+    );
+    return;
+  }
+
+  // Nur App-Shell-Assets cachen (index.html, manifest.json, icons).
+  if (!APP_SHELL.includes(url.href)) return;
+
   event.respondWith(
-    caches.match(event.request).then((cached) => {
+    caches.match(request).then((cached) => {
       if (cached) return cached;
-      return fetch(event.request).then((response) => {
-        return caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, response.clone());
-          return response;
-        });
-      }).catch(() => cached);
+      return fetch(request).then((response) => {
+        if (response.ok && response.type === 'basic') {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+        }
+        return response;
+      });
     })
   );
 });
