@@ -47,62 +47,155 @@ JavaScript-Logik sind in dieser einen Datei vereint. Es gibt keine separaten
 
 ### Aufbau der Oberfläche (DOM)
 
-- **`#tabs`** — Kategorie-Tabs, dynamisch aus `PRODUKTE` erzeugt.
-- **`.pfand-row`** — Umschalter (Toggle) mit kontextabhängiger Funktion (siehe unten).
-- **`.main`** — enthält `.left` und `.right#rightCol`. Layout ist **mobile-first einspaltig** (Hochformat) bzw. **zweispaltig** (Querformat / ≥ 700 px) — siehe [Layout / Responsivität](#layout--responsivität).
-  - **`.left`** → `#productList` (Produkt-Buttons) + `#pfandMinusBtn` (Pfand-Rückgabe-Button).
-  - **`.right`** (id=`rightCol`) → `<h2>Bestellung</h2>` + `#cart` (Bestellungs-Liste) + **`.cart-controls`** (enthält `#neuBtn` „Leeren" und `#totalBar` Gesamt-Leiste, öffnet Wechselgeld). Wird auf dem Info-Tab vollständig ausgeblendet (`.left` expandiert dann auf volle Breite).
+- **`#tabs`** — Tab-Leiste, dynamisch befüllt. Enthält:
+  - **Produkt-Tabs** (Bar, Bier, Essen) — mit Text, je nach Kategorie eingefärbt.
+  - Zwei **Icon-Buttons** rechts außen (via CSS `margin-left: auto` auf den ersten):
+    - **`ℹ`** (`aria-label="Info"`, Klassen `tab-btn tab-icon`) — öffnet die Info-View.
+    - **`⚙`** (`aria-label="Einstellungen"`, Klassen `tab-btn tab-icon`) — öffnet die Einstellungen-View.
+  - Der jeweils aktive Tab/Icon erhält die Klasse `active`.
+  - Eine separate Toggle-Zeile (`.pfand-row`) gibt es **nicht mehr** — alle Umschalter wurden in die Einstellungen-View verschoben.
+- **`.main`** — enthält `.left` und `.right#rightCol`. Layout ist **mobile-first zweispaltig** (auch im Hochformat) — siehe [Layout / Responsivität](#layout--responsivität).
+  - **`.left`** → `#productList` (Produkt-Buttons, Info-Box oder Einstellungen-Box) + `#pfandMinusBtn` (Pfand-Rückgabe-Button).
+  - **`.right`** (id=`rightCol`) → `<h2>Bestellung</h2>` + `#cart` (Bestellungs-Liste) + **`.cart-controls`** (enthält `#neuBtn` „Leeren" und `#totalBar` Gesamt-Leiste, öffnet Wechselgeld). Wird in der Info-View und der Einstellungen-View vollständig ausgeblendet (`.left` expandiert dann auf volle Breite).
 - **`#changeOverlay`** — Modal für die Wechselgeld-Berechnung (`role="dialog"`, `aria-modal="true"`, `aria-labelledby="changeOverlayTitle"`). Enthält die benannten Elemente **`#overlayTotalLabel`** (Label-Span in der `.overlay-row.total`, wechselt zwischen „Zu zahlen" und „Auszahlung an Kunde") und **`#overlayInputWrap`** (Wrapper um das Eingabefeld, wird bei negativem Gesamtbetrag ausgeblendet).
 - **`#clearOverlay`** — Bestätigungs-Modal fürs Leeren der Bestellung (`role="dialog"`, `aria-modal="true"`, `aria-labelledby="clearOverlayTitle"`). Gleiche CSS-Klassen (`.overlay`/`.overlay-card`/`.overlay-close-x`/`.overlay-buttons`) wie das Wechselgeld-Overlay. Enthält: `<h2 id="clearOverlayTitle">Bestellung leeren?</h2>`, einen Absatz `.overlay-confirm-text` „Möchtest du die komplette Bestellung wirklich leeren?", einen **Warnhinweis-Absatz** `.overlay-confirm-hint` „Hinweis: Die Bestellung wird **nicht** als Verkauf gezählt. Zum Abschließen „Fertig" im Wechselgeld-Dialog nutzen." (roter Hintergrund, Klasse `.overlay-confirm-hint`), die Buttons `#clearCancelBtn` „Abbrechen" (`.btn-close`) und `#clearConfirmBtn` „Leeren" (`.btn-danger`) sowie `#clearCloseX` (✕).
 - **`#statsResetOverlay`** — Bestätigungs-Modal fürs Zurücksetzen der Statistik (gleiche Overlay-Klassen, `role="dialog"`, `aria-modal="true"`, `aria-labelledby="statsResetOverlayTitle"`). Enthält: `<h2>Statistik zurücksetzen?</h2>`, „Abbrechen" (`.btn-close`) und „Zurücksetzen" (`.btn-danger`). Kein nativer `confirm()`-Aufruf.
 - **`#statsExportOverlay`** — Modal für den Statistik-Export (`role="dialog"`, `aria-modal="true"`, `aria-labelledby="statsExportOverlayTitle"`). Wird beim Tippen auf „Export" **immer** geöffnet (kein stiller Clipboard-Versuch vorab). Zeigt den Export-Text in einem readonly `<textarea>` sowie den Hinweis „Zum Sichern markieren & kopieren (z. B. in Notizen)". Der Button **`#statsExportCopyBtn`** „Kopieren" schreibt den Inhalt via `navigator.clipboard.writeText` in die Zwischenablage (Fallback: `select` + `document.execCommand('copy')` + `setSelectionRange(0, 99999)` für volle iOS-Auswahl); bei Fehlschlag beider Wege Feedback „Bitte manuell kopieren" statt stiller Fehler; zeigt sonst kurz „Kopiert!". „Schließen", ✕ und Klick auf den Hintergrund schließen das Overlay.
-- **`.sub-nav`** (innerhalb des Info-Tab-Inhalts) — kleine Unter-Navigation mit zwei `.sub-nav-btn`-Buttons („Info" / „Statistik"), die zwischen den beiden Sub-Views des Info-Reiters umschaltet. Nur auf dem Info-Tab sichtbar.
+- **`.sub-nav`** (innerhalb der Info-View) — kleine Unter-Navigation mit zwei `.sub-nav-btn`-Buttons („Info" / „Statistik"), die zwischen den beiden Sub-Views der Info-View umschaltet. Nur in der Info-View sichtbar.
 - **`.update-banner`** — Fix-positioniertes Banner (unten, `z-index: 1000`), das erscheint, wenn der Service Worker eine neue Version gefunden hat. Zeigt „Neue Version verfügbar." und einen Button „Neu laden", der `postMessage('skipWaiting')` an den wartenden SW sendet und danach die Seite neu lädt. Wird per `showUpdateBanner()` aus dem `updatefound`-Listener erzeugt; ein `controllerchange`-Listener lädt die Seite einmalig neu, sobald der neue SW die Kontrolle übernimmt.
 - **`.undo-snackbar`** (`#undoSnackbar`) — Fix-positionierte Snackbar (über der Summen-Leiste), die nach dem Entfernen einer Position angezeigt wird. Zeigt „„Name" entfernt" und einen „Rückgängig"-Button, der die Position an ihrer ursprünglichen Stelle wiederherstellt. Verschwindet nach ~4,5 s automatisch. Wird von `showUndoSnackbar(removedItem, originalIndex)` erzeugt.
+
+#### Einstellungen-View (`.settings-box`)
+
+Wird durch Klick auf das ⚙-Icon geöffnet (`currentView = 'settings'`). Aufgebaut von `renderSettingsView()` in `#productList`. Enthält:
+
+- Eine **`.settings-row`** mit `.settings-label` „Pfand berechnen" und einem Toggle-Switch (`.switch`/`.slider`) der den globalen Zustand `pfandBerechnen` steuert. Umschalten ruft `applyPfandToCart()` — bereits vorhandene Warenkorb-Positionen werden sofort aktualisiert.
+- Für jeden Block-Tab (`Bier`, `Essen`): ein **`.settings-group-label`** (z. B. „Bier-Bereich" / „Essensstand") gefolgt von einem **segmentierten Steuerelement** (Container `.segmented` mit `.segmented-btn`-Buttons, je einem pro Block). Der aktive Block erhält die Klasse `active`. Klick ruft `setActiveBlock(tab, block)` und rendert neu.
 
 ### Zentrale Datenstruktur: `PRODUKTE`
 
 Das Objekt `PRODUKTE` (oben im `<script>`) ist die **einzige Stelle, an der
-Produkte/Preise gepflegt werden**. Es treibt Tabs und Produkt-Buttons.
+Produkte/Preise gepflegt werden**. Es enthält ausschließlich verkaufbare Kategorien —
+Info und Einstellungen sind eigene Views, keine Einträge in `PRODUKTE`.
 
 ```js
 const PRODUKTE = {
   "Bar":  [ { name, preis, pfand }, ... ],   // flaches Array
-  "Bier": [ { name, preis, pfand }, ... ],   // flaches Array
-  "Essen": {                                   // Objekt mit Unterblöcken
+  "Bier": {                                   // Block-Tab (Objekt mit Unterblöcken)
+    "Bierwagen":       [ { name, preis, pfand }, ... ],
+    "Badewannenrennen":[ { name, preis, pfand }, ... ],
+  },
+  "Essen": {                                  // Block-Tab (Objekt mit Unterblöcken)
     "Bratbude":   [ { name, preis, pfand }, ... ],
     "Crepe-Bude": [ { name, preis, pfand }, ... ],
   },
-  "Info": { info: true },                      // KEINE Produkte → Info-/Über-Reiter
 };
 ```
 
-**Drei Formen pro Kategorie sind möglich:**
+**Zwei Formen pro Kategorie sind möglich:**
 
-1. **Array** → einfache Liste von Produkten (z. B. `Bar`, `Bier`).
-2. **Objekt mit Unterblöcken** → mehrere benannte Gruppen (z. B. `Essen`).
-3. **Info-Objekt `{ info: true }`** → kein Produkt-Reiter, sondern eine
-   Info-/Über-Box (z. B. `Info`). Inhalt kommt aus `INFO_TAB` (Titel +
-   `absaetze`-Liste). Siehe [Der Info-Reiter](#der-info-reiter).
+1. **Array** → einfache Produktliste (z. B. `Bar`).
+2. **Block-Tab (Objekt mit Unterblöcken)** → mehrere benannte Blöcke, von denen jeweils
+   einer angezeigt wird. Welche Tabs als Block-Tabs gelten, legt `BLOCK_TABS` fest.
 
 Produktfelder:
 - `name` (String) — Anzeigename auf dem Button.
 - `preis` (Number) — Preis in Euro.
-- `pfand` (Number) — Pfand in Euro (`0.0`, wenn kein Pfand anfällt).
+- `pfand` (Number) — Pfand in Euro pro Produkt (`0.0`, wenn kein Pfand anfällt).
+  Pfand ist **rein produktbasiert** — kein globaler Pfand-Betrag pro Kategorie.
 
 `TAB_CLASS` ordnet jeder Kategorie eine CSS-Klasse für die Tab-Farbe zu
-(`tab-bar`, `tab-bier`, `tab-essen`, `tab-info`). Beim Anlegen einer neuen
-Kategorie ggf. hier eine Farbe ergänzen, sonst bleibt der Tab grau/neutral.
+(`tab-bar`, `tab-bier`, `tab-essen`). Beim Anlegen einer neuen Kategorie
+ggf. hier eine Farbe ergänzen, sonst bleibt der Tab grau/neutral.
+
+#### Block-Tab-Konfiguration: `BLOCK_TABS`
+
+```js
+const BLOCK_TABS = {
+  "Bier":  { label: "Bier-Bereich",  defaultBlock: "Bierwagen", blocks: ["Bierwagen", "Badewannenrennen"] },
+  "Essen": { label: "Essensstand",   defaultBlock: "Bratbude",  blocks: ["Bratbude",  "Crepe-Bude"] },
+};
+```
+
+`BLOCK_TABS` beschreibt, welche Kategorien Block-Tabs sind, wie ihr Label in
+den Einstellungen lautet, welcher Block beim Start aktiv ist (`defaultBlock`)
+und welche Blöcke existieren. Der aktuell angezeigte Block je Tab wird in
+`activeBlock` gespeichert.
+
+#### Aktuelle Produktdaten
+
+**Bar** (flaches Array — Pfand 2,00 € je Produkt, außer Pullchen):
+
+| Name | Preis | Pfand |
+|------|------:|------:|
+| Glas Sekt/Fruchtsecco 0,1l | 2,00 € | 2,00 € |
+| Schoppen Wein 0,1l | 2,00 € | 2,00 € |
+| Flasche Wein/Sekt/Fruchtsecco | 10,00 € | 2,00 € |
+| Desperados | 4,00 € | 2,00 € |
+| alkfrei 0,4l | 2,50 € | 2,00 € |
+| alkfrei 0,2l | 1,50 € | 2,00 € |
+| alkfrei Flasche | 6,00 € | 2,00 € |
+| Mixgetränke | 6,00 € | 2,00 € |
+| Cocktails | 6,00 € | 2,00 € |
+| Mojito/Pina Colada alkfrei | 4,00 € | 2,00 € |
+| Pullchen | 2,50 € | 0,00 € |
+
+**Bier → Block „Bierwagen"** (Pfand 2,00 € je Produkt, außer Pullchen):
+
+| Name | Preis | Pfand |
+|------|------:|------:|
+| Bier/Radler 0,4l | 3,50 € | 2,00 € |
+| Bier/Radler 0,25l | 2,50 € | 2,00 € |
+| alkfrei 0,4l | 2,50 € | 2,00 € |
+| alkfrei 0,2l | 1,50 € | 2,00 € |
+| alkfrei Flasche | 6,00 € | 2,00 € |
+| Pullchen | 2,50 € | 0,00 € |
+
+**Bier → Block „Badewannenrennen"** (kein Pfand):
+
+| Name | Preis | Pfand |
+|------|------:|------:|
+| Bier/Radler 0,4l | 3,50 € | 0,00 € |
+| Bier/Radler 0,2l | 2,00 € | 0,00 € |
+| Wein/Sekt/Fruchtsecco 0,2l | 3,00 € | 0,00 € |
+| alkfrei 0,4l | 2,50 € | 0,00 € |
+| alkfrei 0,2l | 1,50 € | 0,00 € |
+
+**Essen → Block „Bratbude"** (kein Pfand):
+
+| Name | Preis |
+|------|------:|
+| Bratwurst m Br | 3,50 € |
+| Steak m Br | 4,50 € |
+| Spieß m Br | 4,50 € |
+| Hotdog | 3,00 € |
+| Pommes | 2,50 € |
+| Fischsemmel | 3,50 € |
+| Frühl.rolle 2 | 3,50 € |
+| Frühl.rolle 3 | 5,00 € |
+
+**Essen → Block „Crepe-Bude"** (kein Pfand):
+
+| Name | Preis |
+|------|------:|
+| Crepes Puderzucker | 2,50 € |
+| Crepes Nutella/Apfelmus | 3,50 € |
+| Crepes mit Käse | 3,50 € |
+| Crepes m. Käse u. Schinken | 4,00 € |
+| Waffel Zimt/Zucker | 3,00 € |
+| Waffel Nutella/Apfelmus | 4,00 € |
+| Zuckerwatte | 2,00 € |
 
 ### Wichtige State-Variablen
 
-| Variable               | Bedeutung                                                                          |
-| ---------------------- | ---------------------------------------------------------------------------------- |
-| `currentTab`           | aktuell gewählte Kategorie (Default: erste Kategorie)                              |
-| `cart`                 | Array der Bestellungs-Positionen                                                   |
-| `pfandBerechnen`       | ob Pfand auf Produkte aufgeschlagen wird (Toggle, Default `true`)                  |
-| `essenZeigeCrepeBude`  | im Essen-Tab: `false` = Bratbude, `true` = Crepe-Bude                             |
-| `infoView`             | aktive Sub-View des Info-Reiters: `'info'` (Standard) oder `'statistik'`           |
+| Variable       | Bedeutung                                                                                    |
+| -------------- | -------------------------------------------------------------------------------------------- |
+| `currentView`  | aktive Haupt-View: `'products'` (Standard) \| `'info'` \| `'settings'`                      |
+| `currentTab`   | aktuell gewählte Produkt-Kategorie (Default: erste Kategorie in `PRODUKTE`)                  |
+| `cart`         | Array der Bestellungs-Positionen                                                             |
+| `pfandBerechnen` | ob Pfand auf Produkte aufgeschlagen wird (Toggle in Einstellungen, Default `true`)         |
+| `activeBlock`  | je Block-Tab der aktuell angezeigte Unterblock, z. B. `{ Bier: 'Bierwagen', Essen: 'Bratbude' }` |
+| `infoView`     | aktive Sub-View der Info-View: `'info'` (Standard) oder `'statistik'`                       |
 
 `cart`-Einträge haben die Form
 `{ name, preis, pfand, pfandOriginal?, isPfandAbzug? }`. Das Feld `pfandOriginal`
@@ -111,144 +204,139 @@ genutzt, um Pfand für bereits vorhandene Positionen nachträglich zu aktualisie
 Der Pfand-Rückgabe-Eintrag nutzt `preis: -PFAND_RUECKGABE_EURO` und `isPfandAbzug: true`
 (kein `pfandOriginal`, wird von `applyPfandToCart()` übersprungen).
 
-### Der kontextabhängige Toggle (`#pfandToggle`)
+### Pfand-Schalter und Block-Auswahl (Einstellungen-View)
 
-Der Schalter in `.pfand-row` hat **je nach Tab eine andere Funktion** —
-das ist eine der wichtigsten Eigenheiten der App:
+Ab v8 leben **alle Umschalter** in der Einstellungen-View (`currentView = 'settings'`),
+erreichbar über das ⚙-Icon:
 
-- **Normale Tabs (Bar, Bier):** Label „Pfand berechnen". Steuert
-  `pfandBerechnen` — also ob beim Antippen eines Produkts dessen Pfand mit in
-  den Warenkorb wandert. Das Umschalten wirkt **auch nachträglich** auf bereits
-  im Warenkorb liegende Positionen: `applyPfandToCart()` setzt für jede Position
-  `pfand = pfandBerechnen ? (item.pfandOriginal||0) : 0` und rendert den
-  Warenkorb neu. Die manuelle Pfand-Rückgabe (`isPfandAbzug`) bleibt dabei unberührt.
-- **Essen-Tab:** Label ist **fest** „Crepe-Bude anzeigen" — benennt die Funktion des Schalters; ob er an oder aus ist, zeigt, ob die Crepe-Bude angezeigt wird. Steuert
-  `essenZeigeCrepeBude` — schaltet zwischen den Unterblöcken **Bratbude** und
-  **Crepe-Bude** um. Pfand gibt es bei Essen nicht; der Pfand-Button wird ausgeblendet.
-- **Info-Tab:** Die ganze `.pfand-row` (Toggle) **und** der Pfand-Button werden
-  ausgeblendet. Zusätzlich wird die **gesamte rechte Spalte** (`#rightCol` —
-  Bestellung-Überschrift, Bestellungs-Liste, „Leeren"-Button, Gesamt-Leiste) versteckt und `.left` expandiert
-  auf volle Breite — der Reiter zeigt ausschließlich die Info-Box.
+- **„Pfand berechnen"** (Toggle-Switch) — steuert `pfandBerechnen`. Umschalten
+  ruft `applyPfandToCart()`, sodass bereits im Warenkorb liegende Positionen
+  sofort aktualisiert werden (`pfand = pfandBerechnen ? (item.pfandOriginal||0) : 0`).
+  Die manuelle Pfand-Rückgabe (`isPfandAbzug`) bleibt dabei unberührt.
+  `addToCart(p)` ist die **einzige** Stelle, die beim Hinzufügen über Pfand entscheidet
+  (kein `includePfand`/`showPfand`-Argument mehr).
+- **Block-Auswahl je Tab** (segmentierte Buttons, `.segmented`/`.segmented-btn`) —
+  für jeden Block-Tab (Bier, Essen) ein eigenes Segment-Steuerelement. Klick ruft
+  `setActiveBlock(tab, blockName)`. Der Pfand-Rückgabe-Button (`#pfandMinusBtn`)
+  wird ausgeblendet, sobald die aktuelle Produktliste keine Pfand-Produkte enthält
+  (z. B. Block „Badewannenrennen" oder alle Essen-Blöcke) oder wenn eine
+  Nicht-Produkt-View aktiv ist.
 
-Erkannt wird der Essen-Modus über `isEssenTab()` (`currentTab === 'Essen'`
-**und** `PRODUKTE['Essen']` ist **kein** Array). Der Info-Modus wird über
-`isInfoTab()` erkannt (Kategorie ist ein Objekt mit `info: true`).
+### Die Info-View
 
-**Layout der Toggle-Zeile:** `.pfand-row` verwendet `justify-content: flex-end; gap: 12px;`,
-sodass Label und Toggle **beide rechtsbündig gruppiert** sind (Label direkt links
-vom Toggle) — statt Label links / Toggle rechts.
+Erreichbar über das **ℹ-Icon** in der Tab-Leiste (`currentView = 'info'`). Aufgebaut
+von `renderInfoView()` in `#productList`. Die rechte Spalte (`#rightCol`) ist dabei
+ausgeblendet, `.left` nimmt die volle Breite ein.
 
-### Der Info-Reiter
+- Zeigt eine Sub-Navigation (`.sub-nav`) mit zwei `.sub-nav-btn`-Buttons „Info" und
+  „Statistik". Klick setzt `infoView` und rendert neu.
+- Bei `infoView === 'info'`: eine `.info-box` aus `INFO_TAB` mit Titel
+  (`.info-box-title`), Absätzen (`.info-box-text`) und
+  Zwischenüberschriften (`.info-box-subtitle`).
+- Bei `infoView === 'statistik'`: das Statistik-Panel (siehe [Statistik](#statistik)).
 
-Der **Info-Reiter** (Schlüssel `"Info"` in `PRODUKTE`) ist **keine
-Produktkategorie**, sondern ein **Info-/Über-Reiter**. Er geht zurück auf einen
-Info-Tab der Android-Vorlage, der eine Card „APP Informationen" anzeigte. Der
-Reiter heißt jetzt einheitlich `"Info"`.
+Inhalt des Info-Reiters kommt aus der Konstante **`INFO_TAB`**:
+- `titel` (String) — aktuell `"Guttauer Dorf- und Teichfest 2026"`.
+- `absaetze` (Array) — jeder Eintrag ist entweder ein **String** (Absatz) oder ein
+  **Objekt `{ ueberschrift: "…" }`** (Zwischenüberschrift).
 
-- In `PRODUKTE` als `"Info": { info: true }` hinterlegt (kein Produkt-Array).
-- Inhalt kommt aus der Konstante **`INFO_TAB`**:
-  - `titel` (String) — aktuell `"Guttauer Dorf- und Teichfest 2026"`.
-  - `absaetze` (Array) — jeder Eintrag ist entweder ein **String** (wird als
-    Absatz `.info-box-text` gerendert) oder ein **Objekt `{ ueberschrift: "…" }`**
-    (wird als Zwischenüberschrift `.info-box-subtitle` gerendert). So lassen
-    sich Abschnitte wie „Bedienung", „Pfand", „Essen", „Wechselgeld", „Statistik" strukturieren.
-- `renderProducts()` prüft **zuerst** `isInfoTab()` und rendert dann eine
-  kleine Sub-Navigation (`.sub-nav` mit zwei `.sub-nav-btn`-Buttons „Info" und
-  „Statistik") sowie den jeweils aktiven Sub-View: bei `infoView === 'info'`
-  eine `.info-box` aus `INFO_TAB` mit Absätzen (`.info-box-text`) und
-  Zwischenüberschriften (`.info-box-subtitle`); bei `infoView === 'statistik'`
-  das Statistik-Panel (siehe [Statistik](#statistik)). Die rechte Spalte ist
-  via `updateLayoutForTab()` ausgeblendet (früher `return`).
-- Toggle-Zeile, Pfand-Button **und die gesamte rechte Spalte** (`#rightCol`)
-  sind auf diesem Tab ausgeblendet (`updateLayoutForTab()` wird beim Tab-Wechsel
-  und in der Init-Sequenz aufgerufen, zusammen mit `updateToggleForTab()` und
-  `updatePfandButtonVisibility()`). Mit `display: contents` auf Mobilgeräten werden
-  beim Ausblenden von `#rightCol` auch alle seine Kinder (Bestellung-Überschrift,
-  Bestellungs-Liste, `.cart-controls`) unsichtbar.
-
-> **Reihenfolge der Konstanten:** `INFO_TAB` referenziert die Konstante
-> `PFAND_RUECKGABE_EURO` (und weitere: `ESSEN_TAB`, `ESSEN_BLOCK_STANDARD`,
-> `ESSEN_BLOCK_TOGGLE`). Diese Konstanten müssen deshalb **vor** `INFO_TAB` im
-> Quellcode deklariert sein, um einen Temporal-Dead-Zone-ReferenceError zu
+> **Reihenfolge der Konstanten:** `INFO_TAB` referenziert `PFAND_RUECKGABE_EURO`
+> (und ggf. weitere Konstanten). Diese Konstanten müssen deshalb **vor** `INFO_TAB`
+> im Quellcode deklariert sein, um einen Temporal-Dead-Zone-ReferenceError zu
 > vermeiden.
 
 > Inhalt ändern → `INFO_TAB` in `index.html` editieren (`titel`, `absaetze`).
-> Neuen Info-Reiter anlegen → Kategorie als `{ info: true }` in `PRODUKTE`
-> ergänzen (und ggf. `INFO_TAB` verallgemeinern, das aktuell **fest** den einen
-> Info-Tab speist).
 
 ### Layout / Responsivität
 
-Das Layout ist **mobile-first** und vollständig responsiv:
+Das Layout ist **mobile-first zweispaltig** — auch im Hochformat:
 
-- **Hochformat / < 700 px (Standard):** Einspaltig. `.right` hat `display: contents`,
-  sodass seine Kinder (Bestellung-Überschrift, Bestellungs-Liste, `.cart-controls`)
-  direkt in den Spaltenfluss eingebettet werden. Reihenfolge:
-  Tabs → Toggle-Zeile → Produktgitter → Pfand-Rückgabe-Button (unmittelbar darunter,
-  kein toter Leerraum) → Bestellung-Überschrift → Bestellungs-Liste → `.cart-controls`.
-  **Kein Seiten-Scroll:** `.main` ist `overflow-y: hidden` und füllt die Viewport-Höhe.
-  Stattdessen scrollen **`.left` (Produkte) und `#cart` (Bestellung) unabhängig
-  intern** (`overflow-y: auto`, `flex: 1 1 0`, `min-height: 0`); `.left` bekommt
-  etwas mehr Höhe (`flex-grow` ~1.4) als der Warenkorb (~1.0). Die `.cart-controls`-Leiste
-  („Leeren" + Gesamt) ist `flex: none` am Ende von `.main` und dadurch **immer
-  sichtbar** (kein Sticky-Hack nötig).
+- **Hochformat / Standard (mobile-first):** `.main` ist `flex-direction: row`.
+  Produkte links (`.left`, `flex: 1.1 1 0`, ca. 52–53 %), Warenkorb rechts
+  (`#rightCol`, `flex: 1 1 0`, ca. 47–48 %); beide haben `min-width: 0`, damit
+  die Flex-Ratio greift. Beide Spalten scrollen **intern** (`overflow-y: auto`);
+  kein Seiten-Scroll. `#app` ist `position: fixed; inset: 0` (inkl. Safe-Area-Padding),
+  damit iOS keine Scroll-Bounce außerhalb erzeugt.
+  - **Produkt-Buttons:** Im schmalen Hochformat-Grid (`grid-template-columns: 1fr`)
+    gestapelt — eine Spalte, um den engen `.left`-Bereich zu nutzen.
+  - **Warenkorb-Zeilen:** Im Hochformat gestapelt — `.cart-item` ist
+    `flex-direction: column`. `.cart-item-top` (Name + Pfand-Subzeile, volle Breite,
+    Word-Wrap normal) oben, `.cart-item-bottom` (Preis + ✕-Button) darunter.
+  - **`.cart-controls`-Leiste** („Leeren" + Gesamt) ist `flex: none` am Ende der
+    rechten Spalte und dadurch **immer sichtbar** (kein Sticky-Hack nötig).
 
 - **Querformat / ≥ 700 px (`@media (min-width: 700px), (orientation: landscape)`):**
-  Zweispaltig — Produkte links (`.left`), Bestellung rechts (`#rightCol` mit
-  `display: flex`). Beide Spalten scrollen unabhängig intern; `.cart-controls` ist
-  am Ende der rechten Spalte. Der Warenkorb füllt die Spaltenhöhe.
+  - `.left` bekommt `flex: 1.3 1 0`.
+  - Produktgitter wechselt auf `repeat(auto-fill, minmax(150px, 1fr))` (mehrspaltiger Grid).
+  - Produkt-Buttons werden größer (`min-height: 96px`, Schrift 19 px, Padding 22 px × 14 px).
+  - Warenkorb-Zeilen werden wieder einzeilig: `.cart-item` wechselt auf
+    `flex-direction: row` (Name | Preis | ✕ in einer Zeile).
+
+- **≥ 1024 px:** Produkt-Buttons noch größer (`min-height: 116px`, Schrift 21 px,
+  `border-radius: 16px`); Grid `repeat(auto-fill, minmax(180px, 1fr))`.
 
 - **Gleiche Button-Höhe:** `.product-grid-inner` nutzt `grid-auto-rows: 1fr` und
-  `.product-btn` hat `height: 100%` — dadurch sind **alle Produkt-Buttons gleich hoch**
-  (bestimmt durch den Button mit dem längsten/umbruchstärksten Text). `min-height`
-  dient als Untergrenze.
+  `.product-btn` hat `height: 100%` — alle Produkt-Buttons in einem Grid sind
+  gleich hoch (bestimmt durch den höchsten Button). `min-height` dient als Untergrenze.
 
-- **Responsive Button-Größe:** Produkt-Buttons werden auf größeren Bildschirmen
-  spürbar größer, um die Touch-Fläche zu verbessern — bei gleich bleibender
-  Gleichhöhigkeit. Breakpoints:
-  - **Standard (kleines Smartphone):** `min-height: 70px`, Schrift 16 px, Padding 16 px × 10 px.
-  - **≥ 400 px:** `min-height: 86px`, Schrift 18 px, Padding 18 px × 12 px.
-  - **≥ 700 px / Querformat:** `min-height: 96px`, Schrift 19 px, Padding 22 px × 14 px;
-    Grid wechselt auf `repeat(auto-fill, minmax(150px, 1fr))`.
-  - **≥ 1024 px:** `min-height: 116px`, Schrift 21 px, Padding 28 px × 16 px,
-    `border-radius: 16px`; Grid `repeat(auto-fill, minmax(180px, 1fr))`.
+- **WCAG-AA-Farben:** Bar-Buttons `#bd5200`/aktiv `#994200`, Bier-Buttons `#2e7d32`/aktiv `#1b5e20`
+  (für Lesbarkeit im Sonnenlicht abgedunkelt). CSS-Variablen `--orange`/`--green`
+  bleiben für Toggle, Summen-Leiste, `.btn-done` und `.change-result.positive` unverändert.
+
+- **Info- und Einstellungen-View:** `#rightCol` wird per Inline-Style auf `display: none`
+  gesetzt (`updateLayoutForView()`), sodass die gesamte rechte Seite verborgen ist.
+  `.left` wird auf volle Breite ausgedehnt (`flex: 1 1 100%`).
 
 - **Pfand-Rückgabe-Button:** Sitzt direkt unter dem Produktgitter (`.product-grid`
-  ist `flex: none`, kein erzwungenes Strecken) — kein toter Leerraum.
+  ist `flex: none`) — kein toter Leerraum.
 
-- **Bestellungs-Liste (`#cart`):** `flex: 1 1 0` — **füllt den verfügbaren Platz**
-  zwischen Produkten und Summen-Leiste (auch wenn leer, kein schmaler Streifen) und
-  **scrollt intern**, wenn mehr Positionen vorhanden sind, als angezeigt werden können.
-  Keine `max-height`-Begrenzung.
-
-- **Info-Tab:** `#rightCol` wird per Inline-Style auf `display: none` gesetzt
-  (`updateLayoutForTab()`), sodass die gesamte rechte Seite (Bestellung-Überschrift,
-  Liste, `.cart-controls`) verborgen ist. `.left` wird auf volle Breite ausgedehnt
-  (`flex: 1 1 100%`) und zeigt die Info-Box.
+- **Bestellungs-Liste (`#cart`):** `flex: 1 1 0` — füllt den verfügbaren Platz
+  und scrollt intern, wenn mehr Positionen vorhanden sind als angezeigt werden können.
 
 ### Render-Funktionen
 
-- **`renderTabs()`** — baut die Tab-Buttons, markiert den aktiven, hängt
-  `onclick` an (Tab wechseln → alles neu rendern, `updateToggleForTab()`,
-  `updatePfandButtonVisibility()`, `updateLayoutForTab()` aufrufen).
-- **`renderProducts()`** — rendert je nach Datenform:
-  - Setzt zunächst `productListEl.setAttribute('data-tab', TAB_CLASS[currentTab])`,
-    damit per CSS die Produkt-Button-Farbe je Kategorie gesetzt wird
-    (Bar = dunkles Orange `#bd5200`/aktiv `#994200`, Bier = dunkles Grün `#2e7d32`/aktiv `#1b5e20`,
-    Essen = blaugrau; Info hat keine Produkte). Die CSS-Variablen `--orange`/`--green` bleiben
-    für Toggle, Summen-Leiste, `.btn-done` und `.change-result.positive` unverändert; nur
-    die button-/tab-spezifischen Farben wurden für WCAG-AA-Lesbarkeit im Sonnenlicht abgedunkelt.
-  - Info-Objekt (`{ info: true }`) → Sub-Navigation (`.sub-nav`) + aktiver Sub-View: `infoView === 'info'` zeigt `.info-box` aus `INFO_TAB`; `infoView === 'statistik'` zeigt das Statistik-Panel (siehe [Statistik](#statistik)); die rechte Spalte ist via `updateLayoutForTab()` ausgeblendet.
-  - Array → ein Grid (oder Hinweis, wenn leer).
-  - Essen-Objekt → nur der via Toggle gewählte Unterblock, mit Überschrift.
-  - generisches Objekt → **alle** Unterblöcke untereinander mit Überschriften.
-  - `makeButton(p, showPfand)` erzeugt einen Produkt-Button; der Button zeigt
-    **ausschließlich den Preis** (`formatEuro(p.preis)`) als Sub-Zeile — eine
-    „+ X,XX € Pfand"-Zeile auf dem Button gibt es nicht mehr. Pfand wird stattdessen
-    im Warenkorb als „inkl. X,XX € Pfand"-Zeile ausgewiesen (wenn `item.pfand > 0`).
-    Das Argument `showPfand` steuert nur noch, ob beim Antippen Pfand **in den
-    Warenkorb** aufgenommen wird (`addToCart`), nicht die Button-Darstellung.
-    Alle Preise werden via `formatEuro()` im deutschen Kommaformat angezeigt.
+- **`renderApp()`** — zentrale Re-Render-Funktion: ruft `renderTabs()` +
+  `renderContent()` + `updateLayoutForView()` + `updatePfandButtonVisibility()`.
+  Jede State-Änderung (Tab-Wechsel, View-Wechsel, Block-Auswahl) ruft `renderApp()`.
+- **`renderTabs()`** — baut die Produkt-Tab-Buttons (aus `PRODUKTE`-Schlüsseln,
+  mit Kategoriefarbe und `active`-Markierung) sowie die zwei Icon-Buttons
+  (ℹ / ⚙) am rechten Rand. Klick auf einen Produkt-Tab setzt `currentView='products'`
+  und `currentTab`; Klick auf ℹ/⚙ setzt `currentView` entsprechend.
+- **`renderContent()`** — Dispatcher: bei `currentView === 'info'` → `renderInfoView()`;
+  bei `currentView === 'settings'` → `renderSettingsView()`; sonst → `renderProductTab()`.
+- **`renderProductTab()`** — rendert die Produkte des aktuellen Tabs in `#productList`:
+  - Setzt `productListEl.setAttribute('data-tab', TAB_CLASS[currentTab])` für
+    kategoriebasierte Button-Farben per CSS.
+  - **Array** → ein einfaches Grid (`product-grid-inner`).
+  - **Block-Tab** (`isBlockTab(currentTab)` → wahr) → zeigt nur den via `getActiveBlock()`
+    ermittelten Block mit einer `.block-heading`-Überschrift.
+  - **Generisches Objekt** (kein Block-Tab-Eintrag in `BLOCK_TABS`) → alle Unterblöcke
+    nacheinander, jeweils mit Überschrift.
+- **`renderInfoView()`** — baut in `#productList` die Sub-Navigation (`.sub-nav`)
+  und je nach `infoView` die Info-Box aus `INFO_TAB` oder das Statistik-Panel.
+- **`renderSettingsView()`** — baut in `#productList` die `.settings-box` mit
+  Pfand-Toggle und segmentierten Block-Steuerelementen für jeden Block-Tab.
+- **`makeProductButton(p)`** — erzeugt einen Produkt-Button; zeigt Name und
+  **ausschließlich den Preis** (`formatEuro(p.preis)`) als Sub-Zeile. Pfand wird
+  stattdessen im Warenkorb als „inkl. X,XX € Pfand"-Subzeile ausgewiesen.
+  `onclick` ist direkt `addToCart(p)` — kein `showPfand`-Argument mehr.
+- **`isBlockTab(tab)`** — gibt `true` zurück, wenn `BLOCK_TABS[tab]` existiert
+  und `PRODUKTE[tab]` ein nicht-Array-Objekt ist.
+- **`getActiveBlock(tab)`** — gibt den aktuell aktiven Block für einen Block-Tab zurück;
+  fällt auf `BLOCK_TABS[tab].defaultBlock` oder den ersten Block zurück, wenn
+  `activeBlock[tab]` ungültig ist.
+- **`setActiveBlock(tab, blockName)`** — setzt `activeBlock[tab]`, wenn `blockName`
+  in `PRODUKTE[tab]` existiert.
+- **`currentProductList()`** — gibt die aktuell sichtbare Produktliste zurück:
+  flaches Array für `Bar`, oder den aktiven Block für Block-Tabs; nützlich für
+  `updatePfandButtonVisibility()`.
+- **`updateLayoutForView()`** — blendet `#rightCol` aus und setzt `.left` auf volle
+  Breite, wenn `currentView` `'info'` oder `'settings'` ist; stellt normales
+  Zwei-Spalten-Layout für `'products'` wieder her.
+- **`updatePfandButtonVisibility()`** — zeigt `#pfandMinusBtn` nur, wenn
+  `currentView === 'products'` **und** `currentProductList().some(p => p.pfand > 0)`.
+  Versteckt den Button für Blöcke ohne Pfand (z. B. „Badewannenrennen", alle Essen-Blöcke)
+  und für die Info-/Einstellungen-View.
 - **`renderCart()`** — gruppiert identische Positionen zu einer Zeile mit Menge
   (`N× Produktname`), zeigt die Pfand-Subzeile „inkl. X,XX € Pfand / Stück" bei Menge > 1,
   und berechnet die Zeilensumme als `(Preis + Pfand) × Menge`. Die zugrunde liegende
@@ -259,20 +347,32 @@ Das Layout ist **mobile-first** und vollständig responsiv:
 
 ### Warenkorb-Aktionen
 
-- **`addToCart(p)`** — fügt Produkt hinzu; speichert `pfand: includePfand ? p.pfand : 0` und `pfandOriginal: p.pfand || 0` (damit der Pfand-Toggle auch nachträglich wirken kann).
+- **`addToCart(p)`** — fügt Produkt hinzu; ist die **einzige Pfand-Entscheidungsstelle**:
+  speichert `pfand: pfandBerechnen ? (p.pfand||0) : 0` und `pfandOriginal: p.pfand||0`
+  (damit der Pfand-Toggle auch nachträglich wirken kann). Kein `includePfand`/`showPfand`-Parameter.
 - **`addPfandAbzug()`** — fügt „Pfand-Rückgabe" mit `-PFAND_RUECKGABE_EURO`
-  hinzu (über `#pfandMinusBtn`, Beschriftung wird beim Init aus der Konstante
-  gesetzt: „Pfand zurück -2,00 €"). Der Button hat einen ~400 ms **Debounce**
-  gegen versehentliche Doppel-Taps (sonst würde mehrfach Pfand abgezogen).
+  hinzu (über `#pfandMinusBtn`, Beschriftung „Pfand zurück -2,00 €"). Der Button hat
+  einen ~400 ms **Debounce** gegen versehentliche Doppel-Taps.
 - **`applyPfandToCart()`** — iteriert den Warenkorb und setzt für jede Position
   `pfand = pfandBerechnen ? (item.pfandOriginal||0) : 0`; überspringt
-  `isPfandAbzug`-Einträge. Wird vom Pfand-Toggle-Handler aufgerufen, sobald
-  `pfandBerechnen` wechselt, sodass bereits vorhandene Positionen dynamisch
-  aktualisiert werden.
+  `isPfandAbzug`-Einträge. Wird vom Pfand-Toggle in der Einstellungen-View aufgerufen.
 - **`removeItem(index)`** — entfernt eine Position.
-- **`removeOneOfGroup(key)`** — entfernt jeweils **eine** Einheit der angegebenen Gruppe (die zuletzt hinzugefügte, d. h. von hinten im Array). Ruft `showUndoSnackbar()` und `renderCart()`. Wird vom ✕-Button einer Gruppenzeile im Warenkorb verwendet; `aria-label` lautet bei Menge > 1 „Eine Position entfernen".
-- **`showUndoSnackbar(removedItem, originalIndex)`** — zeigt die Undo-Snackbar (`.undo-snackbar`, `#undoSnackbar`) mit „„Name" entfernt" + Button „Rückgängig". Klick auf „Rückgängig" fügt die Position an `originalIndex` wieder ein und rendert den Warenkorb neu. Verschwindet nach ~4,5 s automatisch.
-- **`persistCart()` / `restoreCart()`** — Warenkorb-Sitzungspersistenz über `sessionStorage` (Schlüssel `kassenCart`): `renderCart()` ruft `persistCart()`; beim Start stellt `restoreCart()` den Warenkorb der laufenden Sitzung wieder her (überlebt App-Wechsel / kurzes Wegswitchen, **nicht** einen vollständigen App-Kill).
+- **`removeOneOfGroup(key)`** — entfernt jeweils **eine** Einheit der angegebenen Gruppe
+  (die zuletzt hinzugefügte, d. h. von hinten im Array). Ruft `showUndoSnackbar()` und
+  `renderCart()`. Wird vom ✕-Button einer Gruppenzeile im Warenkorb verwendet;
+  `aria-label` lautet bei Menge > 1 „Eine Position entfernen".
+- **`cartGroupKey(item)`** — Schlüssel zum Gruppieren identischer Positionen:
+  `${isPfandAbzug?'A':'P'}|${name}|${toCents(preis)}|${toCents(pfand||0)}`.
+  Der **Preis ist Teil des Schlüssels**, damit gleichnamige Produkte aus verschiedenen
+  Bereichen mit unterschiedlichem Preis nicht fälschlich zu einer Zeile zusammengefasst werden.
+- **`showUndoSnackbar(removedItem, originalIndex)`** — zeigt die Undo-Snackbar
+  (`.undo-snackbar`, `#undoSnackbar`) mit „„Name" entfernt" + Button „Rückgängig".
+  Klick auf „Rückgängig" fügt die Position an `originalIndex` wieder ein und rendert
+  den Warenkorb neu. Verschwindet nach ~4,5 s automatisch.
+- **`persistCart()` / `restoreCart()`** — Warenkorb-Sitzungspersistenz über
+  `sessionStorage` (Schlüssel `kassenCart`): `renderCart()` ruft `persistCart()`;
+  beim Start stellt `restoreCart()` den Warenkorb der laufenden Sitzung wieder her
+  (überlebt App-Wechsel / kurzes Wegswitchen, **nicht** einen vollständigen App-Kill).
 - **`resetCart()`** — leert den Warenkorb (nach Abschluss oder „Leeren").
   Der „Leeren"-Button (`#neuBtn`) öffnet bei nicht-leerem Warenkorb das
   **`#clearOverlay`**-Bestätigungs-Dialog (h2 „Bestellung leeren?", grauer
@@ -383,14 +483,10 @@ Wechselgeld-Overlay aufgerufen — **bevor** `closeChangeOverlay()` und
 `resetCart()`. Damit wird jede abgeschlossene Bestellung gezählt, unabhängig
 vom Gesamtbetrag (auch 0 € und Auszahlungs-Modus).
 
-#### UI (Info-Tab → Sub-View „Statistik")
+#### UI (Info-View → Sub-View „Statistik")
 
-Die Statistik ist über den Info-Reiter erreichbar. Beim Wechsel auf den
-Info-Tab zeigt `renderProducts()` zunächst eine kleine Sub-Navigation
-(`.sub-nav` mit zwei `.sub-nav-btn`-Buttons „Info" und „Statistik"). Klick
-setzt die Modul-Variable `infoView` und rendert neu.
-
-Bei `infoView === 'statistik'` wird ein Statistik-Panel gerendert:
+Die Statistik ist über das ℹ-Icon und den Sub-Nav-Button „Statistik" erreichbar.
+`renderInfoView()` zeigt bei `infoView === 'statistik'` ein Statistik-Panel:
 
 - **Zusammenfassungs-Karten** (`.stats-summary` / `.stat-card`): sechs Karten —
   „Bestellungen" (`bons`), „Produktumsatz" (`formatCents(einnahmenCents)`),
@@ -439,7 +535,7 @@ Bei `infoView === 'statistik'` wird ein Statistik-Panel gerendert:
   im `<head>` gesetzt.
 
 ### service-worker.js
-- **Cache-Name:** `kassensystem-v7`.
+- **Cache-Name:** `kassensystem-v8`.
 - **Installation (gehärtet):** `install` cacht Assets per `Promise.all(ASSETS.map(a => cache.add(a).catch(() => {})))` — ein einzelnes fehlendes Asset bricht den gesamten Install-Vorgang **nicht** mehr ab. `self.skipWaiting()` wird direkt (außerhalb von `waitUntil`) gerufen.
 - **Message-Handler:** Reagiert auf `postMessage('skipWaiting')` von der Seite (Update-Banner) mit `self.skipWaiting()` — aktiviert den wartenden SW sofort.
 - **Aktivierung:** `activate` löscht alte Caches und ruft `self.clients.claim()` innerhalb der `waitUntil`-Promise-Kette — deterministischer Ablauf.
@@ -459,7 +555,7 @@ Bei `infoView === 'statistik'` wird ein Statistik-Panel gerendert:
 
 > **Cache-Busting beim Deployen:** Da `index.html` aggressiv gecacht wird,
 > muss bei Änderungen der **`CACHE_NAME` erhöht** werden (z. B. auf
-> `kassensystem-v8`), damit Geräte die neue Version laden. Sonst sehen bereits
+> `kassensystem-v9`), damit Geräte die neue Version laden. Sonst sehen bereits
 > installierte Geräte weiterhin den alten Stand. **Das ist der häufigste
 > Stolperstein bei Updates.**
 
@@ -467,31 +563,30 @@ Bei `infoView === 'statistik'` wird ein Statistik-Panel gerendert:
 
 ### Produkte/Preise ändern
 → Im Objekt **`PRODUKTE`** in `index.html` editieren. Format einhalten
-(`{ name, preis, pfand }`). Kein Build nötig — Datei speichern, im Browser neu
-laden. **`CACHE_NAME` im Service Worker erhöhen**, wenn die Änderung auf
-installierten Geräten ankommen soll.
+(`{ name, preis, pfand }`). Pfand ist **pro Produkt** — es gibt keinen Kategorie-weiten
+Pfand. Kein Build nötig — Datei speichern, im Browser neu laden.
+**`CACHE_NAME` im Service Worker erhöhen**, wenn die Änderung auf installierten
+Geräten ankommen soll.
 
 ### Den Info-Reiter ändern
-→ `"Info"` ist ein **Info-/Über-Reiter** (`{ info: true }`), keine Produkt­liste.
+→ Info ist jetzt eine **eigene View** (`currentView = 'info'`), kein Eintrag in `PRODUKTE`.
 Titel und Inhalte in der Konstante **`INFO_TAB`** in `index.html` anpassen:
 - `titel` — Überschrift der Info-Box (String).
 - `absaetze` — Array aus Strings (Absatz, `.info-box-text`) und/oder Objekten
   `{ ueberschrift: "…" }` (Zwischenüberschrift, `.info-box-subtitle`).
 
-Farbe des Tabs ggf. in `TAB_CLASS` ergänzen. **Achtung Reihenfolge:** Da
-`INFO_TAB` die Konstante `PFAND_RUECKGABE_EURO` (und andere) referenziert,
-müssen diese **vor** `INFO_TAB` im Quellcode stehen. Soll `"Info"` doch
-Produkte zeigen, stattdessen ein Produkt-Array hinterlegen (dann entfällt die
-Info-Box).
+**Achtung Reihenfolge:** Da `INFO_TAB` die Konstante `PFAND_RUECKGABE_EURO`
+referenziert, muss diese **vor** `INFO_TAB` im Quellcode stehen.
 
-### Neue Kategorie hinzufügen
-1. Schlüssel in `PRODUKTE` ergänzen (Array **oder** Unterblock-Objekt).
-2. In `TAB_CLASS` eine Tab-Farbklasse hinterlegen (sonst neutral).
-3. Bei einem Unterblock-Objekt, das wie „Essen" per Toggle umschalten soll,
-   beachten: Die Umschalt-Logik in `isEssenTab()` / `updateToggleForTab()` /
-   `renderProducts()` ist **fest auf den Schlüssel `'Essen'` und die Blocknamen
-   `'Bratbude'`/`'Crepe-Bude'` verdrahtet**. Für andere Umschalt-Kategorien
-   müsste diese Logik verallgemeinert werden.
+### Neue Produkt-Kategorie hinzufügen
+1. Schlüssel in `PRODUKTE` ergänzen (flaches Array **oder** Objekt mit Unterblöcken).
+2. In `TAB_CLASS` eine Tab-Farbklasse hinterlegen (sonst neutral/grau).
+3. Soll die neue Kategorie ein **Block-Tab** sein (d. h. nur ein Block wird
+   gleichzeitig angezeigt, Auswahl über die Einstellungen), einen Eintrag in
+   **`BLOCK_TABS`** ergänzen mit `label`, `defaultBlock` und `blocks`-Array.
+   `isBlockTab()`, `getActiveBlock()`, `setActiveBlock()`, `renderSettingsView()`
+   und `renderProductTab()` arbeiten generisch gegen `BLOCK_TABS` — keine
+   weiteren Code-Änderungen nötig.
 
 ### Pfandbetrag ändern
 → Der Rückgabe-Wert und die Button-Beschriftung werden beide aus der Konstante
@@ -515,12 +610,19 @@ Pfand zusätzlich in dessen `pfand`-Feld — auch das bei einer Änderung anpass
 ## Wichtige Eigenheiten / Gotchas
 
 - **Warenkorb-Sitzungspersistenz (kein dauerhafter Speicher):** Der Warenkorb wird für die **laufende Sitzung** in `sessionStorage` (Schlüssel `kassenCart`) gesichert und überlebt so App-Wechsel oder kurzes Wegswitchen. Bei vollständigem Schließen / App-Kill ist er weg. Es gibt weiterhin **keine Bon-Historie** — bewusst minimal als reine Kalkulations-/Kassierhilfe. Die **Statistik** (Verkäufe, Umsatz) wird dagegen per `localStorage` (Schlüssel `kassenStatistik`) dauerhaft gespeichert; im privaten Modus (z. B. iOS Safari) fällt die App auf einen In-Memory-Betrieb zurück (kein Absturz, aber die Daten gehen beim Schließen verloren — der Export-Button ermöglicht in diesem Fall die manuelle Sicherung).
-- **Toggle mit Doppelfunktion:** Derselbe Schalter bedeutet je nach Tab „Pfand
-  berechnen" (Bar/Bier) **oder** „Crepe-Bude anzeigen" (Essen; Label ist immer
-  fest dieser Text, unabhängig von der aktuellen Stellung). Häufige
-  Verwirrungsquelle bei Änderungen.
-- **Hartcodierte Essen-Logik:** Schlüssel `'Essen'` und Blocknamen
-  `'Bratbude'`/`'Crepe-Bude'` sind im Code verankert.
+- **Pfand ist rein produktbasiert:** Jedes Produkt trägt seinen eigenen `pfand`-Wert.
+  Es gibt keinen globalen Tab-Pfand mehr. `addToCart(p)` ist die einzige Stelle, die
+  über Pfand entscheidet. Die Einstellungen-View bietet einen globalen „Pfand berechnen"-Toggle,
+  der nachträglich auf den gesamten Warenkorb wirkt (`applyPfandToCart()`).
+- **Block-Tabs über `BLOCK_TABS` generalisiert:** Die frühere hartcodierte Essen-Logik
+  (feste Schlüssel, eigene Toggle-Variable, `isEssenTab()`) wurde durch den
+  generischen `BLOCK_TABS`-Mechanismus ersetzt. Neue Block-Tabs werden ausschließlich
+  über `BLOCK_TABS` konfiguriert — kein weiterer Code-Eingriff nötig. Aktuell
+  registrierte Block-Tabs: **Bier** (Bierwagen / Badewannenrennen) und
+  **Essen** (Bratbude / Crepe-Bude).
+- **`PFAND_RUECKGABE_EURO` vor `INFO_TAB` deklarieren:** `INFO_TAB` referenziert
+  `PFAND_RUECKGABE_EURO` direkt im Initializer. Werden die Konstantenreihenfolgen
+  vertauscht, entsteht ein Temporal-Dead-Zone-ReferenceError.
 - **Geldbeträge in Cent:** Alle internen Berechnungen (Summen, Wechselgeld,
   Schnellbeträge) laufen in **Integer-Cent** (`toCents()`, `formatCents()`,
   `getCurrentTotalCents()`), um Gleitkomma-Rundungsfehler zu vermeiden. Die
