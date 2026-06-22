@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Kasse">
 <meta name="theme-color" content="#16313b">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Kassensystem</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -19,7 +20,10 @@
     --red: #d33a2c;
     --purple: #6a5fc4;
     --green: #6fbf3f;
+    --green-dark: #5da035;
     --grey: #4a4a4a;
+    --essen-btn: #596a72;
+    --essen-btn-active: #4a585f;
     --card-bg: #ffffff;
     --text-light: #f2f2f2;
   }
@@ -49,48 +53,49 @@
   }
   .tab-btn {
     flex: 1;
-    padding: 10px 6px;
+    padding: 14px 10px; /* larger touch target */
     border: none;
-    border-radius: 22px;
-    font-size: 14px;
+    border-radius: 24px;
+    font-size: 15px;
     font-weight: 700;
     color: white;
     background: var(--grey);
     opacity: 0.6;
     cursor: pointer;
     white-space: nowrap;
+    min-width: 70px;
   }
   .tab-btn.active { opacity: 1; box-shadow: 0 0 0 2px rgba(255,255,255,0.5) inset; }
   .tab-bar { background: var(--orange); }
   .tab-bier { background: var(--green); }
   .tab-essen { background: var(--grey); }
-  .tab-tka { background: var(--purple); }
+  .tab-info { background: var(--purple); }
 
   /* Pfand toggle row */
   .pfand-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 4px 16px 10px;
-    font-size: 14px;
+    padding: 6px 16px 10px;
+    font-size: 15px;
     font-weight: 600;
   }
   .switch {
     position: relative;
-    width: 46px;
-    height: 26px;
+    width: 50px;
+    height: 30px;
   }
   .switch input { opacity: 0; width: 0; height: 0; }
   .slider {
     position: absolute; cursor: pointer; inset: 0;
     background-color: #555;
-    border-radius: 26px;
+    border-radius: 30px;
     transition: 0.2s;
   }
   .slider:before {
     position: absolute;
     content: "";
-    height: 20px; width: 20px;
+    height: 24px; width: 24px;
     left: 3px; bottom: 3px;
     background-color: white;
     border-radius: 50%;
@@ -99,31 +104,32 @@
   input:checked + .slider { background-color: var(--orange); }
   input:checked + .slider:before { transform: translateX(20px); }
 
-  /* Main area */
+    /* Main area (Mobile First - Single Column) */
   .main {
     flex: 1;
     display: flex;
-    gap: 12px;
+    flex-direction: column;
+    gap: 16px;
     padding: 0 12px 12px;
     min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .left {
-    flex: 1.3;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    min-height: 0;
+    gap: 14px;
+    flex: none;
   }
   .product-grid {
     display: flex;
     flex-direction: column;
     gap: 14px;
-    overflow-y: auto;
-    padding-right: 2px;
+    flex: none;
   }
   .product-grid-inner {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
   }
   .block-heading {
@@ -135,22 +141,30 @@
     margin-bottom: -4px;
   }
   .product-btn {
-    background: var(--orange);
     border: none;
     color: white;
     font-weight: 700;
-    font-size: 17px;
-    padding: 22px 14px;
+    font-size: 16px;
+    padding: 16px 10px;
     border-radius: 12px;
     text-align: center;
     cursor: pointer;
-    min-height: 76px;
+    min-height: 70px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    background: var(--grey);
   }
-  .product-btn:active { background: var(--orange-dark); }
+  
+  /* Category Colors for Buttons */
+  #productList[data-tab="tab-bar"] .product-btn { background: var(--orange); }
+  #productList[data-tab="tab-bar"] .product-btn:active { background: var(--orange-dark); }
+  #productList[data-tab="tab-bier"] .product-btn { background: var(--green); }
+  #productList[data-tab="tab-bier"] .product-btn:active { background: var(--green-dark); }
+  #productList[data-tab="tab-essen"] .product-btn { background: var(--essen-btn); }
+  #productList[data-tab="tab-essen"] .product-btn:active { background: var(--essen-btn-active); }
+
   .product-sub {
     font-weight: 400;
     font-size: 13px;
@@ -160,7 +174,7 @@
   }
   .empty-hint {
     opacity: 0.6;
-    font-size: 13px;
+    font-size: 14px;
     text-align: center;
     padding: 20px;
     grid-column: 1 / -1;
@@ -182,6 +196,12 @@
     line-height: 1.45;
   }
   .info-box-text:last-child { margin-bottom: 0; }
+  .info-box-subtitle {
+    font-size: 16px;
+    font-weight: 800;
+    margin: 18px 0 8px;
+    color: var(--orange-dark);
+  }
   .pfand-btn-main {
     background: var(--red);
     border: none;
@@ -191,78 +211,91 @@
     padding: 18px;
     border-radius: 12px;
     cursor: pointer;
-    flex-shrink: 0;
+    display: block;
+    width: 100%;
   }
   .pfand-btn-main:active { filter: brightness(0.9); }
 
   .right {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    min-height: 0;
+    display: contents;
   }
   .right h2 {
-    margin: 0;
-    font-size: 17px;
+    display: block;
+    margin: 8px 0 0;
+    font-size: 18px;
   }
   .cart {
-    flex: 1;
     background: var(--card-bg);
     color: #222;
     border-radius: 12px;
-    overflow-y: auto;
     padding: 6px;
+    flex: none;
   }
   .cart-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 8px;
+    padding: 10px 8px;
     border-bottom: 1px solid #eee;
-    font-size: 14px;
+    font-size: 15px;
   }
   .cart-item:last-child { border-bottom: none; }
   .cart-item .ci-name { font-weight: 600; }
-  .cart-item .ci-price { white-space: nowrap; margin-left: 8px; }
+  .cart-item .ci-price { white-space: nowrap; margin-left: 8px; font-weight: 600; }
   .cart-item .ci-remove {
     background: none;
     border: none;
     color: #c0392b;
-    font-size: 18px;
+    font-size: 20px;
     padding: 0 4px;
-    margin-left: 6px;
+    margin-left: 10px;
     cursor: pointer;
   }
-  .cart-pfand-line { font-size: 12px; opacity: 0.65; }
+  .cart-pfand-line { font-size: 13px; opacity: 0.65; }
 
   .neu-btn {
     background: var(--purple);
     border: none;
     color: white;
     font-weight: 700;
-    font-size: 15px;
-    padding: 12px;
-    border-radius: 10px;
+    font-size: 16px;
+    padding: 16px 14px;
+    border-radius: 12px;
     cursor: pointer;
   }
-  .neu-btn:active { filter: brightness(0.9); }
-
   .total-bar {
     background: var(--orange);
     border-radius: 12px;
-    padding: 28px 14px;
+    padding: 20px 14px;
     text-align: center;
-    font-size: 26px;
+    font-size: 24px;
     font-weight: 800;
-    margin-top: 8px;
     cursor: pointer;
-    min-height: 96px;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
   }
   .total-bar:active { filter: brightness(0.95); }
+
+  .cart-controls {
+    display: flex;
+    gap: 10px;
+    position: sticky;
+    bottom: -12px;
+    padding: 12px 0;
+    background: var(--bg);
+    z-index: 10;
+  }
+  .cart-controls .neu-btn {
+    display: block;
+    flex: 0 0 auto;
+    min-width: 90px;
+  }
+  .cart-controls .total-bar {
+    flex: 1;
+    margin-top: 0;
+  }
 
   /* Wechselgeld-Overlay */
   .overlay {
@@ -273,17 +306,17 @@
     align-items: center;
     justify-content: center;
     z-index: 100;
-    padding: 20px;
+    padding: 16px;
   }
   .overlay.hidden { display: none; }
   .overlay-card {
     position: relative;
     background: var(--bg-2);
     border-radius: 18px;
-    padding: 28px;
+    padding: 24px 20px;
     width: 100%;
-    max-width: 420px;
-    max-height: 90vh;
+    max-width: 440px;
+    max-height: 95vh;
     overflow-y: auto;
     box-shadow: 0 10px 40px rgba(0,0,0,0.4);
   }
@@ -305,16 +338,16 @@
   }
   .overlay-input-wrap label {
     display: block;
-    font-size: 14px;
+    font-size: 15px;
     opacity: 0.8;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
   }
   #receivedInput {
     width: 100%;
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 700;
-    padding: 14px;
-    border-radius: 10px;
+    padding: 16px;
+    border-radius: 12px;
     border: none;
     text-align: center;
     background: white;
@@ -322,28 +355,28 @@
   }
   .quick-amounts {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    margin: 14px 0;
+    grid-template-columns: repeat(auto-fit, minmax(75px, 1fr));
+    gap: 10px;
+    margin: 16px 0;
   }
   .quick-amounts button {
     background: var(--grey);
     border: none;
     color: white;
     font-weight: 700;
-    font-size: 14px;
-    padding: 12px 4px;
-    border-radius: 8px;
+    font-size: 15px;
+    padding: 14px 4px;
+    border-radius: 10px;
     cursor: pointer;
   }
   .quick-amounts button:active { filter: brightness(1.3); }
   .change-result {
     text-align: center;
-    font-size: 34px;
+    font-size: 30px;
     font-weight: 800;
     padding: 16px;
     border-radius: 12px;
-    margin: 14px 0;
+    margin: 16px 0;
     background: rgba(255,255,255,0.06);
   }
   .change-result.negative { color: #ff8a7a; }
@@ -351,73 +384,85 @@
   .overlay-buttons {
     display: flex;
     gap: 10px;
-    margin-top: 10px;
+    margin-top: 12px;
   }
   .overlay-buttons button {
     flex: 1;
-    padding: 14px;
+    padding: 16px;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     font-weight: 700;
-    font-size: 15px;
+    font-size: 17px;
     cursor: pointer;
   }
   .btn-close { background: var(--grey); color: white; }
   .btn-done { background: var(--green); color: #1a1a1a; }
   .overlay-close-x {
     position: absolute;
-    top: 14px;
-    right: 14px;
+    top: 12px;
+    right: 12px;
     background: none;
     border: none;
     color: rgba(255,255,255,0.7);
     font-size: 26px;
     line-height: 1;
-    padding: 6px 10px;
+    padding: 8px 12px;
     cursor: pointer;
   }
   .overlay-close-x:active { color: white; }
 
-  /* Settings drawer for editing products */
-  .gear {
-    position: absolute;
-    top: env(safe-area-inset-top);
-    right: 8px;
-    background: none;
-    border: none;
-    color: rgba(255,255,255,0.5);
-    font-size: 18px;
-    padding: 10px;
-    z-index: 5;
-  }
-
-  @media (max-width: 700px) {
+  @media (min-width: 700px), (orientation: landscape) {
     .main {
-      flex-direction: column;
+      flex-direction: row;
+      overflow-y: hidden;
     }
     .left {
-      flex: 1.4;
+      flex: 1.3;
+      overflow-y: auto;
+      padding-right: 8px;
+      min-height: 0;
     }
     .right {
+      display: flex;
       flex: 1;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 0;
+    }
+    .right h2 {
+      margin: 0;
+      font-size: 17px;
+    }
+    .cart {
+      flex: 1;
+      overflow-y: auto;
     }
     .product-grid-inner {
-      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     }
     .product-btn {
-      min-height: 64px;
-      font-size: 15px;
-      padding: 16px 10px;
+      font-size: 17px;
+      padding: 22px 14px;
+      min-height: 76px;
+    }
+    .cart-controls {
+      position: static;
+      padding: 0;
+      background: transparent;
+      flex-direction: column;
+    }
+    .cart-controls .neu-btn {
+      flex: none;
+      width: 100%;
+    }
+    .total-bar {
+      min-height: 96px;
     }
   }
 
-  @media (max-width: 420px) {
-    .product-grid-inner {
+  @media (max-width: 360px) {
+    .quick-amounts {
       grid-template-columns: repeat(2, 1fr);
-    }
-    .tab-btn {
-      font-size: 13px;
-      padding: 9px 4px;
     }
   }
 </style>
@@ -438,14 +483,16 @@
   <div class="main">
     <div class="left">
       <div class="product-grid" id="productList"></div>
-      <button class="pfand-btn-main" id="pfandMinusBtn">Pfand -2€</button>
+      <button class="pfand-btn-main" id="pfandMinusBtn">Pfand zurück -2,00 €</button>
     </div>
 
-    <div class="right">
-      <h2>Einkaufswagen</h2>
+    <div class="right" id="rightCol">
+      <h2>Bestellung</h2>
       <div class="cart" id="cart"></div>
-      <button class="neu-btn" id="neuBtn">Neu</button>
-      <div class="total-bar" id="totalBar">Gesamt: 0.00 €</div>
+      <div class="cart-controls">
+        <button class="neu-btn" id="neuBtn">Leeren</button>
+        <div class="total-bar" id="totalBar">Gesamt: 0,00 €</div>
+      </div>
     </div>
   </div>
 
@@ -456,13 +503,13 @@
     <button class="overlay-close-x" id="overlayCloseX">✕</button>
     <h2>Wechselgeld</h2>
     <div class="overlay-row total">
-      <span>Gesamtbetrag</span>
-      <span id="overlayTotal">0.00 €</span>
+      <span>Zu zahlen</span>
+      <span id="overlayTotal">0,00 €</span>
     </div>
 
     <div class="overlay-input-wrap">
-      <label for="receivedInput">Erhaltener Betrag (€)</label>
-      <input type="number" id="receivedInput" inputmode="decimal" step="0.01" min="0" placeholder="0.00">
+      <label for="receivedInput">Gegeben (€)</label>
+      <input type="text" id="receivedInput" inputmode="decimal" autocomplete="off" placeholder="0,00">
     </div>
 
     <div class="quick-amounts" id="quickAmounts"></div>
@@ -519,23 +566,60 @@ const PRODUKTE = {
       { name: "Zuckerwatte", preis: 2.0, pfand: 0.0 },
     ],
   },
-  // TKA ist KEINE Produktkategorie, sondern ein Info-/Über-Reiter
+  // "Info" ist KEINE Produktkategorie, sondern ein Info-/Über-Reiter
   // (entspricht dem "APP Informationen"-Tab der Android-Vorlage).
   // Inhalt wird über INFO_TAB gesteuert, nicht über Produkte.
-  "TKA": { info: true },
+  "Info": { info: true },
 };
 
-// Inhalt des Info-Reiters (TKA). Überschrift + Textabsätze.
+// Konfigurierbare Konstanten (vermeiden Hartkodierung an mehreren Stellen)
+const PFAND_RUECKGABE_EURO = 2.0;
+const ESSEN_TAB = 'Essen';
+const ESSEN_BLOCK_STANDARD = 'Bratbude';   // Toggle aus
+const ESSEN_BLOCK_TOGGLE = 'Crepe-Bude';   // Toggle an
+
+// Inhalt des Info-Reiters. Überschrift + Inhaltsblöcke.
+// Ein Block ist entweder ein String (Absatz) oder { ueberschrift: "…" }.
 const INFO_TAB = {
-  titel: "App Informationen",
+  titel: "Guttauer Dorf- und Teichfest 2026",
   absaetze: [
-    "Dorffest Guttau 2026",
-    "App zum Berechnen der Getränkepreise inkl. Pfand und Wechselgeld.",
-    "Viel Spaß damit!",
+    "Kassen-App zum schnellen Berechnen der Preise inkl. Pfand und Wechselgeld. Läuft offline – ohne Internet.",
+    { ueberschrift: "Bedienung" },
+    "Oben die Kategorie wählen (Bar, Bier, Essen). Produkte antippen, um sie der Bestellung hinzuzufügen.",
+    "In der Bestellung kann jede Position mit ✕ wieder entfernt werden. „Leeren“ löscht alle Positionen.",
+    "Auf die orange Summen-Leiste tippen, um das Wechselgeld zu berechnen.",
+    { ueberschrift: "Pfand" },
+    "Der Schalter „Pfand berechnen“ legt fest, ob beim Antippen eines Getränks die " +
+      formatEuro(PFAND_RUECKGABE_EURO) + " Pfand mit aufgeschlagen werden.",
+    "Gibt ein Gast Becher zurück, mit „Pfand zurück -" + formatEuro(PFAND_RUECKGABE_EURO) +
+      "“ den Pfand wieder abziehen.",
+    { ueberschrift: "Essen" },
+    "Im Essen-Tab schaltet der Schalter zwischen „Bratbude“ und „Crepe-Bude“ um. Auf Essen wird kein Pfand berechnet.",
+    { ueberschrift: "Wechselgeld" },
+    "Den erhaltenen Betrag eingeben oder einen Schnellbetrag wählen – die App zeigt das Rückgeld an. „Fertig“ schließt die Berechnung und leert die Bestellung.",
+    "Alle Preise sind in 50-Cent-Schritten – kleinere Münzen als 50 Cent werden nicht benötigt.",
   ],
 };
 
-const TAB_CLASS = { "Bar": "tab-bar", "Bier": "tab-bier", "Essen": "tab-essen", "TKA": "tab-tka" };
+// ---- Geld in Cent rechnen (vermeidet Float-Rundungsfehler) ----
+function toCents(value) {
+  return Math.round((Number(value) || 0) * 100);
+}
+// Einheitliche Geldanzeige: deutsches Format mit Komma, 2 Nachkommastellen.
+function formatCents(cents) {
+  return `${(cents / 100).toFixed(2).replace('.', ',')} €`;
+}
+function formatEuro(euros) {
+  return formatCents(toCents(euros));
+}
+function getCurrentTotalCents() {
+  return cart.reduce(
+    (sum, item) => sum + toCents(item.preis) + toCents(item.pfand || 0),
+    0
+  );
+}
+
+const TAB_CLASS = { "Bar": "tab-bar", "Bier": "tab-bier", "Essen": "tab-essen", "Info": "tab-info" };
 
 let currentTab = Object.keys(PRODUKTE)[0];
 let cart = []; // { name, preis, pfand, isPfandAbzug }
@@ -550,7 +634,7 @@ const pfandToggle = document.getElementById('pfandToggle');
 const pfandRowLabel = document.getElementById('pfandRowLabel');
 
 function isEssenTab() {
-  return currentTab === 'Essen' && !Array.isArray(PRODUKTE['Essen']);
+  return currentTab === ESSEN_TAB && !Array.isArray(PRODUKTE[ESSEN_TAB]);
 }
 
 function isInfoTab() {
@@ -559,7 +643,7 @@ function isInfoTab() {
 }
 
 function updateToggleForTab() {
-  // Auf dem Info-Reiter (TKA) hat der Toggle keine Funktion → ganze Zeile ausblenden.
+  // Auf dem Info-Reiter hat der Toggle keine Funktion → ganze Zeile ausblenden.
   const pfandRow = document.getElementById('pfandRow');
   if (isInfoTab()) {
     pfandRow.style.display = 'none';
@@ -581,45 +665,70 @@ function updatePfandButtonVisibility() {
   pfandBtn.style.display = (isEssenTab() || isInfoTab()) ? 'none' : '';
 }
 
+function updateLayoutForTab() {
+  // Auf dem Info-Reiter nur die Info-Box zeigen: rechte Spalte
+  // (Einkaufswagen, „Neu“, Gesamt) ausblenden, linke Spalte voll nutzen.
+  const rightCol = document.getElementById('rightCol');
+  const leftCol = document.querySelector('.left');
+  if (isInfoTab()) {
+    rightCol.style.display = 'none';
+    leftCol.style.flex = '1 1 100%';
+  } else {
+    rightCol.style.display = '';
+    leftCol.style.flex = '';
+  }
+}
+
 function renderTabs() {
   tabsEl.innerHTML = '';
   Object.keys(PRODUKTE).forEach(tab => {
     const btn = document.createElement('button');
     btn.className = 'tab-btn ' + (TAB_CLASS[tab] || '') + (tab === currentTab ? ' active' : '');
     btn.textContent = tab;
-    btn.onclick = () => { currentTab = tab; renderTabs(); updateToggleForTab(); renderProducts(); updatePfandButtonVisibility(); };
+    btn.onclick = () => { currentTab = tab; renderTabs(); updateToggleForTab(); renderProducts(); updatePfandButtonVisibility(); updateLayoutForTab(); };
     tabsEl.appendChild(btn);
   });
 }
 
 function renderProducts() {
   productListEl.innerHTML = '';
+  productListEl.setAttribute('data-tab', TAB_CLASS[currentTab] || '');
   const data = PRODUKTE[currentTab];
 
   function makeButton(p, showPfand) {
     const btn = document.createElement('button');
     btn.className = 'product-btn';
-    const pfandText = (showPfand && p.pfand > 0)
-      ? `<span class="product-sub">${p.preis.toFixed(2)} € + ${p.pfand.toFixed(2)} € Pfand</span>`
-      : `<span class="product-sub">${p.preis.toFixed(2)} €</span>`;
-    btn.innerHTML = `${p.name}${pfandText}`;
-    btn.onclick = () => addToCart(p);
+    btn.appendChild(document.createTextNode(p.name));
+    const sub = document.createElement('span');
+    sub.className = 'product-sub';
+    sub.textContent = (showPfand && p.pfand > 0)
+      ? `${formatEuro(p.preis)} + ${formatEuro(p.pfand)} Pfand`
+      : `${formatEuro(p.preis)}`;
+    btn.appendChild(sub);
+    btn.onclick = () => addToCart(p, showPfand);
     return btn;
   }
 
   if (isInfoTab()) {
-    // Info-/Über-Reiter (TKA): zeigt eine Info-Box statt Produkten.
+    // Info-/Über-Reiter: zeigt eine Info-Box statt Produkten.
     const box = document.createElement('div');
     box.className = 'info-box';
     const h = document.createElement('div');
     h.className = 'info-box-title';
     h.textContent = INFO_TAB.titel;
     box.appendChild(h);
-    INFO_TAB.absaetze.forEach(text => {
-      const p = document.createElement('p');
-      p.className = 'info-box-text';
-      p.textContent = text;
-      box.appendChild(p);
+    INFO_TAB.absaetze.forEach(block => {
+      if (block && typeof block === 'object' && block.ueberschrift) {
+        const sub = document.createElement('div');
+        sub.className = 'info-box-subtitle';
+        sub.textContent = block.ueberschrift;
+        box.appendChild(sub);
+      } else {
+        const p = document.createElement('p');
+        p.className = 'info-box-text';
+        p.textContent = block;
+        box.appendChild(p);
+      }
     });
     productListEl.appendChild(box);
     return;
@@ -639,7 +748,7 @@ function renderProducts() {
     productListEl.appendChild(grid);
   } else if (isEssenTab()) {
     // Essen: Toggle steuert, welcher Block angezeigt wird (kein Pfand bei Essen)
-    const blockName = essenZeigeCrepeBude ? 'Crepe-Bude' : 'Bratbude';
+    const blockName = essenZeigeCrepeBude ? ESSEN_BLOCK_TOGGLE : ESSEN_BLOCK_STANDARD;
     const heading = document.createElement('div');
     heading.className = 'block-heading';
     heading.textContent = blockName;
@@ -665,13 +774,13 @@ function renderProducts() {
   }
 }
 
-function addToCart(p) {
-  cart.push({ name: p.name, preis: p.preis, pfand: pfandBerechnen ? p.pfand : 0 });
+function addToCart(p, includePfand = pfandBerechnen) {
+  cart.push({ name: p.name, preis: p.preis, pfand: includePfand ? p.pfand : 0 });
   renderCart();
 }
 
 function addPfandAbzug() {
-  cart.push({ name: "Pfand-Rückgabe", preis: -2.0, pfand: 0, isPfandAbzug: true });
+  cart.push({ name: "Pfand-Rückgabe", preis: -PFAND_RUECKGABE_EURO, pfand: 0, isPfandAbzug: true });
   renderCart();
 }
 
@@ -685,31 +794,42 @@ function renderCart() {
   cart.forEach((item, idx) => {
     const row = document.createElement('div');
     row.className = 'cart-item';
-    const lineTotal = item.preis + (item.pfand || 0);
-    const pfandLine = item.pfand > 0 ? `<div class="cart-pfand-line">inkl. ${item.pfand.toFixed(2)} € Pfand</div>` : '';
-    row.innerHTML = `
-      <div>
-        <div class="ci-name">${item.name}</div>
-        ${pfandLine}
-      </div>
-      <div style="display:flex; align-items:center;">
-        <span class="ci-price">${lineTotal.toFixed(2)} €</span>
-        <button class="ci-remove" aria-label="Entfernen">✕</button>
-      </div>
-    `;
-    row.querySelector('.ci-remove').onclick = () => removeItem(idx);
+
+    const left = document.createElement('div');
+    const name = document.createElement('div');
+    name.className = 'ci-name';
+    name.textContent = item.name;
+    left.appendChild(name);
+    if (item.pfand > 0) {
+      const pf = document.createElement('div');
+      pf.className = 'cart-pfand-line';
+      pf.textContent = `inkl. ${formatEuro(item.pfand)} Pfand`;
+      left.appendChild(pf);
+    }
+
+    const right = document.createElement('div');
+    right.style.display = 'flex';
+    right.style.alignItems = 'center';
+    const price = document.createElement('span');
+    price.className = 'ci-price';
+    price.textContent = formatCents(toCents(item.preis) + toCents(item.pfand || 0));
+    const rm = document.createElement('button');
+    rm.className = 'ci-remove';
+    rm.setAttribute('aria-label', 'Entfernen');
+    rm.textContent = '✕';
+    rm.onclick = () => removeItem(idx);
+    right.appendChild(price);
+    right.appendChild(rm);
+
+    row.appendChild(left);
+    row.appendChild(right);
     cartEl.appendChild(row);
   });
   updateTotal();
 }
 
 function updateTotal() {
-  const total = cart.reduce((sum, item) => sum + item.preis + (item.pfand || 0), 0);
-  totalBarEl.textContent = `Gesamt: ${total.toFixed(2)} €`;
-}
-
-function getCurrentTotal() {
-  return cart.reduce((sum, item) => sum + item.preis + (item.pfand || 0), 0);
+  totalBarEl.textContent = `Gesamt: ${formatCents(getCurrentTotalCents())}`;
 }
 
 // ---- Wechselgeld-Overlay ----
@@ -720,32 +840,40 @@ const changeResultEl = document.getElementById('changeResult');
 const quickAmountsEl = document.getElementById('quickAmounts');
 
 function openChangeOverlay() {
-  const total = getCurrentTotal();
-  overlayTotalEl.textContent = `${total.toFixed(2)} €`;
+  const totalCents = getCurrentTotalCents();
+  if (totalCents <= 0) return; // Kein Wechselgeld bei Betrag 0 oder Auszahlung
+
+  overlayTotalEl.textContent = formatCents(totalCents);
   receivedInput.value = '';
   changeResultEl.textContent = 'Betrag eingeben…';
   changeResultEl.className = 'change-result';
 
-  // sinnvolle Schnellbeträge: passende Rundungen + feste gängige Scheine
-  const dynamic = [];
-  [Math.ceil(total), Math.ceil(total / 5) * 5, Math.ceil(total / 10) * 10, Math.ceil(total / 20) * 20]
-    .forEach(v => { if (v > 0 && !dynamic.includes(v)) dynamic.push(v); });
+  // Realistische "Erhalten"-Vorschläge auf Basis echter deutscher
+  // Münz-/Scheinwerte (ab 0,50 €). Idee: Was könnte der Gast gegeben haben?
+  // -> der exakte Betrag, plus Aufrundung auf das nächste Vielfache jeder
+  //    Stückelung (0,50/1/2/5/10/20 €) und jede Stückelung selbst, sofern
+  //    sie >= Gesamtbetrag ist. So entstehen v.a. bei kleinen Beträgen
+  //    sinnvolle Vorschläge (z.B. 3,50 € -> 4 €, 5 €).
+  const DENOMS = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000]; // Cent
+  const ceilTo = (cents, step) => Math.ceil(cents / step) * step;
 
-  const fixed = [5, 10, 50].filter(v => v >= total);
-  const allAmounts = [...dynamic, ...fixed].filter(v => v > 0);
-  // Duplikate entfernen, Reihenfolge beibehalten
-  const seen = new Set();
-  const finalAmounts = allAmounts.filter(v => {
-    if (seen.has(v)) return false;
-    seen.add(v);
-    return true;
+  const candidateSet = new Set();
+  candidateSet.add(totalCents); // exakt passend
+  DENOMS.forEach(d => {
+    candidateSet.add(ceilTo(totalCents, d)); // auf nächstes Vielfaches aufrunden
+    if (d >= totalCents) candidateSet.add(d); // einzelne Münze/Schein, die reicht
   });
 
+  const finalAmounts = [...candidateSet]
+    .filter(c => c >= totalCents && c > 0)
+    .sort((a, b) => a - b)
+    .slice(0, 8); // die kleinsten (= wahrscheinlichsten) Vorschläge zuerst
+
   quickAmountsEl.innerHTML = '';
-  finalAmounts.forEach(v => {
+  finalAmounts.forEach(cents => {
     const b = document.createElement('button');
-    b.textContent = `${v.toFixed(2)} €`;
-    b.onclick = () => { receivedInput.value = v.toFixed(2); calcChange(); };
+    b.textContent = formatCents(cents);
+    b.onclick = () => { receivedInput.value = (cents / 100).toFixed(2).replace('.', ','); calcChange(); };
     quickAmountsEl.appendChild(b);
   });
 
@@ -757,20 +885,28 @@ function closeChangeOverlay() {
   changeOverlay.classList.add('hidden');
 }
 
+function parseEuroCents(value) {
+  const raw = value.trim().replace(',', '.');
+  if (raw === '') return null;
+  const amount = Number(raw);
+  if (!Number.isFinite(amount) || amount < 0) return null;
+  return Math.round(amount * 100);
+}
+
 function calcChange() {
-  const total = getCurrentTotal();
-  const received = parseFloat(receivedInput.value.replace(',', '.'));
-  if (isNaN(received)) {
+  const totalCents = getCurrentTotalCents();
+  const receivedCents = parseEuroCents(receivedInput.value);
+  if (receivedCents === null) {
     changeResultEl.textContent = 'Betrag eingeben…';
     changeResultEl.className = 'change-result';
     return;
   }
-  const change = received - total;
-  if (change < 0) {
-    changeResultEl.textContent = `Fehlt: ${Math.abs(change).toFixed(2)} €`;
+  const changeCents = receivedCents - totalCents;
+  if (changeCents < 0) {
+    changeResultEl.textContent = `Fehlt: ${formatCents(Math.abs(changeCents))}`;
     changeResultEl.className = 'change-result negative';
   } else {
-    changeResultEl.textContent = `Rückgeld: ${change.toFixed(2)} €`;
+    changeResultEl.textContent = `Rückgeld: ${formatCents(changeCents)}`;
     changeResultEl.className = 'change-result positive';
   }
 }
@@ -791,9 +927,11 @@ function resetCart() {
   renderCart();
 }
 
-document.getElementById('pfandMinusBtn').onclick = addPfandAbzug;
+const pfandMinusBtn = document.getElementById('pfandMinusBtn');
+pfandMinusBtn.textContent = `Pfand zurück -${formatEuro(PFAND_RUECKGABE_EURO)}`;
+pfandMinusBtn.onclick = addPfandAbzug;
 document.getElementById('neuBtn').onclick = () => {
-  if (cart.length === 0 || confirm('Einkaufswagen wirklich leeren?')) resetCart();
+  if (cart.length === 0 || confirm('Bestellung wirklich leeren?')) resetCart();
 };
 pfandToggle.onchange = () => {
   if (isEssenTab()) {
@@ -807,6 +945,7 @@ pfandToggle.onchange = () => {
 renderTabs();
 updateToggleForTab();
 updatePfandButtonVisibility();
+updateLayoutForTab();
 renderProducts();
 renderCart();
 
