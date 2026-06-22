@@ -34,10 +34,10 @@ dorffest-kassen-app/
 ├── index.html          # Komplette App: Markup, CSS (<style>) und Logik (<script>)
 ├── manifest.json       # PWA-Manifest (Name, Icons, Farben, Anzeige-Modus)
 ├── service-worker.js   # Offline-Caching (Cache-First-Strategie)
-├── icon-192.png        # App-Icon 192×192 (Homescreen / Manifest)
-├── icon-512.png        # App-Icon 512×512 (Splash / Manifest)
-├── wappen-192.png      # Guttauer Wappen 192×192 (Info-Bereich / Emblem)
-├── wappen-512.png      # Guttauer Wappen 512×512 (Info-Bereich / Emblem)
+├── icon-192.png        # App-Icon 192×192 (Homescreen / Manifest) — Guttauer Wappen mit rotem €-Overlay, full-bleed dunkelteal, lossless-optimiert (~11,7 KB)
+├── icon-512.png        # App-Icon 512×512 (Splash / Manifest) — gleiche Grafik, lossless-optimiert (~41 KB); full-bleed → safe für Android maskable
+├── wappen-192.png      # Guttauer Wappen 192×192 (Info-Bereich / Emblem) — lossless-optimiert (~9,4 KB)
+├── wappen-512.png      # Guttauer Wappen 512×512 (Info-Bereich / Emblem) — lossless-optimiert (~33 KB)
 └── AGENTS.md           # Diese Datei
 ```
 
@@ -55,24 +55,26 @@ JavaScript-Logik sind in dieser einen Datei vereint. Es gibt keine separaten
     - **`ℹ`** (`aria-label="Info"`, Klassen `tab-btn tab-icon`) — öffnet die Info-View.
     - **`⚙`** (`aria-label="Einstellungen"`, Klassen `tab-btn tab-icon`) — öffnet die Einstellungen-View.
   - Die Icon-Buttons sind **lila** (`color: var(--purple)`); wenn ihre View aktiv ist, erhalten sie einen ausgefüllten lila Hintergrund (`background: var(--purple); color: #ffffff`) — entspricht einem klaren iOS-Standard-Active-Zustand.
-  - Der jeweils aktive Tab/Icon erhält die Klasse `active`.
+  - Der jeweils aktive Tab/Icon erhält die Klasse `active`. `renderTabs()` setzt `active` auf einem Produkt-Tab nur, wenn `currentView === 'products'` — in der Info- oder Einstellungen-View ist kein Produkt-Tab hervorgehoben; stattdessen erhält das zugehörige Icon-Btn die Klasse.
+  - Inaktive `.tab-btn` verwenden **kein** `opacity: 0.5` (würde Kontrast verletzen); stattdessen wird ein eingeschobener `box-shadow` mit volldeckendem weißem Text eingesetzt (≥ 4,5 : 1 in beiden Themes).
   - Eine separate Toggle-Zeile (`.pfand-row`) gibt es **nicht mehr** — alle Umschalter wurden in die Einstellungen-View verschoben.
 - **`.main`** — enthält `.left` und `.right#rightCol`. Layout ist **mobile-first zweispaltig** (auch im Hochformat) — siehe [Layout / Responsivität](#layout--responsivität).
   - **`.left`** → `#productList` (Produkt-Buttons, Info-Box oder Einstellungen-Box) + `#pfandMinusBtn` (Pfand-Rückgabe-Button).
   - **`.right`** (id=`rightCol`) → `<h2>Bestellung</h2>` + `#cart` (Bestellungs-Liste) + **`.cart-controls`** (enthält `#neuBtn` „Leeren" und `#totalBar` Gesamt-Leiste, öffnet Wechselgeld). Wird in der Info-View und der Einstellungen-View vollständig ausgeblendet (`.left` expandiert dann auf volle Breite).
-- **`#changeOverlay`** — Modal für die Wechselgeld-Berechnung (`role="dialog"`, `aria-modal="true"`, `aria-labelledby="changeOverlayTitle"`). Enthält die benannten Elemente **`#overlayTotalLabel`** (Label-Span in der `.overlay-row.total`, wechselt zwischen „Zu zahlen" und „Auszahlung an Kunde") und **`#overlayInputWrap`** (Wrapper um das Eingabefeld, wird bei negativem Gesamtbetrag ausgeblendet).
-- **`#clearOverlay`** — Bestätigungs-Modal fürs Leeren der Bestellung (`role="dialog"`, `aria-modal="true"`, `aria-labelledby="clearOverlayTitle"`). Gleiche CSS-Klassen (`.overlay`/`.overlay-card`/`.overlay-close-x`/`.overlay-buttons`) wie das Wechselgeld-Overlay. Enthält: `<h2 id="clearOverlayTitle">Bestellung leeren?</h2>`, einen Absatz `.overlay-confirm-text` „Möchtest du die komplette Bestellung wirklich leeren?", einen **Warnhinweis-Absatz** `.overlay-confirm-hint` „Hinweis: Die Bestellung wird **nicht** als Verkauf gezählt. Zum Abschließen „Fertig" im Wechselgeld-Dialog nutzen." (roter Hintergrund, Klasse `.overlay-confirm-hint`), die Buttons `#clearCancelBtn` „Abbrechen" (`.btn-close`) und `#clearConfirmBtn` „Leeren" (`.btn-danger`) sowie `#clearCloseX` (✕).
-- **`#statsResetOverlay`** — Bestätigungs-Modal fürs Zurücksetzen der Statistik (gleiche Overlay-Klassen, `role="dialog"`, `aria-modal="true"`, `aria-labelledby="statsResetOverlayTitle"`). Enthält: `<h2>Statistik zurücksetzen?</h2>`, „Abbrechen" (`.btn-close`) und „Zurücksetzen" (`.btn-danger`). Kein nativer `confirm()`-Aufruf.
-- **`#statsExportOverlay`** — Modal für den Statistik-Export (`role="dialog"`, `aria-modal="true"`, `aria-labelledby="statsExportOverlayTitle"`). Wird beim Tippen auf „Export" **immer** geöffnet (kein stiller Clipboard-Versuch vorab). Zeigt den Export-Text in einem readonly `<textarea>` sowie den Hinweis „Zum Sichern markieren & kopieren (z. B. in Notizen)". Der Button **`#statsExportCopyBtn`** „Kopieren" schreibt den Inhalt via `navigator.clipboard.writeText` in die Zwischenablage (Fallback: `select` + `document.execCommand('copy')` + `setSelectionRange(0, 99999)` für volle iOS-Auswahl); bei Fehlschlag beider Wege Feedback „Bitte manuell kopieren" statt stiller Fehler; zeigt sonst kurz „Kopiert!". „Schließen", ✕ und Klick auf den Hintergrund schließen das Overlay.
+- **`#changeOverlay`** — Modal für die Wechselgeld-Berechnung (`role="dialog"`, `aria-modal="true"`, `aria-labelledby="changeOverlayTitle"`). Enthält die benannten Elemente **`#overlayTotalLabel`** (Label-Span in der `.overlay-row.total`, wechselt zwischen „Zu zahlen" und „Auszahlung an Kunde") und **`#overlayInputWrap`** (Wrapper um das Eingabefeld, wird bei negativem Gesamtbetrag ausgeblendet). Implementiert einen **Focus-Trap** (Tab/Shift+Tab kreist innerhalb der `.overlay-card`) und gibt den Fokus beim Schließen an das auslösende Element zurück (`overlayReturnFocusEl`). Der ✕-Button hat `aria-label="Schließen"`.
+- **`#clearOverlay`** — Bestätigungs-Modal fürs Leeren der Bestellung (`role="dialog"`, `aria-modal="true"`, `aria-labelledby="clearOverlayTitle"`). Gleiche CSS-Klassen (`.overlay`/`.overlay-card`/`.overlay-close-x`/`.overlay-buttons`) wie das Wechselgeld-Overlay. Enthält: `<h2 id="clearOverlayTitle">Bestellung leeren?</h2>`, einen Absatz `.overlay-confirm-text` „Möchtest du die komplette Bestellung wirklich leeren?", einen **Warnhinweis-Absatz** `.overlay-confirm-hint` „Hinweis: Die Bestellung wird **nicht** als Verkauf gezählt. Zum Abschließen „Fertig" im Wechselgeld-Dialog nutzen." (roter Hintergrund, Klasse `.overlay-confirm-hint`), die Buttons `#clearCancelBtn` „Abbrechen" (`.btn-close`) und `#clearConfirmBtn` „Leeren" (`.btn-danger`) sowie `#clearCloseX` (✕, `aria-label="Schließen"`). Implementiert Focus-Trap und Fokus-Rückgabe.
+- **`#statsResetOverlay`** — Bestätigungs-Modal fürs Zurücksetzen der Statistik (gleiche Overlay-Klassen, `role="dialog"`, `aria-modal="true"`, `aria-labelledby="statsResetOverlayTitle"`). Enthält: `<h2>Statistik zurücksetzen?</h2>`, „Abbrechen" (`.btn-close`) und „Zurücksetzen" (`.btn-danger`). ✕-Button hat `aria-label="Schließen"`. Kein nativer `confirm()`-Aufruf. Implementiert Focus-Trap und Fokus-Rückgabe.
+- **`#statsExportOverlay`** — Modal für den Statistik-Export (`role="dialog"`, `aria-modal="true"`, `aria-labelledby="statsExportOverlayTitle"`). Wird beim Tippen auf „Export" **immer** geöffnet (kein stiller Clipboard-Versuch vorab). Zeigt den Export-Text in einem readonly `<textarea>` sowie den Hinweis „Zum Sichern markieren & kopieren (z. B. in Notizen)". Der Button **`#statsExportCopyBtn`** „Kopieren" schreibt den Inhalt via `navigator.clipboard.writeText` in die Zwischenablage (Fallback: `select` + `document.execCommand('copy')` + `setSelectionRange(0, 99999)` für volle iOS-Auswahl); bei Fehlschlag beider Wege Feedback „Bitte manuell kopieren" statt stiller Fehler; zeigt sonst kurz „Kopiert!". ✕-Button hat `aria-label="Schließen"`. „Schließen", ✕ und Klick auf den Hintergrund schließen das Overlay. Implementiert Focus-Trap und Fokus-Rückgabe.
+- **Overlay `z-index`:** Alle `.overlay`-Elemente verwenden `z-index: 2000` — damit liegen Modals stets über der Undo-Snackbar (`z-index: 1000`) und dem Update-Banner (`z-index: 1000`).
 - **`.sub-nav`** (innerhalb der Info-View) — kleine Unter-Navigation mit zwei `.sub-nav-btn`-Buttons („Info" / „Statistik"), die zwischen den beiden Sub-Views der Info-View umschaltet. Nur in der Info-View sichtbar.
-- **`.wappen-emblem`** — das Guttauer Wappen, eingefügt durch `renderInfoView()` als `<img class="wappen-emblem" src="wappen-512.png">`. Wird oben in der Info-Box platziert (über dem Titel), ist ~120 px hoch auf Smartphones / ~140 px auf breiten Bildschirmen, zentriert, mit CSS-Drop-Shadow. Funktioniert in beiden Farbthemen. Die PNG-Datei `wappen-512.png` ist im Service-Worker-Cache (`ASSETS`) hinterlegt — daher offline verfügbar.
+- **`.wappen-emblem`** — das Guttauer Wappen, eingefügt durch `renderInfoView()` als `<img class="wappen-emblem" src="wappen-512.png" onerror="this.style.display='none'">`. Wird oben in der Info-Box platziert (über dem Titel), ist ~120 px hoch auf Smartphones / ~140 px auf breiten Bildschirmen, zentriert, mit CSS-Drop-Shadow. Funktioniert in beiden Farbthemen. Der `onerror`-Handler blendet das Bild aus, wenn die PNG-Datei nicht geladen werden kann. Die PNG-Datei `wappen-512.png` ist im Service-Worker-Cache (`ASSETS`) hinterlegt — daher offline verfügbar.
 - **`<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,…">`** (im `<head>`) — SVG-Favicon: vereinfachtes Schild (gelb `#FBE324`, dunkle Kontur `#16313B`) mit einem fetten „€"-Overlay, das an das Guttauer Wappen erinnert und bei kleinen Größen lesbar bleibt. Das `apple-touch-icon` (icon-192.png) bleibt für den iOS-Homescreen erhalten.
-- **`.update-banner`** — Fix-positioniertes Banner (unten, `z-index: 1000`), das erscheint, wenn der Service Worker eine neue Version gefunden hat. Zeigt „Neue Version verfügbar." und einen Button „Neu laden", der `postMessage('skipWaiting')` an den wartenden SW sendet und danach die Seite neu lädt. Wird per `showUpdateBanner()` aus dem `updatefound`-Listener erzeugt; ein `controllerchange`-Listener lädt die Seite einmalig neu, sobald der neue SW die Kontrolle übernimmt.
-- **`.undo-snackbar`** (`#undoSnackbar`) — Fix-positionierte Snackbar (über der Summen-Leiste), die nach dem Entfernen einer Position angezeigt wird. Zeigt „„Name" entfernt" und einen „Rückgängig"-Button, der die Position an ihrer ursprünglichen Stelle wiederherstellt. Verschwindet nach ~4,5 s automatisch. Wird von `showUndoSnackbar(removedItem, originalIndex)` erzeugt.
+- **`.update-banner`** — Fix-positioniertes Banner (unten, `z-index: 1000`), das erscheint, wenn der Service Worker eine neue Version gefunden hat. Zeigt „Neue Version verfügbar." und einen Button „Neu laden", der `postMessage('skipWaiting')` an den wartenden SW sendet und danach die Seite neu lädt. Wird per `showUpdateBanner()` aus dem `updatefound`-Listener erzeugt; ein `controllerchange`-Listener lädt die Seite einmalig neu, sobald der neue SW die Kontrolle übernimmt. Die Seite merkt sich `hadController = !!navigator.serviceWorker.controller` vor dem Laden; der `controllerchange`-Listener gibt bei Erstinstallation (kein vorheriger Controller) frühzeitig zurück — so wird bei der allerersten Installation kein sofortiges Reload ausgelöst.
+- **`.undo-snackbar`** (`#undoSnackbar`) — Fix-positionierte Snackbar (`role="status"`, `aria-live="polite"`, über der Summen-Leiste), die nach dem Entfernen einer Position angezeigt wird. Zeigt „„Name" entfernt" und einen „Rückgängig"-Button, der die Position an ihrer ursprünglichen Stelle wiederherstellt. Verschwindet nach ~4,5 s automatisch. Wird von `showUndoSnackbar(removedItem, originalIndex)` erzeugt; ruft zunächst `dismissUndoSnackbar()` auf, um eine ggf. noch sichtbare vorherige Snackbar zu entfernen.
 
 #### Einstellungen-View (`.settings-box`)
 
-Wird durch Klick auf das ⚙-Icon geöffnet (`currentView = 'settings'`). Aufgebaut von `renderSettingsView()` in `#productList`. Alle Toggle-Zeilen werden über den internen Helfer **`addToggleRow(labelText, checked, onChange, hint)`** erzeugt: Label links (`.settings-label`, `flex: 1`), Toggle-Switch rechts (`.switch`/`.slider`) — iOS-Standard-Layout (`justify-content: space-between`). Der optionale `hint`-Parameter fügt eine `.settings-hint`-Zeile darunter ein.
+Wird durch Klick auf das ⚙-Icon geöffnet (`currentView = 'settings'`). Aufgebaut von `renderSettingsView()` in `#productList`. Alle Toggle-Zeilen werden über den internen Helfer **`addToggleRow(labelText, checked, onChange, hint, id)`** erzeugt: Label links (`.settings-label`, `flex: 1`), Toggle-Switch rechts (`.switch`/`.slider`) — iOS-Standard-Layout (`justify-content: space-between`). Der optionale `hint`-Parameter fügt eine `.settings-hint`-Zeile darunter ein. Der `id`-Parameter liefert einen deterministischen Label-ID-Prefix (`'settings-label-' + id`); Aufrufer übergeben `'theme'` bzw. `'pfand'` — kein `Math.random()` mehr.
 
 Gruppen in der Einstellungen-View:
 
@@ -228,6 +230,7 @@ wird in `activeBlock` gespeichert.
 | `activeBlock`  | je Block-Tab der aktuell angezeigte Unterblock, z. B. `{ Bier: 'Bierwagen', Essen: 'Bratbude' }` |
 | `infoView`     | aktive Sub-View der Info-View: `'info'` (Standard) oder `'statistik'`                       |
 | `currentTheme` | aktives Farbthema: `'dark'` (Standard) \| `'light'`; gesetzt durch `loadThemePreference()` beim Start |
+| `changeMode`   | aktueller Modus des Wechselgeld-Overlays: `'positive'` \| `'zero'` \| `'payout'`; wird in `openChangeOverlay()` gesetzt; der „Fertig"-Guard prüft `changeMode === 'positive'` |
 
 Konstante **`THEME_STORAGE_KEY = 'kassenTheme'`** — `localStorage`-Schlüssel für die Theme-Präferenz.
 
@@ -266,7 +269,7 @@ ausgeblendet, `.left` nimmt die volle Breite ein.
 
 - Zeigt eine Sub-Navigation (`.sub-nav`) mit zwei `.sub-nav-btn`-Buttons „Info" und
   „Statistik". Klick setzt `infoView` und rendert neu.
-- Bei `infoView === 'info'`: eine `.info-box` aus `INFO_TAB` mit dem **Guttauer Wappen** (`.wappen-emblem`) ganz oben — als `<img src="wappen-512.png">` — sowie Titel
+- Bei `infoView === 'info'`: eine `.info-box` aus `INFO_TAB` mit dem **Guttauer Wappen** (`.wappen-emblem`) ganz oben — als `<img src="wappen-512.png" onerror="this.style.display='none'">` — sowie Titel
   (`.info-box-title`), Absätzen (`.info-box-text`) und
   Zwischenüberschriften (`.info-box-subtitle`).
 - Bei `infoView === 'statistik'`: das Statistik-Panel (siehe [Statistik](#statistik)).
@@ -315,7 +318,9 @@ Das Layout ist **mobile-first zweispaltig** — auch im Hochformat:
   `.product-btn` hat `height: 100%` — alle Produkt-Buttons in einem Grid sind
   gleich hoch (bestimmt durch den höchsten Button). `min-height` dient als Untergrenze.
 
-- **Hell/Dunkel-Theme und WCAG-AA-Farben:** Alle Farben werden über CSS-Variablen gesteuert, die pro Theme definiert sind: `:root, :root[data-theme="dark"] { … }` (dunkle Palette: `--bg #10181b`, `--card-bg #1c272b`, `--text #f2f2f7` u. a.) und `:root[data-theme="light"] { … }` (helle Palette: `--bg #f2f2f7`, `--card-bg #ffffff`, `--text #111111` u. a.). Beide Themes sind WCAG-AA-konform — dunkel für den Barbetrieb am Abend, hell für den Außeneinsatz in der Sonne. Kategorie-Button-Farben (Bar: Orange-Familie, Bier: Grün-Familie, Essen: Grau/Blau-Familie) sind je Theme fein abgestimmt; die gemeinsamen CSS-Variablen `--orange`/`--green`/`--purple` werden von Toggle, Summen-Leiste, `.btn-done` und `.change-result.positive` genutzt.
+- **Hell/Dunkel-Theme und WCAG-AA-Farben:** Alle Farben werden über CSS-Variablen gesteuert, die pro Theme definiert sind: `:root, :root[data-theme="dark"] { … }` (dunkle Palette: `--bg #10181b`, `--card-bg #1c272b`, `--text #f2f2f7` u. a.) und `:root[data-theme="light"] { … }` (helle Palette: `--bg #f2f2f7`, `--card-bg #ffffff`, `--text #111111` u. a.). Beide Themes sind WCAG-AA-konform — dunkel für den Barbetrieb am Abend, hell für den Außeneinsatz in der Sonne. Kategorie-Button-Farben (Bar: Orange-Familie, Bier: Grün-Familie, Essen: Grau/Blau-Familie) sind je Theme fein abgestimmt; die gemeinsamen CSS-Variablen `--orange`/`--green`/`--purple` werden von Toggle, Summen-Leiste, `.btn-done` und `.change-result.positive` genutzt. Pro Theme sind zusätzlich Tönung-Variablen definiert: `--green-tint`, `--green-border`, `--red-tint`, `--red-border`, `--orange-tint` — sie ersetzen zuvor hartcodierte `rgba`-Werte in `.stat-card-full`, `.stat-card-negative`, `.change-result.positive/.negative`, `.overlay-confirm-hint` und `.stats-reminder`, sodass alle Farbzustände in beiden Themes lesbar sind.
+
+- **Theme-Wechsel (v10):** `applyTheme()` erzwingt nach dem Setzen von `data-theme` einen synchronen Reflow (`void document.documentElement.offsetHeight`), damit der Theme-Wechsel sofort neu gezeichnet wird. Im `<head>` stehen zwei media-gesteuerte `<meta name="theme-color">`-Tags (dunkel `#10181b` für `prefers-color-scheme: dark`, hell `#f2f2f7` für `light`); `applyTheme()` aktualisiert sie via `querySelectorAll` — so bleibt die Statusleistenfarbe auch beim Laufzeit-Toggle korrekt.
 
 - **iOS/Android-Design-Pass (v9):** CSS entspricht dem iOS Human Interface Guidelines- und Material Design 3-Standard: System-Fontstack (`system-ui, -apple-system, …`), einheitliche Typskala, Touch-Targets ≥ 44 px / 48 px, konsistente Abstands-Skala, subtile Elevation/Oberflächen, schnelle zweckmäßige Übergänge (~150–200 ms). `@media (prefers-reduced-motion: reduce)` deaktiviert nicht-essentielle Animationen. iOS-Style-Switch und Segmented-Control sind poliert.
 
@@ -338,6 +343,7 @@ Das Layout ist **mobile-first zweispaltig** — auch im Hochformat:
   mit Kategoriefarbe und `active`-Markierung) sowie die zwei Icon-Buttons
   (ℹ / ⚙) am rechten Rand. Klick auf einen Produkt-Tab setzt `currentView='products'`
   und `currentTab`; Klick auf ℹ/⚙ setzt `currentView` entsprechend.
+  `active` wird einem Produkt-Tab **nur** gesetzt, wenn `currentView === 'products'` — in der Info- oder Einstellungen-View ist kein Produkt-Tab hervorgehoben; stattdessen erhält das zugehörige Icon-Btn die Klasse.
 - **`renderContent()`** — Dispatcher: bei `currentView === 'info'` → `renderInfoView()`;
   bei `currentView === 'settings'` → `renderSettingsView()`; sonst → `renderProductTab()`.
 - **`renderProductTab()`** — rendert die Produkte des aktuellen Tabs in `#productList`:
@@ -351,10 +357,10 @@ Das Layout ist **mobile-first zweispaltig** — auch im Hochformat:
 - **`renderInfoView()`** — baut in `#productList` die Sub-Navigation (`.sub-nav`)
   und je nach `infoView` die Info-Box aus `INFO_TAB` oder das Statistik-Panel.
   Bei der Info-Box wird das Guttauer Wappen als `.wappen-emblem`
-  (`<img src="wappen-512.png">`) ganz oben (vor dem Titel) eingefügt.
+  (`<img src="wappen-512.png" onerror="this.style.display='none'">`) ganz oben (vor dem Titel) eingefügt.
 - **`renderSettingsView()`** — baut in `#productList` die `.settings-box` mit
-  Darstellungs-Gruppe (Dunkler-Modus-Toggle via `addToggleRow`), Kassen-Gruppe
-  (Pfand-Toggle via `addToggleRow`) und segmentierten Block-Steuerelementen für
+  Darstellungs-Gruppe (Dunkler-Modus-Toggle via `addToggleRow(..., 'theme')`), Kassen-Gruppe
+  (Pfand-Toggle via `addToggleRow(..., 'pfand')`) und segmentierten Block-Steuerelementen für
   jeden Block-Tab (inkl. Hinweiszeile aus `BLOCK_TABS[tab].note` und
   Blockbeschreibung aus `BLOCK_TABS[tab].blockDesc`).
 - **`makeProductButton(p)`** — erzeugt einen Produkt-Button; zeigt Name und
@@ -397,7 +403,6 @@ Das Layout ist **mobile-first zweispaltig** — auch im Hochformat:
 - **`applyPfandToCart()`** — iteriert den Warenkorb und setzt für jede Position
   `pfand = pfandBerechnen ? (item.pfandOriginal||0) : 0`; überspringt
   `isPfandAbzug`-Einträge. Wird vom Pfand-Toggle in der Einstellungen-View aufgerufen.
-- **`removeItem(index)`** — entfernt eine Position.
 - **`removeOneOfGroup(key)`** — entfernt jeweils **eine** Einheit der angegebenen Gruppe
   (die zuletzt hinzugefügte, d. h. von hinten im Array). Ruft `showUndoSnackbar()` und
   `renderCart()`. Wird vom ✕-Button einer Gruppenzeile im Warenkorb verwendet;
@@ -408,12 +413,17 @@ Das Layout ist **mobile-first zweispaltig** — auch im Hochformat:
   Bereichen mit unterschiedlichem Preis nicht fälschlich zu einer Zeile zusammengefasst werden.
 - **`showUndoSnackbar(removedItem, originalIndex)`** — zeigt die Undo-Snackbar
   (`.undo-snackbar`, `#undoSnackbar`) mit „„Name" entfernt" + Button „Rückgängig".
+  Ruft zunächst `dismissUndoSnackbar()` auf, um eine ggf. noch sichtbare vorherige Snackbar zu entfernen.
   Klick auf „Rückgängig" fügt die Position an `originalIndex` wieder ein und rendert
   den Warenkorb neu. Verschwindet nach ~4,5 s automatisch.
+- **`dismissUndoSnackbar()`** — entfernt die Snackbar sofort aus dem DOM und löscht ihren Timer. Wird am Beginn von `resetCart()`, `openChangeOverlay()`, `openClearOverlay()`, `openStatsResetOverlay()` und `openStatsExportOverlay()` aufgerufen — so kann die Snackbar eine geöffnete Modal-Ebene nie überleben und verhindert das nachträgliche Wiedereinsetzen einer Position nach dem Kassenabschluss.
 - **`persistCart()` / `restoreCart()`** — Warenkorb-Sitzungspersistenz über
   `sessionStorage` (Schlüssel `kassenCart`): `renderCart()` ruft `persistCart()`;
   beim Start stellt `restoreCart()` den Warenkorb der laufenden Sitzung wieder her
   (überlebt App-Wechsel / kurzes Wegswitchen, **nicht** einen vollständigen App-Kill).
+  `restoreCart()` leitet jeden geladenen Eintrag durch **`normalizeCartItem(it)`**, das
+  Felder validiert und coerct (ungültige `preis`/`name`-Werte werden verworfen, `pfand`
+  erhält einen Standardwert, `pfandOriginal` wird abgeleitet, `isPfandAbzug` bleibt erhalten) — beschädigte Einträge werden herausgefiltert.
 - **`resetCart()`** — leert den Warenkorb (nach Abschluss oder „Leeren").
   Der „Leeren"-Button (`#neuBtn`) öffnet bei nicht-leerem Warenkorb das
   **`#clearOverlay`**-Bestätigungs-Dialog (h2 „Bestellung leeren?", grauer
@@ -423,9 +433,9 @@ Das Layout ist **mobile-first zweispaltig** — auch im Hochformat:
 ### Wechselgeld-Overlay
 
 Öffnet beim Tippen auf die **Summen-Leiste** (`#totalBar` →
-`openChangeOverlay()`). Das Overlay öffnet **nicht**, wenn der Warenkorb leer
+`openChangeOverlay()`); `#totalBar` hat `role=button` und `tabindex=0` und reagiert zusätzlich auf Enter/Space per Keydown-Listener (Tastaturzugänglichkeit). Das Overlay öffnet **nicht**, wenn der Warenkorb leer
 ist (`cart.length === 0` → sofortiger `return`). Für nicht-leere Warenkörbe
-gibt es drei Fälle:
+gibt es drei Fälle, die jeweils `changeMode` setzen (`'positive'` | `'zero'` | `'payout'`):
 
 - **Genau 0 € (nicht-leerer Warenkorb):** Abschließen-Modus. Label
   (`#overlayTotalLabel`) zeigt „Zu zahlen", `#overlayTotal` zeigt „0,00 €",
@@ -450,8 +460,9 @@ gibt es drei Fälle:
   - Alle Betragsanzeigen im Overlay verwenden deutsches Kommaformat via `formatCents()`.
   - **`calcChange()`** — parst den eingegebenen Betrag strikt via
     `parseEuroCents()` (trimmt, akzeptiert Komma **und** Punkt als Dezimaltrenner,
-    lehnt leere/negative/nicht-finite Werte ab, gibt Integer-Cent oder `null`
-    zurück). `Rückgeld = Erhalten − Total` in Cent; zeigt „Rückgeld" (positiv)
+    verwendet das Regex `/^\d{1,9}([.,]\d{1,2})?$/` — lehnt wissenschaftliche Notation,
+    mehrfache Trenner, Buchstaben und mehr als 2 Nachkommastellen ab;
+    gibt Integer-Cent oder `null` zurück). `Rückgeld = Erhalten − Total` in Cent; zeigt „Rückgeld" (positiv)
     oder „Fehlt" (negativ).
 - **Negativer Gesamtbetrag (Auszahlungs-Modus):** Tritt auf, wenn mehr Pfand
   zurückgegeben wurde als Produkte gekauft wurden. Das Overlay öffnet im
@@ -461,11 +472,11 @@ gibt es drei Fälle:
   „Bitte X,XX € an Kunde auszahlen" (Klasse `change-result negative`).
 
 - **„Fertig" (`#overlayDoneBtn`)** — Verhalten je nach Modus:
-  - **Normaler Kassiermodus (Eingabefeld sichtbar):** Schließt erst ab, wenn `parseEuroCents(receivedInput.value) !== null` **und** der eingegebene Betrag ≥ Gesamtbetrag ist. Ist diese Bedingung nicht erfüllt, bleibt das Overlay offen, `#changeResult` zeigt „Bitte ausreichenden Betrag eingeben." (Klasse `change-result negative`) und der Fokus kehrt ins Eingabefeld zurück. Verhindert versehentliches Buchen bei „Fehlt …" oder leerem Feld.
-  - **0-€-Modus und Auszahlungs-Modus (Eingabefeld ausgeblendet):** „Fertig" ist jederzeit abschließbar — kein Guard.
+  - **Normaler Kassiermodus (`changeMode === 'positive'`):** Schließt erst ab, wenn `parseEuroCents(receivedInput.value) !== null` **und** der eingegebene Betrag ≥ Gesamtbetrag ist. Ist diese Bedingung nicht erfüllt, bleibt das Overlay offen, `#changeResult` zeigt „Bitte ausreichenden Betrag eingeben." (Klasse `change-result negative`) und der Fokus kehrt ins Eingabefeld zurück. Verhindert versehentliches Buchen bei „Fehlt …" oder leerem Feld.
+  - **0-€-Modus und Auszahlungs-Modus (`changeMode === 'zero'` / `'payout'`, Eingabefeld ausgeblendet):** „Fertig" ist jederzeit abschließbar — kein Guard.
   - Bei erfolgreichem Abschluss: `recordSale()` (Statistik-Aufzeichnung) → `closeChangeOverlay()` → `resetCart()`. Jede so abgeschlossene Bestellung wird in der Statistik gezählt — unabhängig vom Betrag.
 - Schließen ohne Reset: „✕" oben rechts oder Klick auf den abgedunkelten
-  Hintergrund.
+  Hintergrund. Das Overlay implementiert einen **Focus-Trap** (Tab/Shift+Tab kreist innerhalb der `.overlay-card`) und gibt den Fokus beim Schließen an das auslösende Element zurück.
 
 ### Statistik
 
@@ -478,21 +489,20 @@ Schließen verloren; der Export-Button ermöglicht dann die manuelle Sicherung.
 
 - **Speicherschlüssel:** `kassenStatistik` (Konstante `STATS_STORAGE_KEY`),
   Schemaversion `STATS_VERSION = 1`.
-- **In-Memory-Fallback:** `let memoryStats` — `saveStats(stats)` hält die Stats **immer** auch in `memoryStats` (vor dem `localStorage`-Schreibversuch). Schlägt das Schreiben fehl (privater Modus / Speicher voll), bleiben die Daten für die Sitzung im RAM erhalten (kein stiller Verlust). `loadStats()` nutzt `memoryStats` als Fallback, wenn `localStorage` leer oder nicht lesbar ist.
-- **Defensive Normalisierung:** `toIntSafe(value)` = `Math.round(Number(value))` → endliche Ganzzahl, sonst `0`. `normalizeStats(data)` coerct alle Zahlfelder (`einnahmenCents`, `pfandEinnahmenCents`, `ausgabenCents`, `bons`) und jeden `produkte`-Eintrag zu `{ anzahl, umsatzCents }` via `toIntSafe`. `loadStats()` leitet geladene Daten durch `normalizeStats` — verhindert String-Konkatenation / NaN aus beschädigten `localStorage`-Daten.
+- **In-Memory-Fallback:** `let memoryStats` — `saveStats(stats)` hält die Stats **immer** auch in `memoryStats` (vor dem `localStorage`-Schreibversuch). Schlägt das Schreiben fehl (privater Modus / Speicher voll), setzt das Modul-Flag `statsUseMemory = true`; danach gibt `loadStats()` direkt `normalizeStats(memoryStats)` zurück — so bleibt die In-Memory-Kopie für die gesamte Sitzung autoritativ und es kommt zu keinem stillen Datenverlust. `loadStats()` nutzt `memoryStats` auch als Fallback, wenn `localStorage` leer oder nicht lesbar ist.
+- **Defensive Normalisierung:** `toIntSafe(value)` = `Math.round(Number(value))` → endliche Ganzzahl, sonst `0`. `normalizeStats(data)` coerct alle Zahlfelder (`einnahmenCents`, `pfandEinnahmenCents`, `ausgabenCents`, `bons`) und jeden `produkte`-Eintrag zu `{ name, preisCents, anzahl, umsatzCents }` via `toIntSafe`; das `produkte`-Objekt wird mit `Object.create(null)` angelegt (prototype-pollution-sicher) und ist abwärtskompatibel mit alten name-only-Schlüsseln. `loadStats()` leitet geladene Daten durch `normalizeStats` — verhindert String-Konkatenation / NaN aus beschädigten `localStorage`-Daten.
 - **Datenform:**
   ```js
   {
     version,
-    produkte: { "<Produktname>": { anzahl, umsatzCents } },
+    produkte: { "<name>|<preisCents>": { name, preisCents, anzahl, umsatzCents } },
     einnahmenCents,        // Produktumsatz: Summe aller Produktpreise (ohne Pfand)
     pfandEinnahmenCents,   // Pfand eingenommen: Summe der beim Verkauf aufgeschlagenen Pfandbeträge
     ausgabenCents,         // Pfand ausgezahlt: Summe aller Pfand-Rückgaben (positive Cent)
     bons                   // Anzahl abgeschlossener Bestellungen
   }
   ```
-  - `produkte`: pro Produkt Verkaufsanzahl (`anzahl`) und Umsatz in Cent
-    (`umsatzCents` = Anzahl × Preis, **ohne** Pfand-Anteil).
+  - `produkte`: Schlüssel ist `name + '|' + preisCents` (damit gleichnamige Produkte mit unterschiedlichem Preis getrennt gezählt werden); jeder Eintrag enthält `name` (Anzeigename), `preisCents`, Verkaufsanzahl (`anzahl`) und Umsatz in Cent (`umsatzCents` = Anzahl × Preis, **ohne** Pfand-Anteil). Abwärtskompatibel mit alten name-only-Schlüsseln.
   - `einnahmenCents`: Summe der Produktpreise aller verkauften Positionen
     (**Produktumsatz**, kein Pfand enthalten).
   - `pfandEinnahmenCents`: Summe der beim Abschluss tatsächlich
@@ -508,14 +518,14 @@ Schließen verloren; der Export-Button ermöglicht dann die manuelle Sicherung.
 | -------- | ------------ |
 | `emptyStats()` | Liefert ein frisch genulltes Stats-Objekt (inkl. `pfandEinnahmenCents: 0`). |
 | `toIntSafe(value)` | `Math.round(Number(value))` → endliche Ganzzahl, sonst `0`. Verhindert String-Konkatenation / NaN aus beschädigten Daten. |
-| `normalizeStats(data)` | Coerct alle Zahlfelder sowie jeden `produkte`-Eintrag zu sauberen Typen via `toIntSafe`. Wird von `loadStats()` auf geladene Daten angewendet. |
+| `normalizeStats(data)` | Coerct alle Zahlfelder sowie jeden `produkte`-Eintrag zu sauberen Typen via `toIntSafe`. Das `produkte`-Objekt wird mit `Object.create(null)` angelegt (prototype-pollution-sicher). Wird von `loadStats()` auf geladene Daten angewendet. |
 | `loadStats()` | Liest + parst `localStorage`, leitet Daten durch `normalizeStats`; gibt `emptyStats()` bei Fehler/fehlendem Eintrag zurück. Nutzt `memoryStats` als Fallback, wenn `localStorage` leer oder nicht lesbar ist. |
 | `saveStats(stats)` | Hält Stats **immer** in `memoryStats` (vor dem Schreibversuch); persistiert als JSON; gibt `false` zurück bei Fehler (z. B. Storage voll / privater Modus). |
 | `statsStorageAvailable()` | Boolean: prüft, ob `localStorage` beschreibbar ist (z. B. `false` im privaten Modus). |
 | `statsKassenbestandCents(stats)` | Hilfsfunktion: gibt `einnahmenCents + pfandEinnahmenCents − ausgabenCents` zurück = tatsächlicher Kassenbestand gesamt (Bargeld in der Kasse). Wird von UI und Export verwendet. |
-| `recordSale()` | Aufgerufen beim Abschließen einer Bestellung: iteriert den Warenkorb — für jede normale Position (`!isPfandAbzug`) werden `produkte[name].anzahl` und `umsatzCents` sowie `einnahmenCents` inkrementiert und **zusätzlich** `pfandEinnahmenCents += toCents(item.pfand \|\| 0)` akkumuliert; für `isPfandAbzug`-Einträge wird `ausgabenCents` um den Absolutbetrag erhöht; `bons` wird einmalig pro Bestellung hochgezählt. Leerer Warenkorb → kein Bon. |
+| `recordSale()` | Aufgerufen beim Abschließen einer Bestellung: iteriert den Warenkorb — für jede normale Position (`!isPfandAbzug`) werden `produkte[name+'|'+preisCents].anzahl` und `umsatzCents` sowie `einnahmenCents` inkrementiert und **zusätzlich** `pfandEinnahmenCents += toCents(item.pfand \|\| 0)` akkumuliert; für `isPfandAbzug`-Einträge wird `ausgabenCents` um den Absolutbetrag erhöht; `bons` wird einmalig pro Bestellung hochgezählt. Leerer Warenkorb → kein Bon. |
 | `resetStats()` | Persistiert `emptyStats()` (setzt alle Werte auf null). |
-| `buildStatsExport()` | Gibt einen mehrzeiligen deutschen Zusammenfassungstext zurück: Titelzeile via `INFO_TAB.titel`, dann „Stand: <Datum/Uhrzeit>" (`new Date().toLocaleString('de-DE')`), Produkt-Zeilen **absteigend nach Anzahl** (gleiche Reihenfolge wie UI-Liste), dann „Bestellungen gesamt", „Produktumsatz", „Pfand eingenommen", „Pfand ausgezahlt", „Pfand einbehalten" (`pfandEinnahmenCents − ausgabenCents`), „Kassenbestand gesamt" (`statsKassenbestandCents`). |
+| `buildStatsExport(stats)` | Nimmt einen optionalen `stats`-Snapshot (nutzt denselben wie die UI-Anzeige). Gibt einen mehrzeiligen deutschen Zusammenfassungstext zurück: Titelzeile via `INFO_TAB.titel`, dann „Stand: <Datum/Uhrzeit>" (`new Date().toLocaleString('de-DE')`), Produkt-Zeilen **absteigend nach Anzahl** (gleiche Reihenfolge wie UI-Liste), dann „Bestellungen gesamt", „Produktumsatz", „Pfand eingenommen", „Pfand ausgezahlt", „Pfand einbehalten" oder **„Pfand Fehlbetrag"** bei negativem Saldo (`pfandEinnahmenCents − ausgabenCents`), „Kassenbestand gesamt" (`statsKassenbestandCents`). |
 
 #### Auslöser: Wann wird `recordSale()` gerufen?
 
@@ -566,9 +576,11 @@ Die Statistik ist über das ℹ-Icon und den Sub-Nav-Button „Statistik" erreic
 ## PWA / Offline
 
 ### manifest.json
+- `name: "Dorffest Kasse Guttau"`, deutsche `description`, `lang: "de"`, `dir: "ltr"`, `orientation: "portrait"`, `categories: ["business","utilities","finance"]`.
 - `display: "standalone"` → läuft wie eine native App ohne Browser-UI.
-- `start_url: "./index.html"`, Theme/Background `#16313b`.
-- Icons: Das `icons`-Array enthält jetzt je zwei Einträge pro PNG (`icon-192.png`, `icon-512.png`) — einmal mit `purpose: "any"` (Standard) und einmal mit `purpose: "maskable"` (für Android Adaptive Icons, verhindert Letterboxing/Beschnitt).
+- `id`, `scope` und `start_url` sind **relativ** (`"./"` bzw. `"./index.html"`), weil die App von einem GitHub-Pages-Unterpfad (`/dorffest-kassen-app/`) ausgeliefert wird — absolute `"/"` würden dazu führen, dass der Browser eine falsche Scope-Zuordnung vornimmt.
+- Theme/Background `#16313b`.
+- Icons: Das `icons`-Array enthält je zwei Einträge pro PNG (`icon-192.png`, `icon-512.png`) — einmal mit `purpose: "any"` (Standard) und einmal mit `purpose: "maskable"` (für Android Adaptive Icons, verhindert Letterboxing/Beschnitt). Die Icon-PNGs zeigen das Guttauer Wappen mit rotem €-Overlay auf full-bleed dunkeltealem Hintergrund.
 - iOS-spezifisches Verhalten zusätzlich über `<meta>`-Tags in `index.html`
   (`apple-mobile-web-app-capable`, `-status-bar-style`, `-title`,
   `apple-touch-icon`).
@@ -576,10 +588,10 @@ Die Statistik ist über das ℹ-Icon und den Sub-Nav-Button „Statistik" erreic
   im `<head>` gesetzt.
 
 ### service-worker.js
-- **Cache-Name:** `kassensystem-v9`.
-- **Installation (gehärtet):** `install` cacht Assets per `Promise.all(ASSETS.map(a => cache.add(a).catch(() => {})))` — ein einzelnes fehlendes Asset bricht den gesamten Install-Vorgang **nicht** mehr ab. `self.skipWaiting()` wird direkt (außerhalb von `waitUntil`) gerufen.
+- **Cache-Name:** `kassensystem-v10`.
+- **Installation (gehärtet):** `install` cacht Assets per `Promise.all(ASSETS.map(a => cache.add(a).catch(() => {})))` — ein einzelnes fehlendes Asset bricht den gesamten Install-Vorgang **nicht** mehr ab. `self.skipWaiting()` wird **innerhalb** der `waitUntil`-Promise-Kette aufgerufen (via `.then(() => self.skipWaiting())` nach Abschluss des Cachings) — der SW aktiviert sich also erst, wenn sein Cache vollständig befüllt ist.
 - **Message-Handler:** Reagiert auf `postMessage('skipWaiting')` von der Seite (Update-Banner) mit `self.skipWaiting()` — aktiviert den wartenden SW sofort.
-- **Aktivierung:** `activate` löscht alte Caches und ruft `self.clients.claim()` innerhalb der `waitUntil`-Promise-Kette — deterministischer Ablauf.
+- **Aktivierung:** `activate` löscht alte Caches (mit `.catch(() => {})` je Löschvorgang) und ruft `self.clients.claim()` innerhalb der `waitUntil`-Promise-Kette — deterministischer Ablauf.
 - **Fetch-Handler (gehärtet):** Verarbeitet ausschließlich **same-origin
   GET-Anfragen**. Navigations-Requests werden aus dem Cache mit
   `./index.html` bedient (mit `.catch`-Fallback auf den Cache, damit kein unbehandeltes Reject entsteht). Nur Assets aus der `ASSETS`-Liste (App-Shell,
@@ -592,11 +604,11 @@ Die Statistik ist über das ℹ-Icon und den Sub-Nav-Button „Statistik" erreic
   sich um ein App-Shell-Asset handelt — in den Cache geschrieben (mit `.catch`-Fallback auf Cache-Eintrag bei Netzwerkfehler).
 - **Vorab gecachte Assets (`ASSETS`):** `index.html`, `manifest.json`,
   `icon-192.png`, `icon-512.png`, `wappen-192.png`, `wappen-512.png`.
-- **Update-Hinweis in der Seite:** `index.html` registriert den SW mit `updatefound`-Listener → zeigt bei installierter neuer Version das Banner `.update-banner` „Neue Version verfügbar. / Neu laden"; ein `controllerchange`-Listener lädt die Seite einmalig neu (verhindert „stale" App auf installierten Geräten).
+- **Update-Hinweis in der Seite:** `index.html` registriert den SW mit `updatefound`-Listener → zeigt bei installierter neuer Version das Banner `.update-banner` „Neue Version verfügbar. / Neu laden"; ein `controllerchange`-Listener lädt die Seite einmalig neu (verhindert „stale" App auf installierten Geräten). Die Seite merkt sich `hadController = !!navigator.serviceWorker.controller` vor dem Laden; der `controllerchange`-Listener gibt bei Erstinstallation (kein vorheriger Controller) frühzeitig zurück — so wird bei der allerersten Installation kein sofortiges Reload ausgelöst.
 
 > **Cache-Busting beim Deployen:** Da `index.html` aggressiv gecacht wird,
 > muss bei Änderungen der **`CACHE_NAME` erhöht** werden (z. B. auf
-> `kassensystem-v10`), damit Geräte die neue Version laden. Sonst sehen bereits
+> `kassensystem-v11`), damit Geräte die neue Version laden. Sonst sehen bereits
 > installierte Geräte weiterhin den alten Stand. **Das ist der häufigste
 > Stolperstein bei Updates.**
 
@@ -674,7 +686,9 @@ Pfand zusätzlich in dessen `pfand`-Feld — auch das bei einer Änderung anpass
 - **Service-Worker-Caching** kann alte Stände „festhalten" → bei Updates
   `CACHE_NAME` erhöhen.
 - **Farbthema über `data-theme` und CSS-Variablen:** Das Hell/Dunkel-Theme wird per `data-theme`-Attribut auf `<html>` gesetzt (`'dark'` | `'light'`). Alle Farben sind als CSS-Variablen pro Theme definiert — nie Farben hartcodieren, immer `var(--…)` nutzen. Die Präferenz wird in `localStorage` unter dem Schlüssel `kassenTheme` gespeichert; beim ersten Start folgt die App `prefers-color-scheme`, fällt danach auf `'dark'` zurück.
-- **Guttauer Wappen als PNG im Info-Bereich:** Das Wappen liegt als `wappen-192.png` / `wappen-512.png` im Repo. `renderInfoView()` zeigt es als `<img class="wappen-emblem" src="wappen-512.png">` oben in der Info-Box. Die PNGs sind in der Service-Worker-`ASSETS`-Liste hinterlegt, daher offline verfügbar. Das **Favicon** ist davon getrennt: ein inline-SVG (vereinfachtes Schild + „€") als Data-URI im `<head>`.
+- **Guttauer Wappen als PNG im Info-Bereich:** Das Wappen liegt als `wappen-192.png` / `wappen-512.png` im Repo. `renderInfoView()` zeigt es als `<img class="wappen-emblem" src="wappen-512.png" onerror="this.style.display='none'">` oben in der Info-Box. Die PNGs sind in der Service-Worker-`ASSETS`-Liste hinterlegt, daher offline verfügbar. Das **Favicon** ist davon getrennt: ein inline-SVG (vereinfachtes Schild + „€") als Data-URI im `<head>`.
+- **Undo-Snackbar wird bei Modal-Öffnung und Warenkorb-Reset verworfen:** `dismissUndoSnackbar()` wird zu Beginn von `resetCart()`, `openChangeOverlay()`, `openClearOverlay()`, `openStatsResetOverlay()` und `openStatsExportOverlay()` aufgerufen. Die Snackbar kann dadurch eine laufende Modal-Ebene nie überleben — verhindert, dass eine Position nach Kassenabschluss noch nachträglich wiederhergestellt wird.
+- **Statistik-Schlüssel enthält Name und Preis:** `produkte`-Einträge in den gespeicherten Stats werden mit `name + '|' + preisCents` als Schlüssel abgelegt. Gleichnamige Produkte aus verschiedenen Bereichen mit unterschiedlichem Preis werden damit korrekt getrennt gezählt. Alte name-only-Schlüssel bleiben durch `normalizeStats` abwärtskompatibel.
 - **Einzeldatei-Architektur:** Alles in `index.html`. Kein Build, keine Module,
   keine Dependencies — Änderungen sind direkt und sofort wirksam.
 

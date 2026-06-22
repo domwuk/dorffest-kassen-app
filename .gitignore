@@ -3,6 +3,10 @@
 
 # Temporäre Skripte / Scratch-Artefakte (z. B. aus Tooling)
 patch.js
+patch*.py
 rewrite*.py
 test_script.js
+test_css.py
+generate*.py
+styles.css
 *.tmp
