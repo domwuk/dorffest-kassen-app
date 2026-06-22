@@ -1,10 +1,15 @@
 {
-  "name": "Kassensystem",
+  "name": "Dorffest Kasse Guttau",
   "short_name": "Kasse",
+  "description": "Offline-Kassen-App für das Guttauer Dorf- und Teichfest: Preise, Pfand und Wechselgeld schnell berechnen.",
+  "lang": "de",
+  "dir": "ltr",
   "start_url": "./index.html",
   "scope": "./",
   "id": "./",
   "display": "standalone",
+  "orientation": "portrait",
+  "categories": ["business", "utilities", "finance"],
   "background_color": "#16313b",
   "theme_color": "#16313b",
   "icons": [
