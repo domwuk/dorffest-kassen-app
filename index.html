@@ -24,6 +24,10 @@
     --grey: #4a4a4a;
     --essen-btn: #596a72;
     --essen-btn-active: #4a585f;
+    --bar-btn: #bd5200;
+    --bar-btn-active: #994200;
+    --bier-btn: #2e7d32;
+    --bier-btn-active: #1b5e20;
     --card-bg: #ffffff;
     --text-light: #f2f2f2;
   }
@@ -78,8 +82,8 @@
     min-width: 70px;
   }
   .tab-btn.active { opacity: 1; box-shadow: 0 0 0 2px rgba(255,255,255,0.5) inset; }
-  .tab-bar { background: var(--orange); }
-  .tab-bier { background: var(--green); }
+  .tab-bar { background: var(--bar-btn); }
+  .tab-bier { background: var(--bier-btn); }
   .tab-essen { background: var(--grey); }
   .tab-info { background: var(--purple); }
 
@@ -177,10 +181,10 @@
   }
   
   /* Category Colors for Buttons */
-  #productList[data-tab="tab-bar"] .product-btn { background: var(--orange); }
-  #productList[data-tab="tab-bar"] .product-btn:active { background: var(--orange-dark); }
-  #productList[data-tab="tab-bier"] .product-btn { background: var(--green); }
-  #productList[data-tab="tab-bier"] .product-btn:active { background: var(--green-dark); }
+  #productList[data-tab="tab-bar"] .product-btn { background: var(--bar-btn); }
+  #productList[data-tab="tab-bar"] .product-btn:active { background: var(--bar-btn-active); }
+  #productList[data-tab="tab-bier"] .product-btn { background: var(--bier-btn); }
+  #productList[data-tab="tab-bier"] .product-btn:active { background: var(--bier-btn-active); }
   #productList[data-tab="tab-essen"] .product-btn { background: var(--essen-btn); }
   #productList[data-tab="tab-essen"] .product-btn:active { background: var(--essen-btn-active); }
 
@@ -264,8 +268,9 @@
     font-size: 15px;
   }
   .cart-item:last-child { border-bottom: none; }
-  .cart-item .ci-name { font-weight: 600; }
-  .cart-item .ci-price { white-space: nowrap; margin-left: 8px; font-weight: 600; }
+  .cart-item > div:first-child { flex: 1; min-width: 0; padding-right: 8px; }
+  .cart-item .ci-name { font-weight: 600; overflow-wrap: break-word; word-break: break-word; line-height: 1.3; }
+  .cart-item .ci-price { white-space: nowrap; margin-left: auto; font-weight: 600; }
   .cart-item .ci-remove {
     background: none;
     border: none;
@@ -275,7 +280,7 @@
     margin-left: 10px;
     cursor: pointer;
   }
-  .cart-pfand-line { font-size: 13px; opacity: 0.65; }
+  .cart-pfand-line { font-size: 13px; opacity: 0.65; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 
   .neu-btn {
     background: var(--purple);
@@ -422,9 +427,20 @@
     font-size: 16px;
     line-height: 1.5;
     text-align: center;
-    margin: 10px 0 24px;
+    margin: 10px 0 12px;
     opacity: 0.9;
   }
+  .overlay-confirm-hint {
+    font-size: 13px;
+    line-height: 1.45;
+    text-align: center;
+    margin: 0 0 22px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(211, 58, 44, 0.14);
+    color: #f3b6b0;
+  }
+  .overlay-confirm-hint strong { color: #fff; }
   .export-textarea {
     width: 100%;
     height: 200px;
@@ -484,6 +500,8 @@
   }
   .stat-card.netto .stat-card-val { color: #2c8c1e; }
   .stat-card-full { grid-column: 1 / -1; background: rgba(44, 140, 30, 0.08); border: 1px solid rgba(44, 140, 30, 0.3); }
+  .stat-card-negative { background: rgba(211, 58, 44, 0.10); border: 1px solid rgba(211, 58, 44, 0.35); }
+  .stat-card-negative .stat-card-val { color: #f3b6b0; }
   .stat-card-full .stat-card-val { font-size: 24px; }
   
   .stats-list {
@@ -523,6 +541,75 @@
     font-weight: 600;
     margin-bottom: 16px;
     text-align: center;
+  }
+  .stats-stand {
+    font-size: 12px;
+    opacity: 0.6;
+    margin: -4px 0 12px;
+  }
+  .stats-reminder {
+    background: rgba(232, 119, 46, 0.12);
+    color: #f0b07e;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .update-banner {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #1c3f4a;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.18);
+    padding: 12px 16px;
+    border-radius: 12px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+    font-size: 14px;
+    max-width: calc(100vw - 24px);
+  }
+  .update-banner button {
+    background: var(--orange);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .undo-snackbar {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: calc(80px + env(safe-area-inset-bottom));
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #1c3f4a;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.18);
+    padding: 12px 16px;
+    border-radius: 12px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+    font-size: 14px;
+    max-width: calc(100vw - 24px);
+  }
+  .undo-snackbar button {
+    background: transparent;
+    color: var(--orange);
+    border: none;
+    font-weight: 800;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
   }
   .overlay-close-x {
     position: absolute;
@@ -618,7 +705,7 @@
   <div class="pfand-row" id="pfandRow">
     <span id="pfandRowLabel">Pfand berechnen</span>
     <label class="switch">
-      <input type="checkbox" id="pfandToggle" checked>
+      <input type="checkbox" id="pfandToggle" aria-labelledby="pfandRowLabel" checked>
       <span class="slider"></span>
     </label>
   </div>
@@ -634,7 +721,7 @@
       <div class="cart" id="cart"></div>
       <div class="cart-controls">
         <button class="neu-btn" id="neuBtn">Leeren</button>
-        <div class="total-bar" id="totalBar">Gesamt: 0,00 €</div>
+        <div class="total-bar" id="totalBar" role="button" tabindex="0" aria-label="Wechselgeld berechnen">Gesamt: 0,00 €</div>
       </div>
     </div>
   </div>
@@ -642,9 +729,9 @@
 </div>
 
 <div class="overlay hidden" id="changeOverlay">
-  <div class="overlay-card">
+  <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="changeOverlayTitle">
     <button class="overlay-close-x" id="overlayCloseX">✕</button>
-    <h2>Wechselgeld</h2>
+    <h2 id="changeOverlayTitle">Wechselgeld</h2>
     <div class="overlay-row total">
       <span id="overlayTotalLabel">Zu zahlen</span>
       <span id="overlayTotal">0,00 €</span>
@@ -666,10 +753,11 @@
 </div>
 
 <div class="overlay hidden" id="clearOverlay">
-  <div class="overlay-card">
+  <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="clearOverlayTitle">
     <button class="overlay-close-x" id="clearCloseX">✕</button>
-    <h2>Bestellung leeren?</h2>
+    <h2 id="clearOverlayTitle">Bestellung leeren?</h2>
     <p class="overlay-confirm-text">Möchtest du die komplette Bestellung wirklich leeren?</p>
+    <p class="overlay-confirm-hint">Hinweis: Die Bestellung wird <strong>nicht</strong> als Verkauf gezählt. Zum Abschließen „Fertig" im Wechselgeld-Dialog nutzen.</p>
     <div class="overlay-buttons">
       <button class="btn-close" id="clearCancelBtn">Abbrechen</button>
       <button class="btn-danger" id="clearConfirmBtn">Leeren</button>
@@ -678,9 +766,9 @@
 </div>
 
 <div class="overlay hidden" id="statsResetOverlay">
-  <div class="overlay-card">
+  <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="statsResetOverlayTitle">
     <button class="overlay-close-x" id="statsResetCloseX">✕</button>
-    <h2>Statistik zurücksetzen?</h2>
+    <h2 id="statsResetOverlayTitle">Statistik zurücksetzen?</h2>
     <p class="overlay-confirm-text">Möchtest du alle erfassten Verkäufe und Bons endgültig löschen?</p>
     <div class="overlay-buttons">
       <button class="btn-close" id="statsResetCancelBtn">Abbrechen</button>
@@ -690,9 +778,9 @@
 </div>
 
 <div class="overlay hidden" id="statsExportOverlay">
-  <div class="overlay-card">
+  <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="statsExportOverlayTitle">
     <button class="overlay-close-x" id="statsExportCloseX">✕</button>
-    <h2>Export</h2>
+    <h2 id="statsExportOverlayTitle">Export</h2>
     <p class="overlay-confirm-text" style="margin-top: -4px; margin-bottom: 12px; font-size: 14px;">Zum Sichern markieren & kopieren (z. B. in Notizen)</p>
     <textarea id="statsExportText" readonly class="export-textarea"></textarea>
     <div class="overlay-buttons">
@@ -783,26 +871,60 @@ function emptyStats() {
   };
 }
 
+// In-Memory-Fallback: Wenn localStorage nicht verfügbar ist (z.B. iOS privater
+// Modus, voller Speicher), werden die Statistiken wenigstens für die laufende
+// Sitzung im RAM gehalten, statt verloren zu gehen. Der Export sichert sie dann.
+let memoryStats = null;
+
+// Sichere Ganzzahl-Coercion (verhindert String-Konkatenation / NaN aus
+// beschädigten localStorage-Daten).
+function toIntSafe(value) {
+  const n = Math.round(Number(value));
+  return Number.isFinite(n) ? n : 0;
+}
+
+// Normalisiert ein (ggf. beschädigtes) Stats-Objekt defensiv: alle Zahlfelder
+// werden zu endlichen Ganzzahlen, produkte zu sauberen { anzahl, umsatzCents }.
+function normalizeStats(data) {
+  const base = emptyStats();
+  if (!data || typeof data !== 'object') return base;
+  base.einnahmenCents = toIntSafe(data.einnahmenCents);
+  base.pfandEinnahmenCents = toIntSafe(data.pfandEinnahmenCents);
+  base.ausgabenCents = toIntSafe(data.ausgabenCents);
+  base.bons = toIntSafe(data.bons);
+  if (data.produkte && typeof data.produkte === 'object') {
+    Object.keys(data.produkte).forEach(name => {
+      const entry = data.produkte[name];
+      if (!entry || typeof entry !== 'object') return;
+      base.produkte[name] = {
+        anzahl: toIntSafe(entry.anzahl),
+        umsatzCents: toIntSafe(entry.umsatzCents),
+      };
+    });
+  }
+  return base;
+}
+
 function loadStats() {
   try {
     const raw = localStorage.getItem(STATS_STORAGE_KEY);
-    if (!raw) return emptyStats();
-    const data = JSON.parse(raw);
-    // Defensive: fehlende Felder auffüllen
-    return Object.assign(emptyStats(), data, {
-      produkte: (data && typeof data.produkte === 'object' && data.produkte) ? data.produkte : {},
-    });
+    if (raw) return normalizeStats(JSON.parse(raw));
+    // Kein gespeicherter Eintrag: ggf. vorhandenen Memory-Stand nutzen.
+    return memoryStats ? normalizeStats(memoryStats) : emptyStats();
   } catch (e) {
-    return emptyStats();
+    // localStorage nicht lesbar → Memory-Fallback.
+    return memoryStats ? normalizeStats(memoryStats) : emptyStats();
   }
 }
 
 function saveStats(stats) {
+  // Immer auch im RAM halten, damit nichts verloren geht, falls Persistenz scheitert.
+  memoryStats = stats;
   try {
     localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(stats));
     return true;
   } catch (e) {
-    return false; // z.B. Speicher voll / privater Modus
+    return false; // z.B. Speicher voll / privater Modus → bleibt im Memory-Fallback
   }
 }
 
@@ -862,10 +984,14 @@ function buildStatsExport() {
   const stats = loadStats();
   const kassenbestandCents = statsKassenbestandCents(stats);
   const lines = [];
-  lines.push('Statistik – Guttauer Dorf- und Teichfest 2026');
+  lines.push(`Statistik – ${INFO_TAB.titel}`);
+  lines.push(`Stand: ${new Date().toLocaleString('de-DE')}`);
   lines.push('');
   lines.push('Verkäufe pro Produkt:');
-  const namen = Object.keys(stats.produkte).sort();
+  // Gleiche Sortierung wie in der UI: absteigend nach Anzahl.
+  const namen = Object.keys(stats.produkte).sort(
+    (a, b) => stats.produkte[b].anzahl - stats.produkte[a].anzahl
+  );
   if (namen.length === 0) {
     lines.push('  (noch keine Verkäufe)');
   } else {
@@ -1069,12 +1195,24 @@ function renderProducts() {
       h.className = 'info-box-title';
       h.textContent = 'Statistik';
       box.appendChild(h);
-      
+
+      // „Stand"-Zeitstempel, damit man (auch im Export) Erfassungszeitpunkte unterscheiden kann.
+      const stand = document.createElement('div');
+      stand.className = 'stats-stand';
+      stand.textContent = 'Stand: ' + new Date().toLocaleString('de-DE');
+      box.appendChild(stand);
+
       if (!statsStorageAvailable()) {
         const warn = document.createElement('div');
         warn.className = 'warning-note';
         warn.textContent = 'Hinweis: Speicher nicht verfügbar (z.B. privater Modus). Daten gehen nach Neustart verloren.';
         box.appendChild(warn);
+      } else if (stats.bons > 0) {
+        // Erinnerung: iOS kann Speicher nach ~7 Tagen Inaktivität löschen → Export sichert.
+        const remind = document.createElement('div');
+        remind.className = 'stats-reminder';
+        remind.textContent = 'Tipp: Statistik regelmäßig per „Export" sichern (z. B. in Notizen).';
+        box.appendChild(remind);
       }
       
       const summary = document.createElement('div');
@@ -1098,7 +1236,14 @@ function renderProducts() {
       summary.appendChild(createStatCard('Produktumsatz', formatCents(stats.einnahmenCents)));
       summary.appendChild(createStatCard('Pfand eingenommen', formatCents(stats.pfandEinnahmenCents)));
       summary.appendChild(createStatCard('Pfand ausgezahlt', formatCents(stats.ausgabenCents)));
-      summary.appendChild(createStatCard('Pfand einbehalten', formatCents(stats.pfandEinnahmenCents - stats.ausgabenCents)));
+      // Pfand-Saldo: positiv = einbehalten, negativ = Fehlbetrag (mehr ausgezahlt
+      // als eingenommen) → eigenes Label + roter Hinweis statt verwirrend grün.
+      const pfandSaldoCents = stats.pfandEinnahmenCents - stats.ausgabenCents;
+      summary.appendChild(createStatCard(
+        pfandSaldoCents < 0 ? 'Pfand Fehlbetrag' : 'Pfand einbehalten',
+        formatCents(pfandSaldoCents),
+        pfandSaldoCents < 0 ? 'stat-card-negative' : ''
+      ));
       summary.appendChild(createStatCard('Kassenbestand gesamt', formatCents(statsKassenbestandCents(stats)), 'netto stat-card-full'));
       box.appendChild(summary);
       
@@ -1197,7 +1342,7 @@ function renderProducts() {
 
       const grid = document.createElement('div');
       grid.className = 'product-grid-inner';
-      data[blockName].forEach(p => grid.appendChild(makeButton(p, pfandBerechnen)));
+      (Array.isArray(data[blockName]) ? data[blockName] : []).forEach(p => grid.appendChild(makeButton(p, pfandBerechnen)));
       productListEl.appendChild(grid);
     });
   }
@@ -1236,21 +1381,86 @@ function removeItem(index) {
   renderCart();
 }
 
+// Schlüssel zum Gruppieren identischer Positionen (gleicher Name + gleicher
+// effektiver Pfand + gleiche Art). Pfand-Rückgaben werden eigenständig gruppiert.
+function cartGroupKey(item) {
+  return `${item.isPfandAbzug ? 'A' : 'P'}|${item.name}|${toCents(item.pfand || 0)}`;
+}
+
+// Entfernt EINE Position der angegebenen Gruppe (die zuletzt hinzugefügte).
+function removeOneOfGroup(key) {
+  for (let i = cart.length - 1; i >= 0; i--) {
+    if (cartGroupKey(cart[i]) === key) {
+      const [removed] = cart.splice(i, 1);
+      showUndoSnackbar(removed, i);
+      renderCart();
+      return;
+    }
+  }
+}
+
+// ---- Rückgängig-Snackbar beim Entfernen ----
+let undoTimer = null;
+function showUndoSnackbar(removedItem, originalIndex) {
+  const existing = document.getElementById('undoSnackbar');
+  if (existing) existing.remove();
+  if (undoTimer) { clearTimeout(undoTimer); undoTimer = null; }
+
+  const bar = document.createElement('div');
+  bar.id = 'undoSnackbar';
+  bar.className = 'undo-snackbar';
+  const txt = document.createElement('span');
+  txt.textContent = `„${removedItem.name}" entfernt`;
+  const btn = document.createElement('button');
+  btn.textContent = 'Rückgängig';
+  btn.onclick = () => {
+    const at = Math.min(Math.max(originalIndex, 0), cart.length);
+    cart.splice(at, 0, removedItem);
+    bar.remove();
+    if (undoTimer) { clearTimeout(undoTimer); undoTimer = null; }
+    renderCart();
+  };
+  bar.appendChild(txt);
+  bar.appendChild(btn);
+  document.body.appendChild(bar);
+  undoTimer = setTimeout(() => { bar.remove(); undoTimer = null; }, 4500);
+}
+
 function renderCart() {
   cartEl.innerHTML = '';
-  cart.forEach((item, idx) => {
+
+  // Identische Positionen zu Gruppen mit Menge (N×) zusammenfassen, in
+  // Reihenfolge des ersten Auftretens. Die zugrunde liegende cart-Liste bleibt
+  // unverändert (jede Einheit zählt einzeln in Summe/Statistik).
+  const groups = [];
+  const byKey = new Map();
+  cart.forEach(item => {
+    const key = cartGroupKey(item);
+    let g = byKey.get(key);
+    if (!g) {
+      g = { key, name: item.name, pfand: item.pfand || 0, isPfandAbzug: !!item.isPfandAbzug,
+            preisCents: toCents(item.preis), count: 0 };
+      byKey.set(key, g);
+      groups.push(g);
+    }
+    g.count += 1;
+  });
+
+  groups.forEach(g => {
     const row = document.createElement('div');
     row.className = 'cart-item';
 
     const left = document.createElement('div');
     const name = document.createElement('div');
     name.className = 'ci-name';
-    name.textContent = item.name;
+    name.textContent = g.count > 1 ? `${g.count}× ${g.name}` : g.name;
     left.appendChild(name);
-    if (item.pfand > 0) {
+    if (g.pfand > 0) {
       const pf = document.createElement('div');
       pf.className = 'cart-pfand-line';
-      pf.textContent = `inkl. ${formatEuro(item.pfand)} Pfand`;
+      pf.textContent = g.count > 1
+        ? `inkl. ${formatEuro(g.pfand)} Pfand / Stück`
+        : `inkl. ${formatEuro(g.pfand)} Pfand`;
       left.appendChild(pf);
     }
 
@@ -1259,12 +1469,13 @@ function renderCart() {
     right.style.alignItems = 'center';
     const price = document.createElement('span');
     price.className = 'ci-price';
-    price.textContent = formatCents(toCents(item.preis) + toCents(item.pfand || 0));
+    // Zeilensumme = (Preis + Pfand) × Menge
+    price.textContent = formatCents((g.preisCents + toCents(g.pfand)) * g.count);
     const rm = document.createElement('button');
     rm.className = 'ci-remove';
-    rm.setAttribute('aria-label', 'Entfernen');
+    rm.setAttribute('aria-label', g.count > 1 ? 'Eine Position entfernen' : 'Entfernen');
     rm.textContent = '✕';
-    rm.onclick = () => removeItem(idx);
+    rm.onclick = () => removeOneOfGroup(g.key);
     right.appendChild(price);
     right.appendChild(rm);
 
@@ -1273,6 +1484,21 @@ function renderCart() {
     cartEl.appendChild(row);
   });
   updateTotal();
+  persistCart();
+}
+
+// ---- Warenkorb-Persistenz über sessionStorage (überlebt App-Wechsel, nicht App-Kill) ----
+const CART_SESSION_KEY = 'kassenCart';
+function persistCart() {
+  try { sessionStorage.setItem(CART_SESSION_KEY, JSON.stringify(cart)); } catch (e) {}
+}
+function restoreCart() {
+  try {
+    const raw = sessionStorage.getItem(CART_SESSION_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (Array.isArray(data)) cart = data;
+  } catch (e) {}
 }
 
 function updateTotal() {
@@ -1395,6 +1621,18 @@ totalBarEl.onclick = openChangeOverlay;
 receivedInput.addEventListener('input', calcChange);
 document.getElementById('overlayCloseX').onclick = closeChangeOverlay;
 document.getElementById('overlayDoneBtn').onclick = () => {
+  // Im normalen Kassiermodus (positiver Betrag, Eingabefeld sichtbar) erst
+  // abschließen, wenn ein ausreichender Betrag gegeben wurde. So wird kein
+  // Verkauf versehentlich bei „Fehlt …" oder leerem Feld gebucht.
+  if (overlayInputWrapEl.style.display !== 'none') {
+    const receivedCents = parseEuroCents(receivedInput.value);
+    if (receivedCents === null || receivedCents < getCurrentTotalCents()) {
+      changeResultEl.textContent = 'Bitte ausreichenden Betrag eingeben.';
+      changeResultEl.className = 'change-result negative';
+      receivedInput.focus();
+      return;
+    }
+  }
   recordSale();      // Verkauf in Statistik buchen (vor dem Leeren)
   closeChangeOverlay();
   resetCart();
@@ -1410,7 +1648,14 @@ function resetCart() {
 
 const pfandMinusBtn = document.getElementById('pfandMinusBtn');
 pfandMinusBtn.textContent = `Pfand zurück -${formatEuro(PFAND_RUECKGABE_EURO)}`;
-pfandMinusBtn.onclick = addPfandAbzug;
+// Debounce gegen versehentliche Doppel-Taps (würde sonst mehrfach Pfand abziehen).
+let lastPfandAbzug = 0;
+pfandMinusBtn.onclick = () => {
+  const now = Date.now();
+  if (now - lastPfandAbzug < 400) return;
+  lastPfandAbzug = now;
+  addPfandAbzug();
+};
 const clearOverlay = document.getElementById('clearOverlay');
 function openClearOverlay() {
   clearOverlay.classList.remove('hidden');
@@ -1450,8 +1695,9 @@ function openStatsExportOverlay(text) {
   statsExportText.value = text;
   statsExportOverlay.classList.remove('hidden');
   setTimeout(() => {
-    statsExportText.select();
     statsExportText.focus();
+    statsExportText.select();
+    statsExportText.setSelectionRange(0, 99999); // iOS Safari braucht das für volle Auswahl
   }, 100);
 }
 function closeStatsExportOverlay() { statsExportOverlay.classList.add('hidden'); }
@@ -1459,19 +1705,29 @@ function closeStatsExportOverlay() { statsExportOverlay.classList.add('hidden');
 document.getElementById('statsExportCloseX').onclick = closeStatsExportOverlay;
 document.getElementById('statsExportCancelBtn').onclick = closeStatsExportOverlay;
 document.getElementById('statsExportCopyBtn').onclick = () => {
-  statsExportText.select();
-  const copyDone = () => {
-    const btn = document.getElementById('statsExportCopyBtn');
-    btn.textContent = 'Kopiert!';
-    setTimeout(() => btn.textContent = 'Kopieren', 2000);
+  const btn = document.getElementById('statsExportCopyBtn');
+  const flash = (msg) => { btn.textContent = msg; setTimeout(() => btn.textContent = 'Kopieren', 2000); };
+  // Vor dem Kopieren (auch im Fallback) sicher die volle Auswahl setzen.
+  const selectAll = () => {
+    statsExportText.focus();
+    statsExportText.select();
+    statsExportText.setSelectionRange(0, 99999);
   };
-  
+  const execFallback = () => {
+    try {
+      selectAll();
+      const ok = document.execCommand('copy');
+      flash(ok ? 'Kopiert!' : 'Bitte manuell kopieren');
+    } catch (err) {
+      flash('Bitte manuell kopieren');
+    }
+  };
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(statsExportText.value).then(copyDone).catch(() => {
-      try { document.execCommand('copy'); copyDone(); } catch(err) {}
-    });
+    navigator.clipboard.writeText(statsExportText.value)
+      .then(() => flash('Kopiert!'))
+      .catch(execFallback);
   } else {
-    try { document.execCommand('copy'); copyDone(); } catch(err) {}
+    execFallback();
   }
 };
 statsExportOverlay.addEventListener('click', (e) => {
@@ -1502,13 +1758,65 @@ updateToggleForTab();
 updatePfandButtonVisibility();
 updateLayoutForTab();
 renderProducts();
+restoreCart(); // ggf. Warenkorb aus der laufenden Sitzung wiederherstellen
 renderCart();
 
-// Service Worker für Offline-Nutzung registrieren
+// Escape schließt das jeweils offene Overlay (Tastatur-Bedienbarkeit).
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  const overlays = [
+    { el: changeOverlay, close: closeChangeOverlay },
+    { el: clearOverlay, close: closeClearOverlay },
+    { el: statsResetOverlay, close: closeStatsResetOverlay },
+    { el: statsExportOverlay, close: closeStatsExportOverlay },
+  ];
+  overlays.forEach(o => { if (o.el && !o.el.classList.contains('hidden')) o.close(); });
+});
+
+// Service Worker für Offline-Nutzung registrieren + Update-Hinweis anzeigen.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js').catch(() => {});
+    navigator.serviceWorker.register('service-worker.js').then((reg) => {
+      // Neue Version gefunden → wenn aktiv, Banner „Neu laden" zeigen.
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            showUpdateBanner();
+          }
+        });
+      });
+    }).catch(() => {});
+    // Nach Aktivierung eines wartenden SW einmalig neu laden, damit die neue
+    // Version sofort greift (verhindert „stale" App auf installierten Geräten).
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
   });
+}
+
+function showUpdateBanner() {
+  if (document.getElementById('updateBanner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'updateBanner';
+  banner.className = 'update-banner';
+  const txt = document.createElement('span');
+  txt.textContent = 'Neue Version verfügbar.';
+  const btn = document.createElement('button');
+  btn.textContent = 'Neu laden';
+  btn.onclick = () => {
+    if (navigator.serviceWorker.waiting) {
+      navigator.serviceWorker.waiting.postMessage('skipWaiting');
+    }
+    window.location.reload();
+  };
+  banner.appendChild(txt);
+  banner.appendChild(btn);
+  document.body.appendChild(banner);
 }
 </script>
 </body>
