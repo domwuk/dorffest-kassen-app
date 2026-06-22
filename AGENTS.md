@@ -9,8 +9,8 @@ Eine **kleine Kassen-App (Point of Sale)** für ein Dorffest. Realisiert als
 iOS (zum Homescreen hinzugefügt), funktioniert aber genauso unter Android und
 auf dem Desktop.
 
-Kernidee: Bedienpersonal tippt Produkte an, die App führt einen
-Einkaufswagen, berechnet die Summe inkl. **Pfand**, und bietet eine
+Kernidee: Bedienpersonal tippt Produkte an, die App führt eine
+**Bestellung**, berechnet die Summe inkl. **Pfand**, und bietet eine
 **Wechselgeld-Berechnung** beim Kassieren.
 
 - **Sprache der Oberfläche:** Deutsch
@@ -49,9 +49,9 @@ JavaScript-Logik sind in dieser einen Datei vereint. Es gibt keine separaten
 
 - **`#tabs`** — Kategorie-Tabs, dynamisch aus `PRODUKTE` erzeugt.
 - **`.pfand-row`** — Umschalter (Toggle) mit kontextabhängiger Funktion (siehe unten).
-- **`.main`** — zweispaltiges Layout:
+- **`.main`** — enthält `.left` und `.right#rightCol`. Layout ist **mobile-first einspaltig** (Hochformat) bzw. **zweispaltig** (Querformat / ≥ 700 px) — siehe [Layout / Responsivität](#layout--responsivität).
   - **`.left`** → `#productList` (Produkt-Buttons) + `#pfandMinusBtn` (Pfand-Rückgabe-Button).
-  - **`.right`** → `#cart` (Einkaufswagen) + `#neuBtn` (Leeren) + `#totalBar` (Summe, öffnet Wechselgeld).
+  - **`.right`** (id=`rightCol`) → `<h2>Bestellung</h2>` + `#cart` (Bestellungs-Liste) + **`.cart-controls`** (enthält `#neuBtn` „Leeren" und `#totalBar` Gesamt-Leiste, öffnet Wechselgeld). Wird auf dem Info-Tab vollständig ausgeblendet (`.left` expandiert dann auf volle Breite).
 - **`#changeOverlay`** — Modal für die Wechselgeld-Berechnung.
 
 ### Zentrale Datenstruktur: `PRODUKTE`
@@ -67,7 +67,7 @@ const PRODUKTE = {
     "Bratbude":   [ { name, preis, pfand }, ... ],
     "Crepe-Bude": [ { name, preis, pfand }, ... ],
   },
-  "TKA": { info: true },                       // KEINE Produkte → Info-/Über-Reiter
+  "Info": { info: true },                      // KEINE Produkte → Info-/Über-Reiter
 };
 ```
 
@@ -76,8 +76,8 @@ const PRODUKTE = {
 1. **Array** → einfache Liste von Produkten (z. B. `Bar`, `Bier`).
 2. **Objekt mit Unterblöcken** → mehrere benannte Gruppen (z. B. `Essen`).
 3. **Info-Objekt `{ info: true }`** → kein Produkt-Reiter, sondern eine
-   Info-/Über-Box (z. B. `TKA`). Inhalt kommt aus `INFO_TAB` (Titel +
-   `absaetze`-Liste). Siehe [Der Info-Reiter (TKA)](#der-info-reiter-tka).
+   Info-/Über-Box (z. B. `Info`). Inhalt kommt aus `INFO_TAB` (Titel +
+   `absaetze`-Liste). Siehe [Der Info-Reiter](#der-info-reiter).
 
 Produktfelder:
 - `name` (String) — Anzeigename auf dem Button.
@@ -85,7 +85,7 @@ Produktfelder:
 - `pfand` (Number) — Pfand in Euro (`0.0`, wenn kein Pfand anfällt).
 
 `TAB_CLASS` ordnet jeder Kategorie eine CSS-Klasse für die Tab-Farbe zu
-(`tab-bar`, `tab-bier`, `tab-essen`, `tab-tka`). Beim Anlegen einer neuen
+(`tab-bar`, `tab-bier`, `tab-essen`, `tab-info`). Beim Anlegen einer neuen
 Kategorie ggf. hier eine Farbe ergänzen, sonst bleibt der Tab grau/neutral.
 
 ### Wichtige State-Variablen
@@ -93,13 +93,13 @@ Kategorie ggf. hier eine Farbe ergänzen, sonst bleibt der Tab grau/neutral.
 | Variable               | Bedeutung                                                        |
 | ---------------------- | ---------------------------------------------------------------- |
 | `currentTab`           | aktuell gewählte Kategorie (Default: erste Kategorie)            |
-| `cart`                 | Array der Einkaufswagen-Positionen                               |
+| `cart`                 | Array der Bestellungs-Positionen                                 |
 | `pfandBerechnen`       | ob Pfand auf Produkte aufgeschlagen wird (Toggle, Default `true`)|
 | `essenZeigeCrepeBude`  | im Essen-Tab: `false` = Bratbude, `true` = Crepe-Bude           |
 
 `cart`-Einträge haben die Form
 `{ name, preis, pfand, isPfandAbzug? }`. Der Pfand-Rückgabe-Eintrag nutzt
-`preis: -2.0` und `isPfandAbzug: true`.
+`preis: -PFAND_RUECKGABE_EURO` und `isPfandAbzug: true`.
 
 ### Der kontextabhängige Toggle (`#pfandToggle`)
 
@@ -112,66 +112,133 @@ das ist eine der wichtigsten Eigenheiten der App:
 - **Essen-Tab:** Label „Crepe-Bude anzeigen". Steuert `essenZeigeCrepeBude` —
   schaltet zwischen den Unterblöcken **Bratbude** und **Crepe-Bude** um. Pfand
   gibt es bei Essen nicht; der Pfand-Button wird ausgeblendet.
-- **TKA-Tab (Info):** Die ganze `.pfand-row` (Toggle) **und** der Pfand-Button
-  werden ausgeblendet — der Reiter zeigt nur eine Info-Box, keine Produkte.
+- **Info-Tab:** Die ganze `.pfand-row` (Toggle) **und** der Pfand-Button werden
+  ausgeblendet. Zusätzlich wird die **gesamte rechte Spalte** (`#rightCol` —
+  Bestellung-Überschrift, Bestellungs-Liste, „Leeren"-Button, Gesamt-Leiste) versteckt und `.left` expandiert
+  auf volle Breite — der Reiter zeigt ausschließlich die Info-Box.
 
 Erkannt wird der Essen-Modus über `isEssenTab()` (`currentTab === 'Essen'`
 **und** `PRODUKTE['Essen']` ist **kein** Array). Der Info-Modus wird über
 `isInfoTab()` erkannt (Kategorie ist ein Objekt mit `info: true`).
 
-### Der Info-Reiter (TKA)
+### Der Info-Reiter
 
-`TKA` ist **keine Produktkategorie**, sondern ein **Info-/Über-Reiter** —
-übernommen aus der Android-Vorlage, wo dieser Tab eine Card „APP Informationen"
-anzeigte (Text: „Dorffest Guttau 2026 …"). Die drei Buchstaben „TKA" sind im
-Original-APK **nicht ausgeschrieben**; nur die Funktion (App-Info) ist belegt.
+Der **Info-Reiter** (Schlüssel `"Info"` in `PRODUKTE`) ist **keine
+Produktkategorie**, sondern ein **Info-/Über-Reiter**. Er geht zurück auf einen
+Info-Tab der Android-Vorlage, der eine Card „APP Informationen" anzeigte. Der
+Reiter heißt jetzt einheitlich `"Info"`.
 
-- In `PRODUKTE` als `"TKA": { info: true }` hinterlegt (kein Produkt-Array).
-- Inhalt kommt aus der Konstante **`INFO_TAB`** (`titel` + `absaetze`-Array).
+- In `PRODUKTE` als `"Info": { info: true }` hinterlegt (kein Produkt-Array).
+- Inhalt kommt aus der Konstante **`INFO_TAB`**:
+  - `titel` (String) — aktuell `"Guttauer Dorf- und Teichfest 2026"`.
+  - `absaetze` (Array) — jeder Eintrag ist entweder ein **String** (wird als
+    Absatz `.info-box-text` gerendert) oder ein **Objekt `{ ueberschrift: "…" }`**
+    (wird als Zwischenüberschrift `.info-box-subtitle` gerendert). So lassen
+    sich Abschnitte wie „Bedienung", „Pfand", „Essen", „Wechselgeld" strukturieren.
 - `renderProducts()` prüft **zuerst** `isInfoTab()` und rendert dann eine
-  `.info-box` (Titel + Absätze) statt eines Produkt-Grids — `return` davor
-  verhindert, dass der generische Objekt-Zweig greift.
-- Toggle-Zeile und Pfand-Button sind auf diesem Tab ausgeblendet.
+  `.info-box` (Titel, Absätze, Zwischenüberschriften) statt eines Produkt-Grids
+  — ein früher `return` verhindert, dass der generische Objekt-Zweig greift.
+- Toggle-Zeile, Pfand-Button **und die gesamte rechte Spalte** (`#rightCol`)
+  sind auf diesem Tab ausgeblendet (`updateLayoutForTab()` wird beim Tab-Wechsel
+  und in der Init-Sequenz aufgerufen, zusammen mit `updateToggleForTab()` und
+  `updatePfandButtonVisibility()`). Mit `display: contents` auf Mobilgeräten werden
+  beim Ausblenden von `#rightCol` auch alle seine Kinder (Bestellung-Überschrift,
+  Bestellungs-Liste, `.cart-controls`) unsichtbar.
 
-> Inhalt ändern → `INFO_TAB` in `index.html` editieren. Neuen Info-Reiter
-> anlegen → Kategorie als `{ info: true }` in `PRODUKTE` ergänzen (und ggf.
-> `INFO_TAB` verallgemeinern, das aktuell **fest** den einen Info-Tab speist).
+> **Reihenfolge der Konstanten:** `INFO_TAB` referenziert die Konstante
+> `PFAND_RUECKGABE_EURO` (und weitere: `ESSEN_TAB`, `ESSEN_BLOCK_STANDARD`,
+> `ESSEN_BLOCK_TOGGLE`). Diese Konstanten müssen deshalb **vor** `INFO_TAB` im
+> Quellcode deklariert sein, um einen Temporal-Dead-Zone-ReferenceError zu
+> vermeiden.
+
+> Inhalt ändern → `INFO_TAB` in `index.html` editieren (`titel`, `absaetze`).
+> Neuen Info-Reiter anlegen → Kategorie als `{ info: true }` in `PRODUKTE`
+> ergänzen (und ggf. `INFO_TAB` verallgemeinern, das aktuell **fest** den einen
+> Info-Tab speist).
+
+### Layout / Responsivität
+
+Das Layout ist **mobile-first** und vollständig responsiv:
+
+- **Hochformat / < 700 px (Standard):** Einspaltig. `.right` hat `display: contents`,
+  sodass seine Kinder (Bestellung-Überschrift, Bestellungs-Liste, `.cart-controls`)
+  direkt in den Spaltenfluss eingebettet werden. Reihenfolge im Scroll-Bereich:
+  Tabs → Toggle-Zeile → Produktgitter → Pfand-Rückgabe-Button (unmittelbar darunter,
+  kein toter Leerraum) → Bestellung-Überschrift → Bestellungs-Liste → `.cart-controls`.
+  Die `.cart-controls`-Leiste („Leeren" + Gesamt) ist `position: sticky; bottom: -12px`,
+  damit sie beim Scrollen stets am unteren Bildschirmrand erreichbar bleibt.
+
+- **Querformat / ≥ 700 px (`@media (min-width: 700px), (orientation: landscape)`):**
+  Zweispaltig — Produkte links (`.left`), Bestellung rechts (`#rightCol` mit
+  `display: flex`). Beide Spalten scrollen unabhängig. `.cart-controls` ist
+  dann `position: static` (kein Sticky) am Ende der rechten Spalte.
+
+- **Pfand-Rückgabe-Button:** Sitzt direkt unter dem Produktgitter (`.product-grid`
+  ist `flex: none`, kein erzwungenes Strecken) — der frühere große Leerraum
+  ist damit behoben.
+
+- **Bestellungs-Liste:** Ohne `max-height`-Begrenzung, bleibt auch bei kleinen
+  Bildschirmgrößen gut lesbar.
+
+- **Info-Tab:** `#rightCol` wird per Inline-Style auf `display: none` gesetzt
+  (`updateLayoutForTab()`), sodass die gesamte rechte Seite (Bestellung-Überschrift,
+  Liste, `.cart-controls`) verborgen ist. `.left` wird auf volle Breite ausgedehnt.
 
 ### Render-Funktionen
 
 - **`renderTabs()`** — baut die Tab-Buttons, markiert den aktiven, hängt
-  `onclick` an (Tab wechseln → alles neu rendern).
+  `onclick` an (Tab wechseln → alles neu rendern, `updateToggleForTab()`,
+  `updatePfandButtonVisibility()`, `updateLayoutForTab()` aufrufen).
 - **`renderProducts()`** — rendert je nach Datenform:
-  - Info-Objekt (`{ info: true }`) → `.info-box` aus `INFO_TAB` (früher `return`).
+  - Setzt zunächst `productListEl.setAttribute('data-tab', TAB_CLASS[currentTab])`,
+    damit per CSS die Produkt-Button-Farbe je Kategorie gesetzt wird
+    (Bar = orange, Bier = grün, Essen = blaugrau; Info hat keine Produkte).
+  - Info-Objekt (`{ info: true }`) → `.info-box` aus `INFO_TAB` mit Absätzen
+    (`.info-box-text`) und Zwischenüberschriften (`.info-box-subtitle`); die
+    rechte Spalte ist via `updateLayoutForTab()` ausgeblendet (früher `return`).
   - Array → ein Grid (oder Hinweis, wenn leer).
   - Essen-Objekt → nur der via Toggle gewählte Unterblock, mit Überschrift.
   - generisches Objekt → **alle** Unterblöcke untereinander mit Überschriften.
   - `makeButton(p, showPfand)` erzeugt einen Produkt-Button; `showPfand`
-    blendet die „+ X € Pfand"-Zeile ein/aus.
+    blendet die „+ X,XX € Pfand"-Zeile ein/aus; alle Preise werden via
+    `formatEuro()` im deutschen Kommaformat angezeigt.
 - **`renderCart()`** — zeichnet alle Warenkorb-Positionen inkl.
-  Entfernen-Button und ruft `updateTotal()`.
-- **`updateTotal()` / `getCurrentTotal()`** — Summe = Σ (`preis` + `pfand`)
-  über alle Positionen.
+  Entfernen-Button und ruft `updateTotal()`. Zeilenbeträge werden in Cent
+  berechnet und über `formatCents()` angezeigt.
+- **`updateTotal()`** — aktualisiert die Summen-Leiste; Betrag intern in Cent
+  via `getCurrentTotalCents()`, Anzeige über `formatCents()`.
 
 ### Warenkorb-Aktionen
 
 - **`addToCart(p)`** — fügt Produkt hinzu; Pfand nur, wenn `pfandBerechnen`.
-- **`addPfandAbzug()`** — fügt „Pfand-Rückgabe" mit `-2.0 €` hinzu
-  (über `#pfandMinusBtn`, Beschriftung „Pfand -2€").
+- **`addPfandAbzug()`** — fügt „Pfand-Rückgabe" mit `-PFAND_RUECKGABE_EURO`
+  hinzu (über `#pfandMinusBtn`, Beschriftung wird beim Init aus der Konstante
+  gesetzt: „Pfand zurück -2,00 €").
 - **`removeItem(index)`** — entfernt eine Position.
-- **`resetCart()`** — leert den Warenkorb (nach Abschluss oder „Neu").
-  Der „Neu"-Button fragt bei nicht-leerem Warenkorb per `confirm()` nach.
+- **`resetCart()`** — leert den Warenkorb (nach Abschluss oder „Leeren").
+  Der „Leeren"-Button fragt bei nicht-leerem Warenkorb per `confirm('Bestellung wirklich leeren?')` nach.
 
 ### Wechselgeld-Overlay
 
-Öffnet beim Tippen auf die **Summen-Leiste** (`#totalBar` → `openChangeOverlay()`):
+Öffnet beim Tippen auf die **Summen-Leiste** (`#totalBar` →
+`openChangeOverlay()`), sofern der Gesamtbetrag > 0 ist:
 
-- Zeigt Gesamtbetrag, Eingabefeld für „Erhalten", Schnellbetrag-Buttons.
-- **Schnellbeträge** werden dynamisch berechnet: Aufrundungen des Totals
-  (nächster 1er/5er/10er/20er) plus feste gängige Scheine (5/10/50), gefiltert
-  auf Werte `≥ Total`, dedupliziert.
-- **`calcChange()`** — `Rückgeld = Erhalten − Total`; zeigt „Rückgeld" (positiv)
-  oder „Fehlt" (negativ). Akzeptiert Komma **und** Punkt als Dezimaltrenner.
+- Zeigt Betrag unter „Zu zahlen", Eingabefeld „Gegeben (€)" (`<input type="text"
+  inputmode="decimal" autocomplete="off">`, Placeholder `0,00`), Schnellbetrag-Buttons.
+- **Schnellbeträge** werden in Cent berechnet auf Basis echter deutscher Münz-/
+  Scheinwerte: `DENOMS = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000]` Cent
+  (= 0,50 / 1 / 2 / 5 / 10 / 20 / 50 / 100 / 200 €). Kandidaten sind: der exakte
+  Gesamtbetrag, der Gesamtbetrag aufgerundet auf das nächste Vielfache jeder
+  Stückelung, sowie jede Stückelung selbst sofern sie ≥ Gesamtbetrag ist.
+  Gefiltert auf ≥ Total, dedupliziert, aufsteigend sortiert, maximal 8 Einträge
+  (kleinste = wahrscheinlichste zuerst). Beispiel: 3,50 € → 3,50 / 4,00 / 5,00 /
+  10,00 / 20,00 / 50,00 / 100,00 / 200,00 €.
+- Alle Betragsanzeigen im Overlay verwenden deutsches Kommaformat via `formatCents()`.
+- **`calcChange()`** — parst den eingegebenen Betrag strikt via
+  `parseEuroCents()` (trimmt, akzeptiert Komma **und** Punkt als Dezimaltrenner,
+  lehnt leere/negative/nicht-finite Werte ab, gibt Integer-Cent oder `null`
+  zurück). `Rückgeld = Erhalten − Total` in Cent; zeigt „Rückgeld" (positiv)
+  oder „Fehlt" (negativ).
 - **„Fertig"** schließt das Overlay **und leert den Warenkorb** (`resetCart()`).
 - Schließen ohne Reset: „✕" oben rechts oder Klick auf den abgedunkelten
   Hintergrund.
@@ -185,13 +252,20 @@ Original-APK **nicht ausgeschrieben**; nur die Funktion (App-Info) ist belegt.
 - iOS-spezifisches Verhalten zusätzlich über `<meta>`-Tags in `index.html`
   (`apple-mobile-web-app-capable`, `-status-bar-style`, `-title`,
   `apple-touch-icon`).
+- Ein `<meta name="referrer" content="strict-origin-when-cross-origin">` ist
+  im `<head>` gesetzt.
 
 ### service-worker.js
-- **Cache-Name:** `kassensystem-v1`.
+- **Cache-Name:** `kassensystem-v2`.
+- **Fetch-Handler (gehärtet):** Verarbeitet ausschließlich **same-origin
+  GET-Anfragen**. Navigations-Requests werden aus dem Cache mit
+  `./index.html` bedient. Nur Assets aus der `ASSETS`-Liste (App-Shell,
+  als absolute URLs in `APP_SHELL`) werden gecacht — nach Prüfung auf
+  `response.ok && response.type === 'basic'`. Cross-Origin-Anfragen,
+  Nicht-GET-Methoden und Fehlerantworten werden **nicht** gecacht.
 - **Cache-First-Strategie:** Bei `fetch` wird zuerst der Cache geprüft; bei
-  Treffer wird dieser geliefert, sonst aus dem Netz geholt **und** in den Cache
-  geschrieben (Runtime-Caching). Fällt das Netz aus, wird — falls vorhanden —
-  der gecachte Stand zurückgegeben.
+  Treffer wird dieser geliefert, sonst aus dem Netz geholt und — sofern es
+  sich um ein App-Shell-Asset handelt — in den Cache geschrieben.
 - **Vorab gecachte Assets (`ASSETS`):** `index.html`, `manifest.json`,
   `icon-192.png`, `icon-512.png`.
 - `install` ruft `skipWaiting()`, `activate` löscht alte Caches und ruft
@@ -199,7 +273,7 @@ Original-APK **nicht ausgeschrieben**; nur die Funktion (App-Info) ist belegt.
 
 > **Cache-Busting beim Deployen:** Da `index.html` aggressiv gecacht wird,
 > muss bei Änderungen der **`CACHE_NAME` erhöht** werden (z. B. auf
-> `kassensystem-v2`), damit Geräte die neue Version laden. Sonst sehen bereits
+> `kassensystem-v3`), damit Geräte die neue Version laden. Sonst sehen bereits
 > installierte Geräte weiterhin den alten Stand. **Das ist der häufigste
 > Stolperstein bei Updates.**
 
@@ -211,11 +285,18 @@ Original-APK **nicht ausgeschrieben**; nur die Funktion (App-Info) ist belegt.
 laden. **`CACHE_NAME` im Service Worker erhöhen**, wenn die Änderung auf
 installierten Geräten ankommen soll.
 
-### Den `TKA`-Info-Reiter ändern
-→ `TKA` ist ein **Info-/Über-Reiter** (`{ info: true }`), keine Produkt­liste.
-Text/Überschrift in der Konstante **`INFO_TAB`** (`titel`, `absaetze`) in
-`index.html` anpassen. Farbe ggf. in `TAB_CLASS`. Soll TKA doch Produkte
-zeigen, stattdessen ein Produkt-Array hinterlegen (dann entfällt die Info-Box).
+### Den Info-Reiter ändern
+→ `"Info"` ist ein **Info-/Über-Reiter** (`{ info: true }`), keine Produkt­liste.
+Titel und Inhalte in der Konstante **`INFO_TAB`** in `index.html` anpassen:
+- `titel` — Überschrift der Info-Box (String).
+- `absaetze` — Array aus Strings (Absatz, `.info-box-text`) und/oder Objekten
+  `{ ueberschrift: "…" }` (Zwischenüberschrift, `.info-box-subtitle`).
+
+Farbe des Tabs ggf. in `TAB_CLASS` ergänzen. **Achtung Reihenfolge:** Da
+`INFO_TAB` die Konstante `PFAND_RUECKGABE_EURO` (und andere) referenziert,
+müssen diese **vor** `INFO_TAB` im Quellcode stehen. Soll `"Info"` doch
+Produkte zeigen, stattdessen ein Produkt-Array hinterlegen (dann entfällt die
+Info-Box).
 
 ### Neue Kategorie hinzufügen
 1. Schlüssel in `PRODUKTE` ergänzen (Array **oder** Unterblock-Objekt).
@@ -227,9 +308,12 @@ zeigen, stattdessen ein Produkt-Array hinterlegen (dann entfällt die Info-Box).
    müsste diese Logik verallgemeinert werden.
 
 ### Pfandbetrag ändern
-→ Der Rückgabe-Button ist mit **`-2.0 €` hartkodiert** (`addPfandAbzug()`,
-Button-Text „Pfand -2€"). Pro Produkt steckt der Pfand in dessen `pfand`-Feld.
-Beides bei einer Änderung anpassen.
+→ Der Rückgabe-Wert und die Button-Beschriftung werden beide aus der Konstante
+**`PFAND_RUECKGABE_EURO`** gesetzt: `addPfandAbzug()` verwendet
+`-PFAND_RUECKGABE_EURO`, und beim Init wird der Button-Text
+`Pfand zurück -${formatEuro(PFAND_RUECKGABE_EURO)}` daraus erzeugt. Eine Änderung an
+dieser einen Konstante aktualisiert beides gleichzeitig. Pro Produkt steckt der
+Pfand zusätzlich in dessen `pfand`-Feld — auch das bei einer Änderung anpassen.
 
 ## Testen / Ausführen
 
@@ -253,7 +337,12 @@ Beides bei einer Änderung anpassen.
   Verwirrungsquelle bei Änderungen.
 - **Hartcodierte Essen-Logik:** Schlüssel `'Essen'` und Blocknamen
   `'Bratbude'`/`'Crepe-Bude'` sind im Code verankert.
-- **Pfand `-2€` hartkodiert** im Rückgabe-Button.
+- **Geldbeträge in Cent:** Alle internen Berechnungen (Summen, Wechselgeld,
+  Schnellbeträge) laufen in **Integer-Cent** (`toCents()`, `formatCents()`,
+  `getCurrentTotalCents()`), um Gleitkomma-Rundungsfehler zu vermeiden. Die
+  Anzeige erfolgt ausschließlich im **deutschen Kommaformat** via `formatCents()`
+  (z. B. „2,00 €") bzw. `formatEuro()` für Euro-Werte. Die kleinste praktische
+  Stückelung beträgt **0,50 €** (50 Cent).
 - **Service-Worker-Caching** kann alte Stände „festhalten" → bei Updates
   `CACHE_NAME` erhöhen.
 - **Einzeldatei-Architektur:** Alles in `index.html`. Kein Build, keine Module,
