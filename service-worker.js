@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kassensystem-v1';
+const CACHE_NAME = 'kassensystem-v2';
 const ASSETS = [
   './index.html',
   './manifest.json',
