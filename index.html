@@ -483,6 +483,8 @@
     font-weight: 800;
   }
   .stat-card.netto .stat-card-val { color: #2c8c1e; }
+  .stat-card-full { grid-column: 1 / -1; background: rgba(44, 140, 30, 0.08); border: 1px solid rgba(44, 140, 30, 0.3); }
+  .stat-card-full .stat-card-val { font-size: 24px; }
   
   .stats-list {
     margin-bottom: 20px;
@@ -691,6 +693,7 @@
   <div class="overlay-card">
     <button class="overlay-close-x" id="statsExportCloseX">✕</button>
     <h2>Export</h2>
+    <p class="overlay-confirm-text" style="margin-top: -4px; margin-bottom: 12px; font-size: 14px;">Zum Sichern markieren & kopieren (z. B. in Notizen)</p>
     <textarea id="statsExportText" readonly class="export-textarea"></textarea>
     <div class="overlay-buttons">
       <button class="btn-close" id="statsExportCancelBtn">Schließen</button>
@@ -760,15 +763,24 @@ const ESSEN_BLOCK_TOGGLE = 'Crepe-Bude';   // Toggle an
 // ---------------------------------------------------------
 // Datenmodell (alles Geld in Integer-Cent):
 //   { version, produkte: { <name>: { anzahl, umsatzCents } },
-//     einnahmenCents, ausgabenCents, bons }
-//   - einnahmenCents: Summe der Produkt-Preise (ohne Pfand) aller Abschlüsse
-//   - ausgabenCents : Summe aller ausgezahlten Pfand-Rückgaben
-//   - bons          : Anzahl abgeschlossener Bestellungen ("Fertig")
+//     einnahmenCents, pfandEinnahmenCents, ausgabenCents, bons }
+//   - einnahmenCents      : Summe der Produkt-Preise (ohne Pfand) = Produktumsatz
+//   - pfandEinnahmenCents : Summe des beim Verkauf eingenommenen Pfands
+//   - ausgabenCents       : Summe aller ausgezahlten Pfand-Rückgaben
+//   - bons                : Anzahl abgeschlossener Bestellungen ("Fertig")
+//   Kassenbestand = einnahmenCents + pfandEinnahmenCents − ausgabenCents
 const STATS_STORAGE_KEY = 'kassenStatistik';
 const STATS_VERSION = 1;
 
 function emptyStats() {
-  return { version: STATS_VERSION, produkte: {}, einnahmenCents: 0, ausgabenCents: 0, bons: 0 };
+  return {
+    version: STATS_VERSION,
+    produkte: {},
+    einnahmenCents: 0,
+    pfandEinnahmenCents: 0,
+    ausgabenCents: 0,
+    bons: 0,
+  };
 }
 
 function loadStats() {
@@ -807,8 +819,9 @@ function statsStorageAvailable() {
 }
 
 // Bucht den aktuellen Warenkorb in die Statistik (beim Abschluss / "Fertig").
-// Zählt Produkte (Anzahl + Umsatz = Preis ohne Pfand) und Pfand-Rückgaben
-// (Ausgaben). Leerer Warenkorb wird ignoriert (kein Bon).
+// Zählt Produkte (Anzahl + Umsatz = Preis ohne Pfand), das beim Verkauf
+// eingenommene Pfand sowie Pfand-Rückgaben (Ausgaben). Leerer Warenkorb wird
+// ignoriert (kein Bon).
 function recordSale() {
   if (!cart.length) return;
   const stats = loadStats();
@@ -826,6 +839,7 @@ function recordSale() {
     stats.produkte[name].anzahl += 1;
     stats.produkte[name].umsatzCents += toCents(item.preis); // Preis OHNE Pfand
     stats.einnahmenCents += toCents(item.preis);
+    stats.pfandEinnahmenCents += toCents(item.pfand || 0); // eingenommenes Pfand
     hatPosition = true;
   });
 
@@ -837,9 +851,16 @@ function resetStats() {
   saveStats(emptyStats());
 }
 
+// Kassenbestand gesamt = Produktumsatz + eingenommenes Pfand − ausgezahltes Pfand
+// (= tatsächliches Geld in der Kasse). Für UI und Export.
+function statsKassenbestandCents(stats) {
+  return stats.einnahmenCents + stats.pfandEinnahmenCents - stats.ausgabenCents;
+}
+
 // Exportiert die Statistik als lesbaren Text (für Sicherung/Weitergabe).
 function buildStatsExport() {
   const stats = loadStats();
+  const kassenbestandCents = statsKassenbestandCents(stats);
   const lines = [];
   lines.push('Statistik – Guttauer Dorf- und Teichfest 2026');
   lines.push('');
@@ -855,9 +876,11 @@ function buildStatsExport() {
   }
   lines.push('');
   lines.push(`Bestellungen gesamt: ${stats.bons}`);
-  lines.push(`Einnahmen (Produkte): ${formatCents(stats.einnahmenCents)}`);
-  lines.push(`Ausgaben (Pfand zurück): ${formatCents(stats.ausgabenCents)}`);
-  lines.push(`Netto: ${formatCents(stats.einnahmenCents - stats.ausgabenCents)}`);
+  lines.push(`Produktumsatz: ${formatCents(stats.einnahmenCents)}`);
+  lines.push(`Pfand eingenommen: ${formatCents(stats.pfandEinnahmenCents)}`);
+  lines.push(`Pfand ausgezahlt: ${formatCents(stats.ausgabenCents)}`);
+  lines.push(`Pfand einbehalten: ${formatCents(stats.pfandEinnahmenCents - stats.ausgabenCents)}`);
+  lines.push(`Kassenbestand gesamt: ${formatCents(kassenbestandCents)}`);
   return lines.join('\n');
 }
 
@@ -881,6 +904,11 @@ const INFO_TAB = {
     { ueberschrift: "Wechselgeld" },
     "Den erhaltenen Betrag eingeben oder einen Schnellbetrag wählen – die App zeigt das Rückgeld an. „Fertig“ schließt die Berechnung und leert die Bestellung.",
     "Alle Preise sind in 50-Cent-Schritten – kleinere Münzen als 50 Cent werden nicht benötigt.",
+    { ueberschrift: "Statistik" },
+    "Oben über „Statistik“ erreichbar. Jede mit „Fertig“ abgeschlossene Bestellung wird automatisch gezählt – auch bei 0 € (z. B. reine Pfand-Rückgabe).",
+    "Erfasst werden: Anzahl und Umsatz je Produkt, die Zahl der Bestellungen, der Produktumsatz sowie eingenommenes und ausgezahltes Pfand.",
+    "„Kassenbestand gesamt“ = Produktumsatz + eingenommenes Pfand − ausgezahltes Pfand und entspricht dem tatsächlichen Geld in der Kasse. „Pfand einbehalten“ zeigt das Pfand für nicht zurückgegebene Becher.",
+    "„Export“ zeigt eine Zusammenfassung zum Markieren/Kopieren (z. B. für Notizen). „Zurücksetzen“ löscht die Statistik. Die Daten bleiben auf dem Gerät gespeichert (im privaten Modus ggf. nur bis zum Schließen).",
   ],
 };
 
@@ -1066,10 +1094,12 @@ function renderProducts() {
         return c;
       };
       
-      summary.appendChild(createStatCard('Bestellungen (Bons)', stats.bons));
-      summary.appendChild(createStatCard('Einnahmen (Netto)', formatCents(stats.einnahmenCents - stats.ausgabenCents), 'netto'));
-      summary.appendChild(createStatCard('Umsatz (ohne Pfand)', formatCents(stats.einnahmenCents)));
-      summary.appendChild(createStatCard('Ausgaben (Pfand)', formatCents(stats.ausgabenCents)));
+      summary.appendChild(createStatCard('Bestellungen', stats.bons));
+      summary.appendChild(createStatCard('Produktumsatz', formatCents(stats.einnahmenCents)));
+      summary.appendChild(createStatCard('Pfand eingenommen', formatCents(stats.pfandEinnahmenCents)));
+      summary.appendChild(createStatCard('Pfand ausgezahlt', formatCents(stats.ausgabenCents)));
+      summary.appendChild(createStatCard('Pfand einbehalten', formatCents(stats.pfandEinnahmenCents - stats.ausgabenCents)));
+      summary.appendChild(createStatCard('Kassenbestand gesamt', formatCents(statsKassenbestandCents(stats)), 'netto stat-card-full'));
       box.appendChild(summary);
       
       const listDiv = document.createElement('div');
@@ -1121,15 +1151,7 @@ function renderProducts() {
       exportBtn.className = 'btn-done';
       exportBtn.textContent = 'Export';
       exportBtn.onclick = () => {
-        const text = buildStatsExport();
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(text).then(() => {
-            exportBtn.textContent = 'Kopiert!';
-            setTimeout(() => exportBtn.textContent = 'Export', 2000);
-          }).catch(() => openStatsExportOverlay(text));
-        } else {
-          openStatsExportOverlay(text);
-        }
+        openStatsExportOverlay(buildStatsExport());
       };
       
       actions.appendChild(resetBtn);
@@ -1438,12 +1460,19 @@ document.getElementById('statsExportCloseX').onclick = closeStatsExportOverlay;
 document.getElementById('statsExportCancelBtn').onclick = closeStatsExportOverlay;
 document.getElementById('statsExportCopyBtn').onclick = () => {
   statsExportText.select();
-  try {
-    document.execCommand('copy');
+  const copyDone = () => {
     const btn = document.getElementById('statsExportCopyBtn');
     btn.textContent = 'Kopiert!';
     setTimeout(() => btn.textContent = 'Kopieren', 2000);
-  } catch(err) {}
+  };
+  
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(statsExportText.value).then(copyDone).catch(() => {
+      try { document.execCommand('copy'); copyDone(); } catch(err) {}
+    });
+  } else {
+    try { document.execCommand('copy'); copyDone(); } catch(err) {}
+  }
 };
 statsExportOverlay.addEventListener('click', (e) => {
   if (e.target === statsExportOverlay) closeStatsExportOverlay();
