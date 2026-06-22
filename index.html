@@ -75,7 +75,8 @@
   .pfand-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
+    gap: 12px;
     padding: 6px 16px 10px;
     font-size: 15px;
     font-weight: 600;
@@ -172,7 +173,7 @@
 
   .product-sub {
     font-weight: 400;
-    font-size: 13px;
+    font-size: 14px;
     opacity: 0.85;
     display: block;
     margin-top: 4px;
@@ -403,6 +404,111 @@
   }
   .btn-close { background: var(--grey); color: white; }
   .btn-done { background: var(--green); color: #1a1a1a; }
+  .btn-danger { background: var(--red); color: white; }
+  .overlay-confirm-text {
+    font-size: 16px;
+    line-height: 1.5;
+    text-align: center;
+    margin: 10px 0 24px;
+    opacity: 0.9;
+  }
+  .export-textarea {
+    width: 100%;
+    height: 200px;
+    background: rgba(255,255,255,0.05);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 13px;
+    font-family: monospace;
+    resize: none;
+    margin-bottom: 16px;
+  }
+  .export-textarea:focus { outline: none; border-color: var(--orange); }
+
+  .sub-nav {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .sub-nav-btn {
+    flex: 1;
+    padding: 12px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .sub-nav-btn.active {
+    background: var(--purple);
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.5) inset;
+  }
+
+  .stats-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: rgba(0,0,0,0.05);
+    padding: 14px;
+    border-radius: 10px;
+    text-align: center;
+  }
+  .stat-card-label {
+    font-size: 13px;
+    opacity: 0.7;
+    margin-bottom: 4px;
+  }
+  .stat-card-val {
+    font-size: 18px;
+    font-weight: 800;
+  }
+  .stat-card.netto .stat-card-val { color: #2c8c1e; }
+  
+  .stats-list {
+    margin-bottom: 20px;
+  }
+  .stats-list-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 15px;
+  }
+  .stats-list-item:last-child { border-bottom: none; }
+  .stats-list-item .sl-name { font-weight: 600; flex: 1; }
+  .stats-list-item .sl-anzahl { width: 50px; text-align: right; opacity: 0.8; }
+  .stats-list-item .sl-umsatz { width: 80px; text-align: right; font-weight: 700; }
+  
+  .stats-actions {
+    display: flex;
+    gap: 10px;
+  }
+  .stats-actions button {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .warning-note {
+    background: rgba(211, 58, 44, 0.1);
+    color: #c0392b;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    text-align: center;
+  }
   .overlay-close-x {
     position: absolute;
     top: 12px;
@@ -416,6 +522,18 @@
     cursor: pointer;
   }
   .overlay-close-x:active { color: white; }
+
+  @media (min-width: 400px) {
+    .product-btn {
+      font-size: 18px;
+      padding: 18px 12px;
+      min-height: 86px;
+    }
+    .product-sub {
+      font-size: 15px;
+      margin-top: 6px;
+    }
+  }
 
   @media (min-width: 700px), (orientation: landscape) {
     .main {
@@ -446,9 +564,13 @@
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     }
     .product-btn {
-      font-size: 17px;
+      font-size: 19px;
       padding: 22px 14px;
-      min-height: 76px;
+      min-height: 96px;
+    }
+    .product-sub {
+      font-size: 16px;
+      margin-top: 8px;
     }
     .cart-controls {
       flex-direction: column;
@@ -459,6 +581,22 @@
     }
     .total-bar {
       min-height: 96px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .product-grid-inner {
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+    .product-btn {
+      font-size: 21px;
+      padding: 28px 16px;
+      min-height: 116px;
+      border-radius: 16px;
+    }
+    .product-sub {
+      font-size: 17px;
+      margin-top: 10px;
     }
   }
 
@@ -505,11 +643,11 @@
     <button class="overlay-close-x" id="overlayCloseX">✕</button>
     <h2>Wechselgeld</h2>
     <div class="overlay-row total">
-      <span>Zu zahlen</span>
+      <span id="overlayTotalLabel">Zu zahlen</span>
       <span id="overlayTotal">0,00 €</span>
     </div>
 
-    <div class="overlay-input-wrap">
+    <div class="overlay-input-wrap" id="overlayInputWrap">
       <label for="receivedInput">Gegeben (€)</label>
       <input type="text" id="receivedInput" inputmode="decimal" autocomplete="off" placeholder="0,00">
     </div>
@@ -520,6 +658,42 @@
 
     <div class="overlay-buttons">
       <button class="btn-done" id="overlayDoneBtn">Fertig</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="clearOverlay">
+  <div class="overlay-card">
+    <button class="overlay-close-x" id="clearCloseX">✕</button>
+    <h2>Bestellung leeren?</h2>
+    <p class="overlay-confirm-text">Möchtest du die komplette Bestellung wirklich leeren?</p>
+    <div class="overlay-buttons">
+      <button class="btn-close" id="clearCancelBtn">Abbrechen</button>
+      <button class="btn-danger" id="clearConfirmBtn">Leeren</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="statsResetOverlay">
+  <div class="overlay-card">
+    <button class="overlay-close-x" id="statsResetCloseX">✕</button>
+    <h2>Statistik zurücksetzen?</h2>
+    <p class="overlay-confirm-text">Möchtest du alle erfassten Verkäufe und Bons endgültig löschen?</p>
+    <div class="overlay-buttons">
+      <button class="btn-close" id="statsResetCancelBtn">Abbrechen</button>
+      <button class="btn-danger" id="statsResetConfirmBtn">Zurücksetzen</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="statsExportOverlay">
+  <div class="overlay-card">
+    <button class="overlay-close-x" id="statsExportCloseX">✕</button>
+    <h2>Export</h2>
+    <textarea id="statsExportText" readonly class="export-textarea"></textarea>
+    <div class="overlay-buttons">
+      <button class="btn-close" id="statsExportCancelBtn">Schließen</button>
+      <button class="btn-done" id="statsExportCopyBtn">Kopieren</button>
     </div>
   </div>
 </div>
@@ -580,6 +754,112 @@ const ESSEN_TAB = 'Essen';
 const ESSEN_BLOCK_STANDARD = 'Bratbude';   // Toggle aus
 const ESSEN_BLOCK_TOGGLE = 'Crepe-Bude';   // Toggle an
 
+// ---------------------------------------------------------
+// STATISTIK — persistente Verkaufszahlen (localStorage, offline)
+// ---------------------------------------------------------
+// Datenmodell (alles Geld in Integer-Cent):
+//   { version, produkte: { <name>: { anzahl, umsatzCents } },
+//     einnahmenCents, ausgabenCents, bons }
+//   - einnahmenCents: Summe der Produkt-Preise (ohne Pfand) aller Abschlüsse
+//   - ausgabenCents : Summe aller ausgezahlten Pfand-Rückgaben
+//   - bons          : Anzahl abgeschlossener Bestellungen ("Fertig")
+const STATS_STORAGE_KEY = 'kassenStatistik';
+const STATS_VERSION = 1;
+
+function emptyStats() {
+  return { version: STATS_VERSION, produkte: {}, einnahmenCents: 0, ausgabenCents: 0, bons: 0 };
+}
+
+function loadStats() {
+  try {
+    const raw = localStorage.getItem(STATS_STORAGE_KEY);
+    if (!raw) return emptyStats();
+    const data = JSON.parse(raw);
+    // Defensive: fehlende Felder auffüllen
+    return Object.assign(emptyStats(), data, {
+      produkte: (data && typeof data.produkte === 'object' && data.produkte) ? data.produkte : {},
+    });
+  } catch (e) {
+    return emptyStats();
+  }
+}
+
+function saveStats(stats) {
+  try {
+    localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(stats));
+    return true;
+  } catch (e) {
+    return false; // z.B. Speicher voll / privater Modus
+  }
+}
+
+// Prüft, ob Persistenz überhaupt verfügbar ist (z.B. iOS Private Mode).
+function statsStorageAvailable() {
+  try {
+    const k = '__stats_test__';
+    localStorage.setItem(k, '1');
+    localStorage.removeItem(k);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Bucht den aktuellen Warenkorb in die Statistik (beim Abschluss / "Fertig").
+// Zählt Produkte (Anzahl + Umsatz = Preis ohne Pfand) und Pfand-Rückgaben
+// (Ausgaben). Leerer Warenkorb wird ignoriert (kein Bon).
+function recordSale() {
+  if (!cart.length) return;
+  const stats = loadStats();
+  let hatPosition = false;
+
+  cart.forEach(item => {
+    if (item.isPfandAbzug) {
+      // Pfand-Rückgabe = Auszahlung an Kunde
+      stats.ausgabenCents += Math.abs(toCents(item.preis));
+      hatPosition = true;
+      return;
+    }
+    const name = item.name;
+    if (!stats.produkte[name]) stats.produkte[name] = { anzahl: 0, umsatzCents: 0 };
+    stats.produkte[name].anzahl += 1;
+    stats.produkte[name].umsatzCents += toCents(item.preis); // Preis OHNE Pfand
+    stats.einnahmenCents += toCents(item.preis);
+    hatPosition = true;
+  });
+
+  if (hatPosition) stats.bons += 1;
+  saveStats(stats);
+}
+
+function resetStats() {
+  saveStats(emptyStats());
+}
+
+// Exportiert die Statistik als lesbaren Text (für Sicherung/Weitergabe).
+function buildStatsExport() {
+  const stats = loadStats();
+  const lines = [];
+  lines.push('Statistik – Guttauer Dorf- und Teichfest 2026');
+  lines.push('');
+  lines.push('Verkäufe pro Produkt:');
+  const namen = Object.keys(stats.produkte).sort();
+  if (namen.length === 0) {
+    lines.push('  (noch keine Verkäufe)');
+  } else {
+    namen.forEach(n => {
+      const p = stats.produkte[n];
+      lines.push(`  ${n}: ${p.anzahl}x  (${formatCents(p.umsatzCents)})`);
+    });
+  }
+  lines.push('');
+  lines.push(`Bestellungen gesamt: ${stats.bons}`);
+  lines.push(`Einnahmen (Produkte): ${formatCents(stats.einnahmenCents)}`);
+  lines.push(`Ausgaben (Pfand zurück): ${formatCents(stats.ausgabenCents)}`);
+  lines.push(`Netto: ${formatCents(stats.einnahmenCents - stats.ausgabenCents)}`);
+  return lines.join('\n');
+}
+
 // Inhalt des Info-Reiters. Überschrift + Inhaltsblöcke.
 // Ein Block ist entweder ein String (Absatz) oder { ueberschrift: "…" }.
 const INFO_TAB = {
@@ -623,6 +903,7 @@ function getCurrentTotalCents() {
 
 const TAB_CLASS = { "Bar": "tab-bar", "Bier": "tab-bier", "Essen": "tab-essen", "Info": "tab-info" };
 
+let infoView = 'info';
 let currentTab = Object.keys(PRODUKTE)[0];
 let cart = []; // { name, preis, pfand, isPfandAbzug }
 let pfandBerechnen = true;
@@ -653,6 +934,7 @@ function updateToggleForTab() {
   }
   pfandRow.style.display = '';
   if (isEssenTab()) {
+    // Label benennt die Funktion; der Toggle-State zeigt, ob sie aktiv ist.
     pfandRowLabel.textContent = 'Crepe-Bude anzeigen';
     pfandToggle.checked = essenZeigeCrepeBude;
   } else {
@@ -703,35 +985,157 @@ function renderProducts() {
     btn.appendChild(document.createTextNode(p.name));
     const sub = document.createElement('span');
     sub.className = 'product-sub';
-    sub.textContent = (showPfand && p.pfand > 0)
-      ? `${formatEuro(p.preis)} + ${formatEuro(p.pfand)} Pfand`
-      : `${formatEuro(p.preis)}`;
+    // Pfand wird nur im Warenkorb ausgewiesen, nicht auf dem Button (kürzeres Layout).
+    sub.textContent = formatEuro(p.preis);
     btn.appendChild(sub);
     btn.onclick = () => addToCart(p, showPfand);
     return btn;
   }
 
   if (isInfoTab()) {
-    // Info-/Über-Reiter: zeigt eine Info-Box statt Produkten.
+    // Sub-Nav (Info / Statistik)
+    const nav = document.createElement('div');
+    nav.className = 'sub-nav';
+    
+    const btnInfo = document.createElement('button');
+    btnInfo.className = 'sub-nav-btn' + (infoView === 'info' ? ' active' : '');
+    btnInfo.textContent = 'Info';
+    btnInfo.onclick = () => { infoView = 'info'; renderProducts(); };
+    nav.appendChild(btnInfo);
+    
+    const btnStat = document.createElement('button');
+    btnStat.className = 'sub-nav-btn' + (infoView === 'statistik' ? ' active' : '');
+    btnStat.textContent = 'Statistik';
+    btnStat.onclick = () => { infoView = 'statistik'; renderProducts(); };
+    nav.appendChild(btnStat);
+    
+    productListEl.appendChild(nav);
+
     const box = document.createElement('div');
     box.className = 'info-box';
-    const h = document.createElement('div');
-    h.className = 'info-box-title';
-    h.textContent = INFO_TAB.titel;
-    box.appendChild(h);
-    INFO_TAB.absaetze.forEach(block => {
-      if (block && typeof block === 'object' && block.ueberschrift) {
-        const sub = document.createElement('div');
-        sub.className = 'info-box-subtitle';
-        sub.textContent = block.ueberschrift;
-        box.appendChild(sub);
-      } else {
-        const p = document.createElement('p');
-        p.className = 'info-box-text';
-        p.textContent = block;
-        box.appendChild(p);
+
+    if (infoView === 'info') {
+      const h = document.createElement('div');
+      h.className = 'info-box-title';
+      h.textContent = INFO_TAB.titel;
+      box.appendChild(h);
+      INFO_TAB.absaetze.forEach(block => {
+        if (block && typeof block === 'object' && block.ueberschrift) {
+          const sub = document.createElement('div');
+          sub.className = 'info-box-subtitle';
+          sub.textContent = block.ueberschrift;
+          box.appendChild(sub);
+        } else {
+          const p = document.createElement('p');
+          p.className = 'info-box-text';
+          p.textContent = block;
+          box.appendChild(p);
+        }
+      });
+    } else {
+      // Statistik View
+      const stats = loadStats();
+      
+      const h = document.createElement('div');
+      h.className = 'info-box-title';
+      h.textContent = 'Statistik';
+      box.appendChild(h);
+      
+      if (!statsStorageAvailable()) {
+        const warn = document.createElement('div');
+        warn.className = 'warning-note';
+        warn.textContent = 'Hinweis: Speicher nicht verfügbar (z.B. privater Modus). Daten gehen nach Neustart verloren.';
+        box.appendChild(warn);
       }
-    });
+      
+      const summary = document.createElement('div');
+      summary.className = 'stats-summary';
+      
+      const createStatCard = (lbl, val, xtraCls='') => {
+        const c = document.createElement('div');
+        c.className = 'stat-card ' + xtraCls;
+        const l = document.createElement('div');
+        l.className = 'stat-card-label';
+        l.textContent = lbl;
+        const v = document.createElement('div');
+        v.className = 'stat-card-val';
+        v.textContent = val;
+        c.appendChild(l);
+        c.appendChild(v);
+        return c;
+      };
+      
+      summary.appendChild(createStatCard('Bestellungen (Bons)', stats.bons));
+      summary.appendChild(createStatCard('Einnahmen (Netto)', formatCents(stats.einnahmenCents - stats.ausgabenCents), 'netto'));
+      summary.appendChild(createStatCard('Umsatz (ohne Pfand)', formatCents(stats.einnahmenCents)));
+      summary.appendChild(createStatCard('Ausgaben (Pfand)', formatCents(stats.ausgabenCents)));
+      box.appendChild(summary);
+      
+      const listDiv = document.createElement('div');
+      listDiv.className = 'stats-list';
+      
+      const prodNames = Object.keys(stats.produkte).sort((a,b) => stats.produkte[b].anzahl - stats.produkte[a].anzahl);
+      
+      if (prodNames.length === 0) {
+        const hint = document.createElement('div');
+        hint.className = 'empty-hint';
+        hint.style.padding = '10px 0';
+        hint.textContent = 'Noch keine Verkäufe erfasst.';
+        listDiv.appendChild(hint);
+      } else {
+        prodNames.forEach(n => {
+          const p = stats.produkte[n];
+          const row = document.createElement('div');
+          row.className = 'stats-list-item';
+          
+          const nameEl = document.createElement('div');
+          nameEl.className = 'sl-name';
+          nameEl.textContent = n;
+          
+          const anzEl = document.createElement('div');
+          anzEl.className = 'sl-anzahl';
+          anzEl.textContent = p.anzahl + 'x';
+          
+          const umsEl = document.createElement('div');
+          umsEl.className = 'sl-umsatz';
+          umsEl.textContent = formatCents(p.umsatzCents);
+          
+          row.appendChild(nameEl);
+          row.appendChild(anzEl);
+          row.appendChild(umsEl);
+          listDiv.appendChild(row);
+        });
+      }
+      box.appendChild(listDiv);
+      
+      const actions = document.createElement('div');
+      actions.className = 'stats-actions';
+      
+      const resetBtn = document.createElement('button');
+      resetBtn.className = 'btn-close';
+      resetBtn.textContent = 'Zurücksetzen';
+      resetBtn.onclick = openStatsResetOverlay;
+      
+      const exportBtn = document.createElement('button');
+      exportBtn.className = 'btn-done';
+      exportBtn.textContent = 'Export';
+      exportBtn.onclick = () => {
+        const text = buildStatsExport();
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => {
+            exportBtn.textContent = 'Kopiert!';
+            setTimeout(() => exportBtn.textContent = 'Export', 2000);
+          }).catch(() => openStatsExportOverlay(text));
+        } else {
+          openStatsExportOverlay(text);
+        }
+      };
+      
+      actions.appendChild(resetBtn);
+      actions.appendChild(exportBtn);
+      box.appendChild(actions);
+    }
+    
     productListEl.appendChild(box);
     return;
   }
@@ -777,12 +1181,30 @@ function renderProducts() {
 }
 
 function addToCart(p, includePfand = pfandBerechnen) {
-  cart.push({ name: p.name, preis: p.preis, pfand: includePfand ? p.pfand : 0 });
+  // pfandOriginal merkt sich den Produkt-Pfand, damit der Pfand-Toggle
+  // auch nachträglich (bei bereits hinzugefügten Positionen) wirken kann.
+  cart.push({
+    name: p.name,
+    preis: p.preis,
+    pfand: includePfand ? p.pfand : 0,
+    pfandOriginal: p.pfand || 0,
+  });
   renderCart();
 }
 
 function addPfandAbzug() {
   cart.push({ name: "Pfand-Rückgabe", preis: -PFAND_RUECKGABE_EURO, pfand: 0, isPfandAbzug: true });
+  renderCart();
+}
+
+// Wendet den aktuellen Pfand-Toggle (pfandBerechnen) nachträglich auf alle
+// bereits im Warenkorb liegenden Produkte an. Die manuelle Pfand-Rückgabe
+// (isPfandAbzug) bleibt unberührt.
+function applyPfandToCart() {
+  cart.forEach(item => {
+    if (item.isPfandAbzug) return;
+    item.pfand = pfandBerechnen ? (item.pfandOriginal || 0) : 0;
+  });
   renderCart();
 }
 
@@ -837,14 +1259,47 @@ function updateTotal() {
 // ---- Wechselgeld-Overlay ----
 const changeOverlay = document.getElementById('changeOverlay');
 const overlayTotalEl = document.getElementById('overlayTotal');
+const overlayTotalLabelEl = document.getElementById('overlayTotalLabel');
+const overlayInputWrapEl = document.getElementById('overlayInputWrap');
 const receivedInput = document.getElementById('receivedInput');
 const changeResultEl = document.getElementById('changeResult');
 const quickAmountsEl = document.getElementById('quickAmounts');
 
 function openChangeOverlay() {
   const totalCents = getCurrentTotalCents();
-  if (totalCents <= 0) return; // Kein Wechselgeld bei Betrag 0 oder Auszahlung
+  // Leerer Warenkorb: nichts zu kassieren/abzuschließen.
+  if (cart.length === 0) return;
 
+  // Negativer Gesamtbetrag (viel Pfand zurück) = Auszahlung an den Kunden.
+  if (totalCents < 0) {
+    const payoutCents = Math.abs(totalCents);
+    overlayTotalLabelEl.textContent = 'Auszahlung an Kunde';
+    overlayTotalEl.textContent = formatCents(payoutCents);
+    overlayInputWrapEl.style.display = 'none';
+    quickAmountsEl.style.display = 'none';
+    changeResultEl.textContent = `Bitte ${formatCents(payoutCents)} an Kunde auszahlen`;
+    changeResultEl.className = 'change-result negative';
+    changeOverlay.classList.remove('hidden');
+    return;
+  }
+
+  // Gesamtbetrag genau 0 (z.B. Pfand-Rückgabe = Warenwert): nichts zu
+  // kassieren, aber Bestellung kann abgeschlossen werden (zählt in Statistik).
+  if (totalCents === 0) {
+    overlayTotalLabelEl.textContent = 'Zu zahlen';
+    overlayTotalEl.textContent = formatCents(0);
+    overlayInputWrapEl.style.display = 'none';
+    quickAmountsEl.style.display = 'none';
+    changeResultEl.textContent = 'Nichts zu zahlen – „Fertig" zum Abschließen';
+    changeResultEl.className = 'change-result';
+    changeOverlay.classList.remove('hidden');
+    return;
+  }
+
+  // Positiver Gesamtbetrag = normaler Kassiervorgang mit Wechselgeld.
+  overlayTotalLabelEl.textContent = 'Zu zahlen';
+  overlayInputWrapEl.style.display = '';
+  quickAmountsEl.style.display = '';
   overlayTotalEl.textContent = formatCents(totalCents);
   receivedInput.value = '';
   changeResultEl.textContent = 'Betrag eingeben…';
@@ -917,6 +1372,7 @@ totalBarEl.onclick = openChangeOverlay;
 receivedInput.addEventListener('input', calcChange);
 document.getElementById('overlayCloseX').onclick = closeChangeOverlay;
 document.getElementById('overlayDoneBtn').onclick = () => {
+  recordSale();      // Verkauf in Statistik buchen (vor dem Leeren)
   closeChangeOverlay();
   resetCart();
 };
@@ -932,16 +1388,83 @@ function resetCart() {
 const pfandMinusBtn = document.getElementById('pfandMinusBtn');
 pfandMinusBtn.textContent = `Pfand zurück -${formatEuro(PFAND_RUECKGABE_EURO)}`;
 pfandMinusBtn.onclick = addPfandAbzug;
+const clearOverlay = document.getElementById('clearOverlay');
+function openClearOverlay() {
+  clearOverlay.classList.remove('hidden');
+}
+function closeClearOverlay() {
+  clearOverlay.classList.add('hidden');
+}
+document.getElementById('clearCloseX').onclick = closeClearOverlay;
+document.getElementById('clearCancelBtn').onclick = closeClearOverlay;
+document.getElementById('clearConfirmBtn').onclick = () => {
+  closeClearOverlay();
+  resetCart();
+};
+clearOverlay.addEventListener('click', (e) => {
+  if (e.target === clearOverlay) closeClearOverlay();
+});
+
+
+const statsResetOverlay = document.getElementById('statsResetOverlay');
+function openStatsResetOverlay() { statsResetOverlay.classList.remove('hidden'); }
+function closeStatsResetOverlay() { statsResetOverlay.classList.add('hidden'); }
+
+document.getElementById('statsResetCloseX').onclick = closeStatsResetOverlay;
+document.getElementById('statsResetCancelBtn').onclick = closeStatsResetOverlay;
+document.getElementById('statsResetConfirmBtn').onclick = () => {
+  closeStatsResetOverlay();
+  resetStats();
+  renderProducts();
+};
+statsResetOverlay.addEventListener('click', (e) => {
+  if (e.target === statsResetOverlay) closeStatsResetOverlay();
+});
+
+const statsExportOverlay = document.getElementById('statsExportOverlay');
+const statsExportText = document.getElementById('statsExportText');
+function openStatsExportOverlay(text) {
+  statsExportText.value = text;
+  statsExportOverlay.classList.remove('hidden');
+  setTimeout(() => {
+    statsExportText.select();
+    statsExportText.focus();
+  }, 100);
+}
+function closeStatsExportOverlay() { statsExportOverlay.classList.add('hidden'); }
+
+document.getElementById('statsExportCloseX').onclick = closeStatsExportOverlay;
+document.getElementById('statsExportCancelBtn').onclick = closeStatsExportOverlay;
+document.getElementById('statsExportCopyBtn').onclick = () => {
+  statsExportText.select();
+  try {
+    document.execCommand('copy');
+    const btn = document.getElementById('statsExportCopyBtn');
+    btn.textContent = 'Kopiert!';
+    setTimeout(() => btn.textContent = 'Kopieren', 2000);
+  } catch(err) {}
+};
+statsExportOverlay.addEventListener('click', (e) => {
+  if (e.target === statsExportOverlay) closeStatsExportOverlay();
+});
+
 document.getElementById('neuBtn').onclick = () => {
-  if (cart.length === 0 || confirm('Bestellung wirklich leeren?')) resetCart();
+  if (cart.length === 0) {
+    resetCart();
+  } else {
+    openClearOverlay();
+  }
 };
 pfandToggle.onchange = () => {
   if (isEssenTab()) {
     essenZeigeCrepeBude = pfandToggle.checked;
+    updateToggleForTab();
+    renderProducts();
   } else {
     pfandBerechnen = pfandToggle.checked;
+    renderProducts();
+    applyPfandToCart(); // bestehende Warenkorb-Positionen dynamisch anpassen
   }
-  renderProducts();
 };
 
 renderTabs();
