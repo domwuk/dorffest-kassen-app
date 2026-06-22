@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kasse">
+<meta name="theme-color" content="#16313b">
+<title>Kassensystem</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root {
+    --bg: #16313b;
+    --bg-2: #1c3f4a;
+    --orange: #e8772e;
+    --orange-dark: #d4651f;
+    --red: #d33a2c;
+    --purple: #6a5fc4;
+    --green: #6fbf3f;
+    --grey: #4a4a4a;
+    --card-bg: #ffffff;
+    --text-light: #f2f2f2;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--bg);
+    color: var(--text-light);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overscroll-behavior: none;
+    user-select: none;
+  }
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    padding: 10px 12px 6px;
+    overflow-x: auto;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px 6px;
+    border: none;
+    border-radius: 22px;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    background: var(--grey);
+    opacity: 0.6;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .tab-btn.active { opacity: 1; box-shadow: 0 0 0 2px rgba(255,255,255,0.5) inset; }
+  .tab-bar { background: var(--orange); }
+  .tab-bier { background: var(--green); }
+  .tab-essen { background: var(--grey); }
+  .tab-tka { background: var(--purple); }
+
+  /* Pfand toggle row */
+  .pfand-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 16px 10px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .switch {
+    position: relative;
+    width: 46px;
+    height: 26px;
+  }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; cursor: pointer; inset: 0;
+    background-color: #555;
+    border-radius: 26px;
+    transition: 0.2s;
+  }
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 20px; width: 20px;
+    left: 3px; bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.2s;
+  }
+  input:checked + .slider { background-color: var(--orange); }
+  input:checked + .slider:before { transform: translateX(20px); }
+
+  /* Main area */
+  .main {
+    flex: 1;
+    display: flex;
+    gap: 12px;
+    padding: 0 12px 12px;
+    min-height: 0;
+  }
+  .left {
+    flex: 1.3;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+  }
+  .product-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+  .product-grid-inner {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+  }
+  .block-heading {
+    font-size: 15px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.75;
+    margin-bottom: -4px;
+  }
+  .product-btn {
+    background: var(--orange);
+    border: none;
+    color: white;
+    font-weight: 700;
+    font-size: 17px;
+    padding: 22px 14px;
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    min-height: 76px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .product-btn:active { background: var(--orange-dark); }
+  .product-sub {
+    font-weight: 400;
+    font-size: 13px;
+    opacity: 0.85;
+    display: block;
+    margin-top: 4px;
+  }
+  .empty-hint {
+    opacity: 0.6;
+    font-size: 13px;
+    text-align: center;
+    padding: 20px;
+    grid-column: 1 / -1;
+  }
+  .pfand-btn-main {
+    background: var(--red);
+    border: none;
+    color: white;
+    font-weight: 800;
+    font-size: 19px;
+    padding: 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .pfand-btn-main:active { filter: brightness(0.9); }
+
+  .right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+  }
+  .right h2 {
+    margin: 0;
+    font-size: 17px;
+  }
+  .cart {
+    flex: 1;
+    background: var(--card-bg);
+    color: #222;
+    border-radius: 12px;
+    overflow-y: auto;
+    padding: 6px;
+  }
+  .cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 8px;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+  }
+  .cart-item:last-child { border-bottom: none; }
+  .cart-item .ci-name { font-weight: 600; }
+  .cart-item .ci-price { white-space: nowrap; margin-left: 8px; }
+  .cart-item .ci-remove {
+    background: none;
+    border: none;
+    color: #c0392b;
+    font-size: 18px;
+    padding: 0 4px;
+    margin-left: 6px;
+    cursor: pointer;
+  }
+  .cart-pfand-line { font-size: 12px; opacity: 0.65; }
+
+  .neu-btn {
+    background: var(--purple);
+    border: none;
+    color: white;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  .neu-btn:active { filter: brightness(0.9); }
+
+  .total-bar {
+    background: var(--orange);
+    border-radius: 12px;
+    padding: 28px 14px;
+    text-align: center;
+    font-size: 26px;
+    font-weight: 800;
+    margin-top: 8px;
+    cursor: pointer;
+    min-height: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .total-bar:active { filter: brightness(0.95); }
+
+  /* Wechselgeld-Overlay */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 20, 25, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .overlay.hidden { display: none; }
+  .overlay-card {
+    position: relative;
+    background: var(--bg-2);
+    border-radius: 18px;
+    padding: 28px;
+    width: 100%;
+    max-width: 420px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+  }
+  .overlay-card h2 {
+    margin: 0 0 18px;
+    font-size: 22px;
+    text-align: center;
+  }
+  .overlay-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 17px;
+    margin-bottom: 10px;
+    padding: 4px 0;
+  }
+  .overlay-row.total { font-weight: 800; font-size: 20px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 12px; margin-top: 4px; }
+  .overlay-input-wrap {
+    margin: 18px 0;
+  }
+  .overlay-input-wrap label {
+    display: block;
+    font-size: 14px;
+    opacity: 0.8;
+    margin-bottom: 6px;
+  }
+  #receivedInput {
+    width: 100%;
+    font-size: 28px;
+    font-weight: 700;
+    padding: 14px;
+    border-radius: 10px;
+    border: none;
+    text-align: center;
+    background: white;
+    color: #222;
+  }
+  .quick-amounts {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin: 14px 0;
+  }
+  .quick-amounts button {
+    background: var(--grey);
+    border: none;
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 12px 4px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .quick-amounts button:active { filter: brightness(1.3); }
+  .change-result {
+    text-align: center;
+    font-size: 34px;
+    font-weight: 800;
+    padding: 16px;
+    border-radius: 12px;
+    margin: 14px 0;
+    background: rgba(255,255,255,0.06);
+  }
+  .change-result.negative { color: #ff8a7a; }
+  .change-result.positive { color: #8fe88a; }
+  .overlay-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .overlay-buttons button {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .btn-close { background: var(--grey); color: white; }
+  .btn-done { background: var(--green); color: #1a1a1a; }
+  .overlay-close-x {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    font-size: 26px;
+    line-height: 1;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+  .overlay-close-x:active { color: white; }
+
+  /* Settings drawer for editing products */
+  .gear {
+    position: absolute;
+    top: env(safe-area-inset-top);
+    right: 8px;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.5);
+    font-size: 18px;
+    padding: 10px;
+    z-index: 5;
+  }
+
+  @media (max-width: 700px) {
+    .main {
+      flex-direction: column;
+    }
+    .left {
+      flex: 1.4;
+    }
+    .right {
+      flex: 1;
+    }
+    .product-grid-inner {
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    }
+    .product-btn {
+      min-height: 64px;
+      font-size: 15px;
+      padding: 16px 10px;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .product-grid-inner {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .tab-btn {
+      font-size: 13px;
+      padding: 9px 4px;
+    }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="pfand-row">
+    <span id="pfandRowLabel">Pfand berechnen</span>
+    <label class="switch">
+      <input type="checkbox" id="pfandToggle" checked>
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="main">
+    <div class="left">
+      <div class="product-grid" id="productList"></div>
+      <button class="pfand-btn-main" id="pfandMinusBtn">Pfand -2€</button>
+    </div>
+
+    <div class="right">
+      <h2>Einkaufswagen</h2>
+      <div class="cart" id="cart"></div>
+      <button class="neu-btn" id="neuBtn">Neu</button>
+      <div class="total-bar" id="totalBar">Gesamt: 0.00 €</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="overlay hidden" id="changeOverlay">
+  <div class="overlay-card">
+    <button class="overlay-close-x" id="overlayCloseX">✕</button>
+    <h2>Wechselgeld</h2>
+    <div class="overlay-row total">
+      <span>Gesamtbetrag</span>
+      <span id="overlayTotal">0.00 €</span>
+    </div>
+
+    <div class="overlay-input-wrap">
+      <label for="receivedInput">Erhaltener Betrag (€)</label>
+      <input type="number" id="receivedInput" inputmode="decimal" step="0.01" min="0" placeholder="0.00">
+    </div>
+
+    <div class="quick-amounts" id="quickAmounts"></div>
+
+    <div class="change-result" id="changeResult">Betrag eingeben…</div>
+
+    <div class="overlay-buttons">
+      <button class="btn-done" id="overlayDoneBtn">Fertig</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------------------------------------------------------
+// PRODUKTDATEN — hier einfach anpassen / ergänzen
+// ---------------------------------------------------------
+const PRODUKTE = {
+  "Bar": [
+    { name: "Glas Sekt/Hugo 0,1l", preis: 2.0, pfand: 2.0 },
+    { name: "Schoppen Wein 0,1l", preis: 2.0, pfand: 2.0 },
+    { name: "Flasche Wein/Sekt/Hugo", preis: 10.0, pfand: 2.0 },
+    { name: "Despo", preis: 4.0, pfand: 2.0 },
+    { name: "Mixgetränke", preis: 6.0, pfand: 2.0 },
+    { name: "Cocktails", preis: 6.0, pfand: 2.0 },
+    { name: "alkfrei Cocktails", preis: 4.0, pfand: 2.0 },
+    { name: "Pullchen", preis: 2.5, pfand: 0.0 },
+  ],
+  "Bier": [
+    { name: "Bier/Radler 0,4l", preis: 3.5, pfand: 2.0 },
+    { name: "Bier/Radler 0,25l", preis: 2.5, pfand: 2.0 },
+    { name: "alkfrei 0,4l", preis: 2.5, pfand: 2.0 },
+    { name: "alkfrei 0,25l", preis: 1.5, pfand: 2.0 },
+    { name: "alkfrei Flasche", preis: 6.0, pfand: 2.0 },
+    { name: "Pullchen", preis: 2.5, pfand: 0.0 },
+  ],
+  "Essen": {
+    "Bratbude": [
+      { name: "Bratwurst m Br", preis: 3.5, pfand: 0.0 },
+      { name: "Steak m Br", preis: 4.5, pfand: 0.0 },
+      { name: "Spieß m Br", preis: 4.5, pfand: 0.0 },
+      { name: "Hotdog", preis: 3.0, pfand: 0.0 },
+      { name: "Pommes", preis: 2.5, pfand: 0.0 },
+      { name: "Fischsemmel", preis: 3.5, pfand: 0.0 },
+      { name: "Frühl.rolle 2", preis: 3.5, pfand: 0.0 },
+      { name: "Frühl.rolle 3", preis: 5.0, pfand: 0.0 },
+    ],
+    "Crepe-Bude": [
+      { name: "Crepes Puderzucker", preis: 2.5, pfand: 0.0 },
+      { name: "Crepes Nutella/Apfelmus", preis: 3.5, pfand: 0.0 },
+      { name: "Crepes m. Käse u. Schinken", preis: 4.0, pfand: 0.0 },
+      { name: "Waffel Zimt/Zucker", preis: 3.0, pfand: 0.0 },
+      { name: "Waffel Nutella/Apfelmus", preis: 4.0, pfand: 0.0 },
+      { name: "Waffel m. Käse u. Schinken", preis: 4.5, pfand: 0.0 },
+      { name: "Zuckerwatte", preis: 2.0, pfand: 0.0 },
+    ],
+  },
+  "TKA": [
+    // Noch keine Produkte hinterlegt — hier einfach im gleichen Format ergänzen:
+    // { name: "Beispielprodukt", preis: 1.0, pfand: 0.0 },
+  ],
+};
+
+const TAB_CLASS = { "Bar": "tab-bar", "Bier": "tab-bier", "Essen": "tab-essen", "TKA": "tab-tka" };
+
+let currentTab = Object.keys(PRODUKTE)[0];
+let cart = []; // { name, preis, pfand, isPfandAbzug }
+let pfandBerechnen = true;
+let essenZeigeCrepeBude = false; // false = Bratbude, true = Crepe-Bude
+
+const tabsEl = document.getElementById('tabs');
+const productListEl = document.getElementById('productList');
+const cartEl = document.getElementById('cart');
+const totalBarEl = document.getElementById('totalBar');
+const pfandToggle = document.getElementById('pfandToggle');
+const pfandRowLabel = document.getElementById('pfandRowLabel');
+
+function isEssenTab() {
+  return currentTab === 'Essen' && !Array.isArray(PRODUKTE['Essen']);
+}
+
+function updateToggleForTab() {
+  if (isEssenTab()) {
+    pfandRowLabel.textContent = 'Crepe-Bude anzeigen';
+    pfandToggle.checked = essenZeigeCrepeBude;
+  } else {
+    pfandRowLabel.textContent = 'Pfand berechnen';
+    pfandToggle.checked = pfandBerechnen;
+  }
+}
+
+function updatePfandButtonVisibility() {
+  const pfandBtn = document.getElementById('pfandMinusBtn');
+  pfandBtn.style.display = isEssenTab() ? 'none' : '';
+}
+
+function renderTabs() {
+  tabsEl.innerHTML = '';
+  Object.keys(PRODUKTE).forEach(tab => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn ' + (TAB_CLASS[tab] || '') + (tab === currentTab ? ' active' : '');
+    btn.textContent = tab;
+    btn.onclick = () => { currentTab = tab; renderTabs(); updateToggleForTab(); renderProducts(); updatePfandButtonVisibility(); };
+    tabsEl.appendChild(btn);
+  });
+}
+
+function renderProducts() {
+  productListEl.innerHTML = '';
+  const data = PRODUKTE[currentTab];
+
+  function makeButton(p, showPfand) {
+    const btn = document.createElement('button');
+    btn.className = 'product-btn';
+    const pfandText = (showPfand && p.pfand > 0)
+      ? `<span class="product-sub">${p.preis.toFixed(2)} € + ${p.pfand.toFixed(2)} € Pfand</span>`
+      : `<span class="product-sub">${p.preis.toFixed(2)} €</span>`;
+    btn.innerHTML = `${p.name}${pfandText}`;
+    btn.onclick = () => addToCart(p);
+    return btn;
+  }
+
+  if (Array.isArray(data)) {
+    if (data.length === 0) {
+      const hint = document.createElement('div');
+      hint.className = 'empty-hint';
+      hint.textContent = 'Keine Produkte in dieser Kategorie. Im Code (PRODUKTE) ergänzen.';
+      productListEl.appendChild(hint);
+      return;
+    }
+    const grid = document.createElement('div');
+    grid.className = 'product-grid-inner';
+    data.forEach(p => grid.appendChild(makeButton(p, pfandBerechnen)));
+    productListEl.appendChild(grid);
+  } else if (isEssenTab()) {
+    // Essen: Toggle steuert, welcher Block angezeigt wird (kein Pfand bei Essen)
+    const blockName = essenZeigeCrepeBude ? 'Crepe-Bude' : 'Bratbude';
+    const heading = document.createElement('div');
+    heading.className = 'block-heading';
+    heading.textContent = blockName;
+    productListEl.appendChild(heading);
+
+    const grid = document.createElement('div');
+    grid.className = 'product-grid-inner';
+    (data[blockName] || []).forEach(p => grid.appendChild(makeButton(p, false)));
+    productListEl.appendChild(grid);
+  } else {
+    // Generischer Fall: Objekt mit Unterblöcken, alle gleichzeitig anzeigen
+    Object.keys(data).forEach(blockName => {
+      const heading = document.createElement('div');
+      heading.className = 'block-heading';
+      heading.textContent = blockName;
+      productListEl.appendChild(heading);
+
+      const grid = document.createElement('div');
+      grid.className = 'product-grid-inner';
+      data[blockName].forEach(p => grid.appendChild(makeButton(p, pfandBerechnen)));
+      productListEl.appendChild(grid);
+    });
+  }
+}
+
+function addToCart(p) {
+  cart.push({ name: p.name, preis: p.preis, pfand: pfandBerechnen ? p.pfand : 0 });
+  renderCart();
+}
+
+function addPfandAbzug() {
+  cart.push({ name: "Pfand-Rückgabe", preis: -2.0, pfand: 0, isPfandAbzug: true });
+  renderCart();
+}
+
+function removeItem(index) {
+  cart.splice(index, 1);
+  renderCart();
+}
+
+function renderCart() {
+  cartEl.innerHTML = '';
+  cart.forEach((item, idx) => {
+    const row = document.createElement('div');
+    row.className = 'cart-item';
+    const lineTotal = item.preis + (item.pfand || 0);
+    const pfandLine = item.pfand > 0 ? `<div class="cart-pfand-line">inkl. ${item.pfand.toFixed(2)} € Pfand</div>` : '';
+    row.innerHTML = `
+      <div>
+        <div class="ci-name">${item.name}</div>
+        ${pfandLine}
+      </div>
+      <div style="display:flex; align-items:center;">
+        <span class="ci-price">${lineTotal.toFixed(2)} €</span>
+        <button class="ci-remove" aria-label="Entfernen">✕</button>
+      </div>
+    `;
+    row.querySelector('.ci-remove').onclick = () => removeItem(idx);
+    cartEl.appendChild(row);
+  });
+  updateTotal();
+}
+
+function updateTotal() {
+  const total = cart.reduce((sum, item) => sum + item.preis + (item.pfand || 0), 0);
+  totalBarEl.textContent = `Gesamt: ${total.toFixed(2)} €`;
+}
+
+function getCurrentTotal() {
+  return cart.reduce((sum, item) => sum + item.preis + (item.pfand || 0), 0);
+}
+
+// ---- Wechselgeld-Overlay ----
+const changeOverlay = document.getElementById('changeOverlay');
+const overlayTotalEl = document.getElementById('overlayTotal');
+const receivedInput = document.getElementById('receivedInput');
+const changeResultEl = document.getElementById('changeResult');
+const quickAmountsEl = document.getElementById('quickAmounts');
+
+function openChangeOverlay() {
+  const total = getCurrentTotal();
+  overlayTotalEl.textContent = `${total.toFixed(2)} €`;
+  receivedInput.value = '';
+  changeResultEl.textContent = 'Betrag eingeben…';
+  changeResultEl.className = 'change-result';
+
+  // sinnvolle Schnellbeträge: passende Rundungen + feste gängige Scheine
+  const dynamic = [];
+  [Math.ceil(total), Math.ceil(total / 5) * 5, Math.ceil(total / 10) * 10, Math.ceil(total / 20) * 20]
+    .forEach(v => { if (v > 0 && !dynamic.includes(v)) dynamic.push(v); });
+
+  const fixed = [5, 10, 50].filter(v => v >= total);
+  const allAmounts = [...dynamic, ...fixed].filter(v => v > 0);
+  // Duplikate entfernen, Reihenfolge beibehalten
+  const seen = new Set();
+  const finalAmounts = allAmounts.filter(v => {
+    if (seen.has(v)) return false;
+    seen.add(v);
+    return true;
+  });
+
+  quickAmountsEl.innerHTML = '';
+  finalAmounts.forEach(v => {
+    const b = document.createElement('button');
+    b.textContent = `${v.toFixed(2)} €`;
+    b.onclick = () => { receivedInput.value = v.toFixed(2); calcChange(); };
+    quickAmountsEl.appendChild(b);
+  });
+
+  changeOverlay.classList.remove('hidden');
+  setTimeout(() => receivedInput.focus(), 100);
+}
+
+function closeChangeOverlay() {
+  changeOverlay.classList.add('hidden');
+}
+
+function calcChange() {
+  const total = getCurrentTotal();
+  const received = parseFloat(receivedInput.value.replace(',', '.'));
+  if (isNaN(received)) {
+    changeResultEl.textContent = 'Betrag eingeben…';
+    changeResultEl.className = 'change-result';
+    return;
+  }
+  const change = received - total;
+  if (change < 0) {
+    changeResultEl.textContent = `Fehlt: ${Math.abs(change).toFixed(2)} €`;
+    changeResultEl.className = 'change-result negative';
+  } else {
+    changeResultEl.textContent = `Rückgeld: ${change.toFixed(2)} €`;
+    changeResultEl.className = 'change-result positive';
+  }
+}
+
+totalBarEl.onclick = openChangeOverlay;
+receivedInput.addEventListener('input', calcChange);
+document.getElementById('overlayCloseX').onclick = closeChangeOverlay;
+document.getElementById('overlayDoneBtn').onclick = () => {
+  closeChangeOverlay();
+  resetCart();
+};
+changeOverlay.addEventListener('click', (e) => {
+  if (e.target === changeOverlay) closeChangeOverlay();
+});
+
+function resetCart() {
+  cart = [];
+  renderCart();
+}
+
+document.getElementById('pfandMinusBtn').onclick = addPfandAbzug;
+document.getElementById('neuBtn').onclick = () => {
+  if (cart.length === 0 || confirm('Einkaufswagen wirklich leeren?')) resetCart();
+};
+pfandToggle.onchange = () => {
+  if (isEssenTab()) {
+    essenZeigeCrepeBude = pfandToggle.checked;
+  } else {
+    pfandBerechnen = pfandToggle.checked;
+  }
+  renderProducts();
+};
+
+renderTabs();
+updateToggleForTab();
+updatePfandButtonVisibility();
+renderProducts();
+renderCart();
+
+// Service Worker für Offline-Nutzung registrieren
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
