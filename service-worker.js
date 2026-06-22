@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kassensystem-v9';
+const CACHE_NAME = 'kassensystem-v10';
 const ASSETS = [
   './index.html',
   './manifest.json',
@@ -10,13 +10,14 @@ const ASSETS = [
 
 // Fix 2: Per-Asset-Installation – ein fehlgeschlagenes Asset (z. B. 404) bricht
 // den gesamten Install nicht mehr ab. Einzelne Fehler werden still ignoriert.
+// skipWaiting() wird erst NACH Abschluss des Cachings aufgerufen (innerhalb
+// waitUntil), damit der SW nicht mit halb gefülltem Cache aktiviert.
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) =>
       Promise.all(ASSETS.map((asset) => cache.add(asset).catch(() => {})))
-    )
+    ).then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
 // Ermöglicht der Seite, einen wartenden SW sofort zu aktivieren (Update-Banner).
@@ -30,7 +31,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
       .then((keys) =>
-        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k).catch(() => {})))
       )
       .then(() => self.clients.claim())
   );
