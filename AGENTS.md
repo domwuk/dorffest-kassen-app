@@ -15,7 +15,7 @@ Kernidee: Bedienpersonal tippt Produkte an, die App führt eine
 
 - **Sprache der Oberfläche:** Deutsch
 - **Zielgerät:** Smartphone/Tablet im Hochformat, Touch-Bedienung
-- **Persistenz:** Keine (bewusst — siehe [Wichtige Eigenheiten](#wichtige-eigenheiten--gotchas))
+- **Persistenz:** Warenkorb: Sitzung (`sessionStorage`); Statistik: dauerhaft (`localStorage`) — siehe [Wichtige Eigenheiten](#wichtige-eigenheiten--gotchas)
 
 ## Tech-Stack
 
@@ -52,11 +52,13 @@ JavaScript-Logik sind in dieser einen Datei vereint. Es gibt keine separaten
 - **`.main`** — enthält `.left` und `.right#rightCol`. Layout ist **mobile-first einspaltig** (Hochformat) bzw. **zweispaltig** (Querformat / ≥ 700 px) — siehe [Layout / Responsivität](#layout--responsivität).
   - **`.left`** → `#productList` (Produkt-Buttons) + `#pfandMinusBtn` (Pfand-Rückgabe-Button).
   - **`.right`** (id=`rightCol`) → `<h2>Bestellung</h2>` + `#cart` (Bestellungs-Liste) + **`.cart-controls`** (enthält `#neuBtn` „Leeren" und `#totalBar` Gesamt-Leiste, öffnet Wechselgeld). Wird auf dem Info-Tab vollständig ausgeblendet (`.left` expandiert dann auf volle Breite).
-- **`#changeOverlay`** — Modal für die Wechselgeld-Berechnung. Enthält die benannten Elemente **`#overlayTotalLabel`** (Label-Span in der `.overlay-row.total`, wechselt zwischen „Zu zahlen" und „Auszahlung an Kunde") und **`#overlayInputWrap`** (Wrapper um das Eingabefeld, wird bei negativem Gesamtbetrag ausgeblendet).
-- **`#clearOverlay`** — Bestätigungs-Modal fürs Leeren der Bestellung. Gleiche CSS-Klassen (`.overlay`/`.overlay-card`/`.overlay-close-x`/`.overlay-buttons`) wie das Wechselgeld-Overlay. Enthält: `<h2>Bestellung leeren?</h2>`, einen Absatz `.overlay-confirm-text` „Möchtest du die komplette Bestellung wirklich leeren?", die Buttons `#clearCancelBtn` „Abbrechen" (`.btn-close`) und `#clearConfirmBtn` „Leeren" (`.btn-danger`) sowie `#clearCloseX` (✕).
-- **`#statsResetOverlay`** — Bestätigungs-Modal fürs Zurücksetzen der Statistik (gleiche Overlay-Klassen). Enthält: `<h2>Statistik zurücksetzen?</h2>`, „Abbrechen" (`.btn-close`) und „Zurücksetzen" (`.btn-danger`). Kein nativer `confirm()`-Aufruf.
-- **`#statsExportOverlay`** — Modal für den Statistik-Export. Wird beim Tippen auf „Export" **immer** geöffnet (kein stiller Clipboard-Versuch vorab). Zeigt den Export-Text in einem readonly `<textarea>` sowie den Hinweis „Zum Sichern markieren & kopieren (z. B. in Notizen)". Der Button **`#statsExportCopyBtn`** „Kopieren" schreibt den Inhalt via `navigator.clipboard.writeText` in die Zwischenablage (Fallback: `select` + `document.execCommand('copy')`) und zeigt kurz „Kopiert!". „Schließen", ✕ und Klick auf den Hintergrund schließen das Overlay.
+- **`#changeOverlay`** — Modal für die Wechselgeld-Berechnung (`role="dialog"`, `aria-modal="true"`, `aria-labelledby="changeOverlayTitle"`). Enthält die benannten Elemente **`#overlayTotalLabel`** (Label-Span in der `.overlay-row.total`, wechselt zwischen „Zu zahlen" und „Auszahlung an Kunde") und **`#overlayInputWrap`** (Wrapper um das Eingabefeld, wird bei negativem Gesamtbetrag ausgeblendet).
+- **`#clearOverlay`** — Bestätigungs-Modal fürs Leeren der Bestellung (`role="dialog"`, `aria-modal="true"`, `aria-labelledby="clearOverlayTitle"`). Gleiche CSS-Klassen (`.overlay`/`.overlay-card`/`.overlay-close-x`/`.overlay-buttons`) wie das Wechselgeld-Overlay. Enthält: `<h2 id="clearOverlayTitle">Bestellung leeren?</h2>`, einen Absatz `.overlay-confirm-text` „Möchtest du die komplette Bestellung wirklich leeren?", einen **Warnhinweis-Absatz** `.overlay-confirm-hint` „Hinweis: Die Bestellung wird **nicht** als Verkauf gezählt. Zum Abschließen „Fertig" im Wechselgeld-Dialog nutzen." (roter Hintergrund, Klasse `.overlay-confirm-hint`), die Buttons `#clearCancelBtn` „Abbrechen" (`.btn-close`) und `#clearConfirmBtn` „Leeren" (`.btn-danger`) sowie `#clearCloseX` (✕).
+- **`#statsResetOverlay`** — Bestätigungs-Modal fürs Zurücksetzen der Statistik (gleiche Overlay-Klassen, `role="dialog"`, `aria-modal="true"`, `aria-labelledby="statsResetOverlayTitle"`). Enthält: `<h2>Statistik zurücksetzen?</h2>`, „Abbrechen" (`.btn-close`) und „Zurücksetzen" (`.btn-danger`). Kein nativer `confirm()`-Aufruf.
+- **`#statsExportOverlay`** — Modal für den Statistik-Export (`role="dialog"`, `aria-modal="true"`, `aria-labelledby="statsExportOverlayTitle"`). Wird beim Tippen auf „Export" **immer** geöffnet (kein stiller Clipboard-Versuch vorab). Zeigt den Export-Text in einem readonly `<textarea>` sowie den Hinweis „Zum Sichern markieren & kopieren (z. B. in Notizen)". Der Button **`#statsExportCopyBtn`** „Kopieren" schreibt den Inhalt via `navigator.clipboard.writeText` in die Zwischenablage (Fallback: `select` + `document.execCommand('copy')` + `setSelectionRange(0, 99999)` für volle iOS-Auswahl); bei Fehlschlag beider Wege Feedback „Bitte manuell kopieren" statt stiller Fehler; zeigt sonst kurz „Kopiert!". „Schließen", ✕ und Klick auf den Hintergrund schließen das Overlay.
 - **`.sub-nav`** (innerhalb des Info-Tab-Inhalts) — kleine Unter-Navigation mit zwei `.sub-nav-btn`-Buttons („Info" / „Statistik"), die zwischen den beiden Sub-Views des Info-Reiters umschaltet. Nur auf dem Info-Tab sichtbar.
+- **`.update-banner`** — Fix-positioniertes Banner (unten, `z-index: 1000`), das erscheint, wenn der Service Worker eine neue Version gefunden hat. Zeigt „Neue Version verfügbar." und einen Button „Neu laden", der `postMessage('skipWaiting')` an den wartenden SW sendet und danach die Seite neu lädt. Wird per `showUpdateBanner()` aus dem `updatefound`-Listener erzeugt; ein `controllerchange`-Listener lädt die Seite einmalig neu, sobald der neue SW die Kontrolle übernimmt.
+- **`.undo-snackbar`** (`#undoSnackbar`) — Fix-positionierte Snackbar (über der Summen-Leiste), die nach dem Entfernen einer Position angezeigt wird. Zeigt „„Name" entfernt" und einen „Rückgängig"-Button, der die Position an ihrer ursprünglichen Stelle wiederherstellt. Verschwindet nach ~4,5 s automatisch. Wird von `showUndoSnackbar(removedItem, originalIndex)` erzeugt.
 
 ### Zentrale Datenstruktur: `PRODUKTE`
 
@@ -232,7 +234,10 @@ Das Layout ist **mobile-first** und vollständig responsiv:
 - **`renderProducts()`** — rendert je nach Datenform:
   - Setzt zunächst `productListEl.setAttribute('data-tab', TAB_CLASS[currentTab])`,
     damit per CSS die Produkt-Button-Farbe je Kategorie gesetzt wird
-    (Bar = orange, Bier = grün, Essen = blaugrau; Info hat keine Produkte).
+    (Bar = dunkles Orange `#bd5200`/aktiv `#994200`, Bier = dunkles Grün `#2e7d32`/aktiv `#1b5e20`,
+    Essen = blaugrau; Info hat keine Produkte). Die CSS-Variablen `--orange`/`--green` bleiben
+    für Toggle, Summen-Leiste, `.btn-done` und `.change-result.positive` unverändert; nur
+    die button-/tab-spezifischen Farben wurden für WCAG-AA-Lesbarkeit im Sonnenlicht abgedunkelt.
   - Info-Objekt (`{ info: true }`) → Sub-Navigation (`.sub-nav`) + aktiver Sub-View: `infoView === 'info'` zeigt `.info-box` aus `INFO_TAB`; `infoView === 'statistik'` zeigt das Statistik-Panel (siehe [Statistik](#statistik)); die rechte Spalte ist via `updateLayoutForTab()` ausgeblendet.
   - Array → ein Grid (oder Hinweis, wenn leer).
   - Essen-Objekt → nur der via Toggle gewählte Unterblock, mit Überschrift.
@@ -244,9 +249,11 @@ Das Layout ist **mobile-first** und vollständig responsiv:
     Das Argument `showPfand` steuert nur noch, ob beim Antippen Pfand **in den
     Warenkorb** aufgenommen wird (`addToCart`), nicht die Button-Darstellung.
     Alle Preise werden via `formatEuro()` im deutschen Kommaformat angezeigt.
-- **`renderCart()`** — zeichnet alle Warenkorb-Positionen inkl.
-  Entfernen-Button und ruft `updateTotal()`. Zeilenbeträge werden in Cent
-  berechnet und über `formatCents()` angezeigt.
+- **`renderCart()`** — gruppiert identische Positionen zu einer Zeile mit Menge
+  (`N× Produktname`), zeigt die Pfand-Subzeile „inkl. X,XX € Pfand / Stück" bei Menge > 1,
+  und berechnet die Zeilensumme als `(Preis + Pfand) × Menge`. Die zugrunde liegende
+  `cart`-Liste bleibt unverändert. Ruft `updateTotal()` und `persistCart()`. Zeilenbeträge
+  in Cent via `formatCents()`.
 - **`updateTotal()`** — aktualisiert die Summen-Leiste; Betrag intern in Cent
   via `getCurrentTotalCents()`, Anzeige über `formatCents()`.
 
@@ -255,13 +262,17 @@ Das Layout ist **mobile-first** und vollständig responsiv:
 - **`addToCart(p)`** — fügt Produkt hinzu; speichert `pfand: includePfand ? p.pfand : 0` und `pfandOriginal: p.pfand || 0` (damit der Pfand-Toggle auch nachträglich wirken kann).
 - **`addPfandAbzug()`** — fügt „Pfand-Rückgabe" mit `-PFAND_RUECKGABE_EURO`
   hinzu (über `#pfandMinusBtn`, Beschriftung wird beim Init aus der Konstante
-  gesetzt: „Pfand zurück -2,00 €").
+  gesetzt: „Pfand zurück -2,00 €"). Der Button hat einen ~400 ms **Debounce**
+  gegen versehentliche Doppel-Taps (sonst würde mehrfach Pfand abgezogen).
 - **`applyPfandToCart()`** — iteriert den Warenkorb und setzt für jede Position
   `pfand = pfandBerechnen ? (item.pfandOriginal||0) : 0`; überspringt
   `isPfandAbzug`-Einträge. Wird vom Pfand-Toggle-Handler aufgerufen, sobald
   `pfandBerechnen` wechselt, sodass bereits vorhandene Positionen dynamisch
   aktualisiert werden.
 - **`removeItem(index)`** — entfernt eine Position.
+- **`removeOneOfGroup(key)`** — entfernt jeweils **eine** Einheit der angegebenen Gruppe (die zuletzt hinzugefügte, d. h. von hinten im Array). Ruft `showUndoSnackbar()` und `renderCart()`. Wird vom ✕-Button einer Gruppenzeile im Warenkorb verwendet; `aria-label` lautet bei Menge > 1 „Eine Position entfernen".
+- **`showUndoSnackbar(removedItem, originalIndex)`** — zeigt die Undo-Snackbar (`.undo-snackbar`, `#undoSnackbar`) mit „„Name" entfernt" + Button „Rückgängig". Klick auf „Rückgängig" fügt die Position an `originalIndex` wieder ein und rendert den Warenkorb neu. Verschwindet nach ~4,5 s automatisch.
+- **`persistCart()` / `restoreCart()`** — Warenkorb-Sitzungspersistenz über `sessionStorage` (Schlüssel `kassenCart`): `renderCart()` ruft `persistCart()`; beim Start stellt `restoreCart()` den Warenkorb der laufenden Sitzung wieder her (überlebt App-Wechsel / kurzes Wegswitchen, **nicht** einen vollständigen App-Kill).
 - **`resetCart()`** — leert den Warenkorb (nach Abschluss oder „Leeren").
   Der „Leeren"-Button (`#neuBtn`) öffnet bei nicht-leerem Warenkorb das
   **`#clearOverlay`**-Bestätigungs-Dialog (h2 „Bestellung leeren?", grauer
@@ -308,9 +319,10 @@ gibt es drei Fälle:
   werden ausgeblendet (`style.display = 'none'`), und `#changeResult` zeigt
   „Bitte X,XX € an Kunde auszahlen" (Klasse `change-result negative`).
 
-- **„Fertig" (`#overlayDoneBtn`)** ruft zuerst `recordSale()` (Statistik-Aufzeichnung),
-  dann `closeChangeOverlay()` und schließlich `resetCart()`. Jede abgeschlossene
-  Bestellung wird so in der Statistik gezählt — unabhängig vom Betrag.
+- **„Fertig" (`#overlayDoneBtn`)** — Verhalten je nach Modus:
+  - **Normaler Kassiermodus (Eingabefeld sichtbar):** Schließt erst ab, wenn `parseEuroCents(receivedInput.value) !== null` **und** der eingegebene Betrag ≥ Gesamtbetrag ist. Ist diese Bedingung nicht erfüllt, bleibt das Overlay offen, `#changeResult` zeigt „Bitte ausreichenden Betrag eingeben." (Klasse `change-result negative`) und der Fokus kehrt ins Eingabefeld zurück. Verhindert versehentliches Buchen bei „Fehlt …" oder leerem Feld.
+  - **0-€-Modus und Auszahlungs-Modus (Eingabefeld ausgeblendet):** „Fertig" ist jederzeit abschließbar — kein Guard.
+  - Bei erfolgreichem Abschluss: `recordSale()` (Statistik-Aufzeichnung) → `closeChangeOverlay()` → `resetCart()`. Jede so abgeschlossene Bestellung wird in der Statistik gezählt — unabhängig vom Betrag.
 - Schließen ohne Reset: „✕" oben rechts oder Klick auf den abgedunkelten
   Hintergrund.
 
@@ -325,6 +337,8 @@ Schließen verloren; der Export-Button ermöglicht dann die manuelle Sicherung.
 
 - **Speicherschlüssel:** `kassenStatistik` (Konstante `STATS_STORAGE_KEY`),
   Schemaversion `STATS_VERSION = 1`.
+- **In-Memory-Fallback:** `let memoryStats` — `saveStats(stats)` hält die Stats **immer** auch in `memoryStats` (vor dem `localStorage`-Schreibversuch). Schlägt das Schreiben fehl (privater Modus / Speicher voll), bleiben die Daten für die Sitzung im RAM erhalten (kein stiller Verlust). `loadStats()` nutzt `memoryStats` als Fallback, wenn `localStorage` leer oder nicht lesbar ist.
+- **Defensive Normalisierung:** `toIntSafe(value)` = `Math.round(Number(value))` → endliche Ganzzahl, sonst `0`. `normalizeStats(data)` coerct alle Zahlfelder (`einnahmenCents`, `pfandEinnahmenCents`, `ausgabenCents`, `bons`) und jeden `produkte`-Eintrag zu `{ anzahl, umsatzCents }` via `toIntSafe`. `loadStats()` leitet geladene Daten durch `normalizeStats` — verhindert String-Konkatenation / NaN aus beschädigten `localStorage`-Daten.
 - **Datenform:**
   ```js
   {
@@ -340,7 +354,7 @@ Schließen verloren; der Export-Button ermöglicht dann die manuelle Sicherung.
     (`umsatzCents` = Anzahl × Preis, **ohne** Pfand-Anteil).
   - `einnahmenCents`: Summe der Produktpreise aller verkauften Positionen
     (**Produktumsatz**, kein Pfand enthalten).
-  - `pfandEinnahmenCents`: **NEU** — Summe der beim Abschluss tatsächlich
+  - `pfandEinnahmenCents`: Summe der beim Abschluss tatsächlich
     aufgeschlagenen Pfandbeträge (`item.pfand`) über alle verkauften Positionen
     (= **Pfand eingenommen**).
   - `ausgabenCents`: Summe aller Pfand-Rückgabe-Beträge (= **Pfand ausgezahlt**,
@@ -352,13 +366,15 @@ Schließen verloren; der Export-Button ermöglicht dann die manuelle Sicherung.
 | Funktion | Beschreibung |
 | -------- | ------------ |
 | `emptyStats()` | Liefert ein frisch genulltes Stats-Objekt (inkl. `pfandEinnahmenCents: 0`). |
-| `loadStats()` | Liest + parst `localStorage`; füllt fehlende Felder defensiv via `Object.assign(emptyStats(), data)` (rückwärtskompatibel, setzt fehlendes `pfandEinnahmenCents` auf 0); gibt `emptyStats()` bei Fehler/fehlendem Eintrag zurück. |
-| `saveStats(stats)` | Persistiert als JSON; gibt `false` zurück bei Fehler (z. B. Storage voll / privater Modus). |
+| `toIntSafe(value)` | `Math.round(Number(value))` → endliche Ganzzahl, sonst `0`. Verhindert String-Konkatenation / NaN aus beschädigten Daten. |
+| `normalizeStats(data)` | Coerct alle Zahlfelder sowie jeden `produkte`-Eintrag zu sauberen Typen via `toIntSafe`. Wird von `loadStats()` auf geladene Daten angewendet. |
+| `loadStats()` | Liest + parst `localStorage`, leitet Daten durch `normalizeStats`; gibt `emptyStats()` bei Fehler/fehlendem Eintrag zurück. Nutzt `memoryStats` als Fallback, wenn `localStorage` leer oder nicht lesbar ist. |
+| `saveStats(stats)` | Hält Stats **immer** in `memoryStats` (vor dem Schreibversuch); persistiert als JSON; gibt `false` zurück bei Fehler (z. B. Storage voll / privater Modus). |
 | `statsStorageAvailable()` | Boolean: prüft, ob `localStorage` beschreibbar ist (z. B. `false` im privaten Modus). |
-| `statsKassenbestandCents(stats)` | **NEU** — Hilfsfunktion: gibt `einnahmenCents + pfandEinnahmenCents − ausgabenCents` zurück = tatsächlicher Kassenbestand gesamt (Bargeld in der Kasse). Wird von UI und Export verwendet. |
+| `statsKassenbestandCents(stats)` | Hilfsfunktion: gibt `einnahmenCents + pfandEinnahmenCents − ausgabenCents` zurück = tatsächlicher Kassenbestand gesamt (Bargeld in der Kasse). Wird von UI und Export verwendet. |
 | `recordSale()` | Aufgerufen beim Abschließen einer Bestellung: iteriert den Warenkorb — für jede normale Position (`!isPfandAbzug`) werden `produkte[name].anzahl` und `umsatzCents` sowie `einnahmenCents` inkrementiert und **zusätzlich** `pfandEinnahmenCents += toCents(item.pfand \|\| 0)` akkumuliert; für `isPfandAbzug`-Einträge wird `ausgabenCents` um den Absolutbetrag erhöht; `bons` wird einmalig pro Bestellung hochgezählt. Leerer Warenkorb → kein Bon. |
 | `resetStats()` | Persistiert `emptyStats()` (setzt alle Werte auf null). |
-| `buildStatsExport()` | Gibt einen mehrzeiligen deutschen Zusammenfassungstext zurück: Produkt-Zeilen, dann „Bestellungen gesamt", „Produktumsatz", „Pfand eingenommen", „Pfand ausgezahlt", „Pfand einbehalten" (`pfandEinnahmenCents − ausgabenCents`), „Kassenbestand gesamt" (`statsKassenbestandCents`). |
+| `buildStatsExport()` | Gibt einen mehrzeiligen deutschen Zusammenfassungstext zurück: Titelzeile via `INFO_TAB.titel`, dann „Stand: <Datum/Uhrzeit>" (`new Date().toLocaleString('de-DE')`), Produkt-Zeilen **absteigend nach Anzahl** (gleiche Reihenfolge wie UI-Liste), dann „Bestellungen gesamt", „Produktumsatz", „Pfand eingenommen", „Pfand ausgezahlt", „Pfand einbehalten" (`pfandEinnahmenCents − ausgabenCents`), „Kassenbestand gesamt" (`statsKassenbestandCents`). |
 
 #### Auslöser: Wann wird `recordSale()` gerufen?
 
@@ -379,11 +395,15 @@ Bei `infoView === 'statistik'` wird ein Statistik-Panel gerendert:
 - **Zusammenfassungs-Karten** (`.stats-summary` / `.stat-card`): sechs Karten —
   „Bestellungen" (`bons`), „Produktumsatz" (`formatCents(einnahmenCents)`),
   „Pfand eingenommen" (`formatCents(pfandEinnahmenCents)`), „Pfand ausgezahlt"
-  (`formatCents(ausgabenCents)`), „Pfand einbehalten"
-  (`formatCents(pfandEinnahmenCents − ausgabenCents)`) und **„Kassenbestand gesamt"**
+  (`formatCents(ausgabenCents)`), „Pfand einbehalten" bzw. **„Pfand Fehlbetrag"**
+  (`formatCents(pfandEinnahmenCents − ausgabenCents)`) — bei negativem Saldo (mehr ausgezahlt als
+  eingenommen) erscheint das Label „Pfand Fehlbetrag" und die Karte erhält rote Tönung
+  (Klasse `.stat-card-negative`) statt verwirrend grün — und **„Kassenbestand gesamt"**
   (`formatCents(statsKassenbestandCents(stats))`) — letztere hervorgehoben: volle
   Breite (CSS-Klasse `.stat-card-full`, `grid-column: 1 / -1`), grün getönter
   Hintergrund, größere Werteschrift. Sie ist die betonte Ergebnis-Kenngröße.
+- **„Stand: …"-Zeitstempel** (`.stats-stand`) direkt unter der Überschrift; zeigt `new Date().toLocaleString('de-DE')`.
+- **Sicherungs-Hinweis** (`.stats-reminder`): erscheint, wenn Speicher verfügbar **und** `bons > 0` — „Tipp: Statistik regelmäßig per „Export" sichern (z. B. in Notizen)." (iOS kann Speicher nach ~7 Tagen Inaktivität löschen).
 - **Produkt-Liste** (`.stats-list-item`): Name × Anzahl + Umsatz, absteigend
   nach Anzahl sortiert. Bei keinen erfassten Produkten erscheint der Hinweis
   „Noch keine Verkäufe erfasst."
@@ -411,7 +431,7 @@ Bei `infoView === 'statistik'` wird ein Statistik-Panel gerendert:
 ### manifest.json
 - `display: "standalone"` → läuft wie eine native App ohne Browser-UI.
 - `start_url: "./index.html"`, Theme/Background `#16313b`.
-- Icons: `icon-192.png`, `icon-512.png`.
+- Icons: Das `icons`-Array enthält jetzt je zwei Einträge pro PNG (`icon-192.png`, `icon-512.png`) — einmal mit `purpose: "any"` (Standard) und einmal mit `purpose: "maskable"` (für Android Adaptive Icons, verhindert Letterboxing/Beschnitt).
 - iOS-spezifisches Verhalten zusätzlich über `<meta>`-Tags in `index.html`
   (`apple-mobile-web-app-capable`, `-status-bar-style`, `-title`,
   `apple-touch-icon`).
@@ -419,24 +439,27 @@ Bei `infoView === 'statistik'` wird ein Statistik-Panel gerendert:
   im `<head>` gesetzt.
 
 ### service-worker.js
-- **Cache-Name:** `kassensystem-v3`.
+- **Cache-Name:** `kassensystem-v7`.
+- **Installation (gehärtet):** `install` cacht Assets per `Promise.all(ASSETS.map(a => cache.add(a).catch(() => {})))` — ein einzelnes fehlendes Asset bricht den gesamten Install-Vorgang **nicht** mehr ab. `self.skipWaiting()` wird direkt (außerhalb von `waitUntil`) gerufen.
+- **Message-Handler:** Reagiert auf `postMessage('skipWaiting')` von der Seite (Update-Banner) mit `self.skipWaiting()` — aktiviert den wartenden SW sofort.
+- **Aktivierung:** `activate` löscht alte Caches und ruft `self.clients.claim()` innerhalb der `waitUntil`-Promise-Kette — deterministischer Ablauf.
 - **Fetch-Handler (gehärtet):** Verarbeitet ausschließlich **same-origin
   GET-Anfragen**. Navigations-Requests werden aus dem Cache mit
-  `./index.html` bedient. Nur Assets aus der `ASSETS`-Liste (App-Shell,
+  `./index.html` bedient (mit `.catch`-Fallback auf den Cache, damit kein unbehandeltes Reject entsteht). Nur Assets aus der `ASSETS`-Liste (App-Shell,
   als absolute URLs in `APP_SHELL`) werden gecacht — nach Prüfung auf
-  `response.ok && response.type === 'basic'`. Cross-Origin-Anfragen,
+  `response.ok && response.type === 'basic'`. Cache-Writes (`cache.put`) nutzen `.catch(() => {})` gegen Storage-voll-Fehler. Cross-Origin-Anfragen,
   Nicht-GET-Methoden und Fehlerantworten werden **nicht** gecacht.
+- **App-Shell-Mitgliedschaft:** wird tolerant gegen Query-Strings geprüft — `APP_SHELL.includes(url.href) || APP_SHELL.includes(url.origin + url.pathname)`.
 - **Cache-First-Strategie:** Bei `fetch` wird zuerst der Cache geprüft; bei
   Treffer wird dieser geliefert, sonst aus dem Netz geholt und — sofern es
-  sich um ein App-Shell-Asset handelt — in den Cache geschrieben.
+  sich um ein App-Shell-Asset handelt — in den Cache geschrieben (mit `.catch`-Fallback auf Cache-Eintrag bei Netzwerkfehler).
 - **Vorab gecachte Assets (`ASSETS`):** `index.html`, `manifest.json`,
   `icon-192.png`, `icon-512.png`.
-- `install` ruft `skipWaiting()`, `activate` löscht alte Caches und ruft
-  `clients.claim()` → neue Version übernimmt zügig.
+- **Update-Hinweis in der Seite:** `index.html` registriert den SW mit `updatefound`-Listener → zeigt bei installierter neuer Version das Banner `.update-banner` „Neue Version verfügbar. / Neu laden"; ein `controllerchange`-Listener lädt die Seite einmalig neu (verhindert „stale" App auf installierten Geräten).
 
 > **Cache-Busting beim Deployen:** Da `index.html` aggressiv gecacht wird,
 > muss bei Änderungen der **`CACHE_NAME` erhöht** werden (z. B. auf
-> `kassensystem-v4`), damit Geräte die neue Version laden. Sonst sehen bereits
+> `kassensystem-v8`), damit Geräte die neue Version laden. Sonst sehen bereits
 > installierte Geräte weiterhin den alten Stand. **Das ist der häufigste
 > Stolperstein bei Updates.**
 
@@ -491,13 +514,7 @@ Pfand zusätzlich in dessen `pfand`-Feld — auch das bei einer Änderung anpass
 
 ## Wichtige Eigenheiten / Gotchas
 
-- **Keine Warenkorb-Persistenz:** Der Warenkorb lebt nur im Speicher (`cart`-Array). Beim
-  Neuladen/Schließen ist er weg. Es gibt **keine Bon-Historie** — bewusst minimal als
-  reine Kalkulations-/Kassierhilfe. Die **Statistik** (Verkäufe, Umsatz) wird
-  dagegen per `localStorage` (Schlüssel `kassenStatistik`) dauerhaft gespeichert;
-  im privaten Modus (z. B. iOS Safari) fällt die App auf einen In-Memory-Betrieb
-  zurück (kein Absturz, aber die Daten gehen beim Schließen verloren — der
-  Export-Button ermöglicht in diesem Fall die manuelle Sicherung).
+- **Warenkorb-Sitzungspersistenz (kein dauerhafter Speicher):** Der Warenkorb wird für die **laufende Sitzung** in `sessionStorage` (Schlüssel `kassenCart`) gesichert und überlebt so App-Wechsel oder kurzes Wegswitchen. Bei vollständigem Schließen / App-Kill ist er weg. Es gibt weiterhin **keine Bon-Historie** — bewusst minimal als reine Kalkulations-/Kassierhilfe. Die **Statistik** (Verkäufe, Umsatz) wird dagegen per `localStorage` (Schlüssel `kassenStatistik`) dauerhaft gespeichert; im privaten Modus (z. B. iOS Safari) fällt die App auf einen In-Memory-Betrieb zurück (kein Absturz, aber die Daten gehen beim Schließen verloren — der Export-Button ermöglicht in diesem Fall die manuelle Sicherung).
 - **Toggle mit Doppelfunktion:** Derselbe Schalter bedeutet je nach Tab „Pfand
   berechnen" (Bar/Bier) **oder** „Crepe-Bude anzeigen" (Essen; Label ist immer
   fest dieser Text, unabhängig von der aktuellen Stellung). Häufige
