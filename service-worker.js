@@ -1,9 +1,11 @@
-const CACHE_NAME = 'kassensystem-v8';
+const CACHE_NAME = 'kassensystem-v9';
 const ASSETS = [
   './index.html',
   './manifest.json',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './wappen-192.png',
+  './wappen-512.png'
 ];
 
 // Fix 2: Per-Asset-Installation – ein fehlgeschlagenes Asset (z. B. 404) bricht
