@@ -67,14 +67,17 @@ const PRODUKTE = {
     "Bratbude":   [ { name, preis, pfand }, ... ],
     "Crepe-Bude": [ { name, preis, pfand }, ... ],
   },
-  "TKA": [ /* aktuell leer */ ],
+  "TKA": { info: true },                       // KEINE Produkte → Info-/Über-Reiter
 };
 ```
 
-**Zwei Formen pro Kategorie sind möglich:**
+**Drei Formen pro Kategorie sind möglich:**
 
-1. **Array** → einfache Liste von Produkten (z. B. `Bar`, `Bier`, `TKA`).
+1. **Array** → einfache Liste von Produkten (z. B. `Bar`, `Bier`).
 2. **Objekt mit Unterblöcken** → mehrere benannte Gruppen (z. B. `Essen`).
+3. **Info-Objekt `{ info: true }`** → kein Produkt-Reiter, sondern eine
+   Info-/Über-Box (z. B. `TKA`). Inhalt kommt aus `INFO_TAB` (Titel +
+   `absaetze`-Liste). Siehe [Der Info-Reiter (TKA)](#der-info-reiter-tka).
 
 Produktfelder:
 - `name` (String) — Anzeigename auf dem Button.
@@ -103,21 +106,43 @@ Kategorie ggf. hier eine Farbe ergänzen, sonst bleibt der Tab grau/neutral.
 Der Schalter in `.pfand-row` hat **je nach Tab eine andere Funktion** —
 das ist eine der wichtigsten Eigenheiten der App:
 
-- **Normale Tabs (Bar, Bier, TKA):** Label „Pfand berechnen". Steuert
+- **Normale Tabs (Bar, Bier):** Label „Pfand berechnen". Steuert
   `pfandBerechnen` — also ob beim Antippen eines Produkts dessen Pfand mit in
   den Warenkorb wandert.
 - **Essen-Tab:** Label „Crepe-Bude anzeigen". Steuert `essenZeigeCrepeBude` —
   schaltet zwischen den Unterblöcken **Bratbude** und **Crepe-Bude** um. Pfand
   gibt es bei Essen nicht; der Pfand-Button wird ausgeblendet.
+- **TKA-Tab (Info):** Die ganze `.pfand-row` (Toggle) **und** der Pfand-Button
+  werden ausgeblendet — der Reiter zeigt nur eine Info-Box, keine Produkte.
 
 Erkannt wird der Essen-Modus über `isEssenTab()` (`currentTab === 'Essen'`
-**und** `PRODUKTE['Essen']` ist **kein** Array).
+**und** `PRODUKTE['Essen']` ist **kein** Array). Der Info-Modus wird über
+`isInfoTab()` erkannt (Kategorie ist ein Objekt mit `info: true`).
+
+### Der Info-Reiter (TKA)
+
+`TKA` ist **keine Produktkategorie**, sondern ein **Info-/Über-Reiter** —
+übernommen aus der Android-Vorlage, wo dieser Tab eine Card „APP Informationen"
+anzeigte (Text: „Dorffest Guttau 2026 …"). Die drei Buchstaben „TKA" sind im
+Original-APK **nicht ausgeschrieben**; nur die Funktion (App-Info) ist belegt.
+
+- In `PRODUKTE` als `"TKA": { info: true }` hinterlegt (kein Produkt-Array).
+- Inhalt kommt aus der Konstante **`INFO_TAB`** (`titel` + `absaetze`-Array).
+- `renderProducts()` prüft **zuerst** `isInfoTab()` und rendert dann eine
+  `.info-box` (Titel + Absätze) statt eines Produkt-Grids — `return` davor
+  verhindert, dass der generische Objekt-Zweig greift.
+- Toggle-Zeile und Pfand-Button sind auf diesem Tab ausgeblendet.
+
+> Inhalt ändern → `INFO_TAB` in `index.html` editieren. Neuen Info-Reiter
+> anlegen → Kategorie als `{ info: true }` in `PRODUKTE` ergänzen (und ggf.
+> `INFO_TAB` verallgemeinern, das aktuell **fest** den einen Info-Tab speist).
 
 ### Render-Funktionen
 
 - **`renderTabs()`** — baut die Tab-Buttons, markiert den aktiven, hängt
   `onclick` an (Tab wechseln → alles neu rendern).
 - **`renderProducts()`** — rendert je nach Datenform:
+  - Info-Objekt (`{ info: true }`) → `.info-box` aus `INFO_TAB` (früher `return`).
   - Array → ein Grid (oder Hinweis, wenn leer).
   - Essen-Objekt → nur der via Toggle gewählte Unterblock, mit Überschrift.
   - generisches Objekt → **alle** Unterblöcke untereinander mit Überschriften.
@@ -186,9 +211,11 @@ Erkannt wird der Essen-Modus über `isEssenTab()` (`currentTab === 'Essen'`
 laden. **`CACHE_NAME` im Service Worker erhöhen**, wenn die Änderung auf
 installierten Geräten ankommen soll.
 
-### Die `TKA`-Kategorie befüllen
-→ `TKA` ist aktuell ein **leeres Array** (zeigt einen Hinweistext). Produkte im
-selben Format ergänzen; bei Bedarf in `TAB_CLASS` eine Farbe vergeben.
+### Den `TKA`-Info-Reiter ändern
+→ `TKA` ist ein **Info-/Über-Reiter** (`{ info: true }`), keine Produkt­liste.
+Text/Überschrift in der Konstante **`INFO_TAB`** (`titel`, `absaetze`) in
+`index.html` anpassen. Farbe ggf. in `TAB_CLASS`. Soll TKA doch Produkte
+zeigen, stattdessen ein Produkt-Array hinterlegen (dann entfällt die Info-Box).
 
 ### Neue Kategorie hinzufügen
 1. Schlüssel in `PRODUKTE` ergänzen (Array **oder** Unterblock-Objekt).

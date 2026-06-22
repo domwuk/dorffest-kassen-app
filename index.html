@@ -165,6 +165,23 @@
     padding: 20px;
     grid-column: 1 / -1;
   }
+  .info-box {
+    background: var(--card-bg);
+    color: #222;
+    border-radius: 12px;
+    padding: 22px 20px;
+  }
+  .info-box-title {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 12px;
+  }
+  .info-box-text {
+    margin: 0 0 10px;
+    font-size: 15px;
+    line-height: 1.45;
+  }
+  .info-box-text:last-child { margin-bottom: 0; }
   .pfand-btn-main {
     background: var(--red);
     border: none;
@@ -410,7 +427,7 @@
 
   <div class="tabs" id="tabs"></div>
 
-  <div class="pfand-row">
+  <div class="pfand-row" id="pfandRow">
     <span id="pfandRowLabel">Pfand berechnen</span>
     <label class="switch">
       <input type="checkbox" id="pfandToggle" checked>
@@ -502,9 +519,19 @@ const PRODUKTE = {
       { name: "Zuckerwatte", preis: 2.0, pfand: 0.0 },
     ],
   },
-  "TKA": [
-    // Noch keine Produkte hinterlegt — hier einfach im gleichen Format ergänzen:
-    // { name: "Beispielprodukt", preis: 1.0, pfand: 0.0 },
+  // TKA ist KEINE Produktkategorie, sondern ein Info-/Über-Reiter
+  // (entspricht dem "APP Informationen"-Tab der Android-Vorlage).
+  // Inhalt wird über INFO_TAB gesteuert, nicht über Produkte.
+  "TKA": { info: true },
+};
+
+// Inhalt des Info-Reiters (TKA). Überschrift + Textabsätze.
+const INFO_TAB = {
+  titel: "App Informationen",
+  absaetze: [
+    "Dorffest Guttau 2026",
+    "App zum Berechnen der Getränkepreise inkl. Pfand und Wechselgeld.",
+    "Viel Spaß damit!",
   ],
 };
 
@@ -526,7 +553,19 @@ function isEssenTab() {
   return currentTab === 'Essen' && !Array.isArray(PRODUKTE['Essen']);
 }
 
+function isInfoTab() {
+  const data = PRODUKTE[currentTab];
+  return !!(data && !Array.isArray(data) && data.info);
+}
+
 function updateToggleForTab() {
+  // Auf dem Info-Reiter (TKA) hat der Toggle keine Funktion → ganze Zeile ausblenden.
+  const pfandRow = document.getElementById('pfandRow');
+  if (isInfoTab()) {
+    pfandRow.style.display = 'none';
+    return;
+  }
+  pfandRow.style.display = '';
   if (isEssenTab()) {
     pfandRowLabel.textContent = 'Crepe-Bude anzeigen';
     pfandToggle.checked = essenZeigeCrepeBude;
@@ -538,7 +577,8 @@ function updateToggleForTab() {
 
 function updatePfandButtonVisibility() {
   const pfandBtn = document.getElementById('pfandMinusBtn');
-  pfandBtn.style.display = isEssenTab() ? 'none' : '';
+  // Kein Pfand-Button bei Essen und auf dem Info-Reiter.
+  pfandBtn.style.display = (isEssenTab() || isInfoTab()) ? 'none' : '';
 }
 
 function renderTabs() {
@@ -565,6 +605,24 @@ function renderProducts() {
     btn.innerHTML = `${p.name}${pfandText}`;
     btn.onclick = () => addToCart(p);
     return btn;
+  }
+
+  if (isInfoTab()) {
+    // Info-/Über-Reiter (TKA): zeigt eine Info-Box statt Produkten.
+    const box = document.createElement('div');
+    box.className = 'info-box';
+    const h = document.createElement('div');
+    h.className = 'info-box-title';
+    h.textContent = INFO_TAB.titel;
+    box.appendChild(h);
+    INFO_TAB.absaetze.forEach(text => {
+      const p = document.createElement('p');
+      p.className = 'info-box-text';
+      p.textContent = text;
+      box.appendChild(p);
+    });
+    productListEl.appendChild(box);
+    return;
   }
 
   if (Array.isArray(data)) {
