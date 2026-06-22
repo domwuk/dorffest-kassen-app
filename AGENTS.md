@@ -36,6 +36,8 @@ dorffest-kassen-app/
 ├── service-worker.js   # Offline-Caching (Cache-First-Strategie)
 ├── icon-192.png        # App-Icon 192×192 (Homescreen / Manifest)
 ├── icon-512.png        # App-Icon 512×512 (Splash / Manifest)
+├── wappen-192.png      # Guttauer Wappen 192×192 (Info-Bereich / Emblem)
+├── wappen-512.png      # Guttauer Wappen 512×512 (Info-Bereich / Emblem)
 └── AGENTS.md           # Diese Datei
 ```
 
@@ -52,6 +54,7 @@ JavaScript-Logik sind in dieser einen Datei vereint. Es gibt keine separaten
   - Zwei **Icon-Buttons** rechts außen (via CSS `margin-left: auto` auf den ersten):
     - **`ℹ`** (`aria-label="Info"`, Klassen `tab-btn tab-icon`) — öffnet die Info-View.
     - **`⚙`** (`aria-label="Einstellungen"`, Klassen `tab-btn tab-icon`) — öffnet die Einstellungen-View.
+  - Die Icon-Buttons sind **lila** (`color: var(--purple)`); wenn ihre View aktiv ist, erhalten sie einen ausgefüllten lila Hintergrund (`background: var(--purple); color: #ffffff`) — entspricht einem klaren iOS-Standard-Active-Zustand.
   - Der jeweils aktive Tab/Icon erhält die Klasse `active`.
   - Eine separate Toggle-Zeile (`.pfand-row`) gibt es **nicht mehr** — alle Umschalter wurden in die Einstellungen-View verschoben.
 - **`.main`** — enthält `.left` und `.right#rightCol`. Layout ist **mobile-first zweispaltig** (auch im Hochformat) — siehe [Layout / Responsivität](#layout--responsivität).
@@ -62,15 +65,24 @@ JavaScript-Logik sind in dieser einen Datei vereint. Es gibt keine separaten
 - **`#statsResetOverlay`** — Bestätigungs-Modal fürs Zurücksetzen der Statistik (gleiche Overlay-Klassen, `role="dialog"`, `aria-modal="true"`, `aria-labelledby="statsResetOverlayTitle"`). Enthält: `<h2>Statistik zurücksetzen?</h2>`, „Abbrechen" (`.btn-close`) und „Zurücksetzen" (`.btn-danger`). Kein nativer `confirm()`-Aufruf.
 - **`#statsExportOverlay`** — Modal für den Statistik-Export (`role="dialog"`, `aria-modal="true"`, `aria-labelledby="statsExportOverlayTitle"`). Wird beim Tippen auf „Export" **immer** geöffnet (kein stiller Clipboard-Versuch vorab). Zeigt den Export-Text in einem readonly `<textarea>` sowie den Hinweis „Zum Sichern markieren & kopieren (z. B. in Notizen)". Der Button **`#statsExportCopyBtn`** „Kopieren" schreibt den Inhalt via `navigator.clipboard.writeText` in die Zwischenablage (Fallback: `select` + `document.execCommand('copy')` + `setSelectionRange(0, 99999)` für volle iOS-Auswahl); bei Fehlschlag beider Wege Feedback „Bitte manuell kopieren" statt stiller Fehler; zeigt sonst kurz „Kopiert!". „Schließen", ✕ und Klick auf den Hintergrund schließen das Overlay.
 - **`.sub-nav`** (innerhalb der Info-View) — kleine Unter-Navigation mit zwei `.sub-nav-btn`-Buttons („Info" / „Statistik"), die zwischen den beiden Sub-Views der Info-View umschaltet. Nur in der Info-View sichtbar.
+- **`.wappen-emblem`** — das Guttauer Wappen, eingefügt durch `renderInfoView()` als `<img class="wappen-emblem" src="wappen-512.png">`. Wird oben in der Info-Box platziert (über dem Titel), ist ~120 px hoch auf Smartphones / ~140 px auf breiten Bildschirmen, zentriert, mit CSS-Drop-Shadow. Funktioniert in beiden Farbthemen. Die PNG-Datei `wappen-512.png` ist im Service-Worker-Cache (`ASSETS`) hinterlegt — daher offline verfügbar.
+- **`<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,…">`** (im `<head>`) — SVG-Favicon: vereinfachtes Schild (gelb `#FBE324`, dunkle Kontur `#16313B`) mit einem fetten „€"-Overlay, das an das Guttauer Wappen erinnert und bei kleinen Größen lesbar bleibt. Das `apple-touch-icon` (icon-192.png) bleibt für den iOS-Homescreen erhalten.
 - **`.update-banner`** — Fix-positioniertes Banner (unten, `z-index: 1000`), das erscheint, wenn der Service Worker eine neue Version gefunden hat. Zeigt „Neue Version verfügbar." und einen Button „Neu laden", der `postMessage('skipWaiting')` an den wartenden SW sendet und danach die Seite neu lädt. Wird per `showUpdateBanner()` aus dem `updatefound`-Listener erzeugt; ein `controllerchange`-Listener lädt die Seite einmalig neu, sobald der neue SW die Kontrolle übernimmt.
 - **`.undo-snackbar`** (`#undoSnackbar`) — Fix-positionierte Snackbar (über der Summen-Leiste), die nach dem Entfernen einer Position angezeigt wird. Zeigt „„Name" entfernt" und einen „Rückgängig"-Button, der die Position an ihrer ursprünglichen Stelle wiederherstellt. Verschwindet nach ~4,5 s automatisch. Wird von `showUndoSnackbar(removedItem, originalIndex)` erzeugt.
 
 #### Einstellungen-View (`.settings-box`)
 
-Wird durch Klick auf das ⚙-Icon geöffnet (`currentView = 'settings'`). Aufgebaut von `renderSettingsView()` in `#productList`. Enthält:
+Wird durch Klick auf das ⚙-Icon geöffnet (`currentView = 'settings'`). Aufgebaut von `renderSettingsView()` in `#productList`. Alle Toggle-Zeilen werden über den internen Helfer **`addToggleRow(labelText, checked, onChange, hint)`** erzeugt: Label links (`.settings-label`, `flex: 1`), Toggle-Switch rechts (`.switch`/`.slider`) — iOS-Standard-Layout (`justify-content: space-between`). Der optionale `hint`-Parameter fügt eine `.settings-hint`-Zeile darunter ein.
 
-- Eine **`.settings-row`** mit `.settings-label` „Pfand berechnen" und einem Toggle-Switch (`.switch`/`.slider`) der den globalen Zustand `pfandBerechnen` steuert. Umschalten ruft `applyPfandToCart()` — bereits vorhandene Warenkorb-Positionen werden sofort aktualisiert.
-- Für jeden Block-Tab (`Bier`, `Essen`): ein **`.settings-group-label`** (z. B. „Bier-Bereich" / „Essensstand") gefolgt von einem **segmentierten Steuerelement** (Container `.segmented` mit `.segmented-btn`-Buttons, je einem pro Block). Der aktive Block erhält die Klasse `active`. Klick ruft `setActiveBlock(tab, block)` und rendert neu.
+Gruppen in der Einstellungen-View:
+
+- **Gruppe „Darstellung"** (`.settings-group-label`):
+  - **„Dunkler Modus"** (Toggle) — gebunden an `getTheme()` / `setTheme()`. Hint: „Abends in der Bar dunkel, tagsüber draußen hell."
+- **Gruppe „Kasse"** (`.settings-group-label`):
+  - **„Pfand berechnen"** (Toggle) — steuert `pfandBerechnen`. Umschalten ruft `applyPfandToCart()` — bereits vorhandene Warenkorb-Positionen werden sofort aktualisiert. Hint: „Schlägt beim Antippen automatisch das Becher-Pfand auf."
+- **Für jeden Block-Tab** (`Bier`, `Essen`): ein **`.settings-group-label`** (z. B. „Bier-Bereich" / „Essensstand") gefolgt von einer **`.settings-hint`**-Zeile (aus `BLOCK_TABS[tab].note`), dem **segmentierten Steuerelement** (`.segmented` / `.segmented-btn`, aktiver Block erhält Klasse `active`) und einer **`.settings-block-desc`**-Zeile, die den aktuell gewählten Block beschreibt (aus `BLOCK_TABS[tab].blockDesc[activeBlock]`). Klick auf einen `.segmented-btn` ruft `setActiveBlock(tab, block)` und rendert neu.
+
+Der Pfand-Rückgabe-Button (`#pfandMinusBtn`) wird ausgeblendet, sobald die aktuelle Produktliste keine Pfand-Produkte enthält (z. B. Block „Badewannenrennen" oder alle Essen-Blöcke) oder wenn eine Nicht-Produkt-View aktiv ist.
 
 ### Zentrale Datenstruktur: `PRODUKTE`
 
@@ -112,15 +124,34 @@ ggf. hier eine Farbe ergänzen, sonst bleibt der Tab grau/neutral.
 
 ```js
 const BLOCK_TABS = {
-  "Bier":  { label: "Bier-Bereich",  defaultBlock: "Bierwagen", blocks: ["Bierwagen", "Badewannenrennen"] },
-  "Essen": { label: "Essensstand",   defaultBlock: "Bratbude",  blocks: ["Bratbude",  "Crepe-Bude"] },
+  "Bier":  {
+    label: "Bier-Bereich",  defaultBlock: "Bierwagen",
+    blocks: ["Bierwagen", "Badewannenrennen"],
+    note: "Zwei Ausschank-Bereiche mit eigener Karte.",
+    blockDesc: {
+      "Bierwagen":        "Mit Pfand (2,00 € je Becher).",
+      "Badewannenrennen": "Ohne Pfand – eigene Getränkeauswahl.",
+    },
+  },
+  "Essen": {
+    label: "Essensstand",   defaultBlock: "Bratbude",
+    blocks: ["Bratbude",  "Crepe-Bude"],
+    note: "Zwei Stände – kein Pfand.",
+    blockDesc: {
+      "Bratbude":   "Herzhaft: Bratwurst, Steak, Pommes …",
+      "Crepe-Bude": "Süß: Crepes, Waffeln, Zuckerwatte.",
+    },
+  },
 };
 ```
 
 `BLOCK_TABS` beschreibt, welche Kategorien Block-Tabs sind, wie ihr Label in
 den Einstellungen lautet, welcher Block beim Start aktiv ist (`defaultBlock`)
-und welche Blöcke existieren. Der aktuell angezeigte Block je Tab wird in
-`activeBlock` gespeichert.
+und welche Blöcke existieren. Die Felder **`note`** (kurze Hinweiszeile, in der
+Einstellungen-View als `.settings-hint` angezeigt) und **`blockDesc`** (Map
+Blockname → Kurzbeschreibung, angezeigt als `.settings-block-desc` unter dem
+Segmented-Control) wurden in v9 ergänzt. Der aktuell angezeigte Block je Tab
+wird in `activeBlock` gespeichert.
 
 #### Aktuelle Produktdaten
 
@@ -128,62 +159,62 @@ und welche Blöcke existieren. Der aktuell angezeigte Block je Tab wird in
 
 | Name | Preis | Pfand |
 |------|------:|------:|
-| Glas Sekt/Fruchtsecco 0,1l | 2,00 € | 2,00 € |
+| Glas Sekt / Fruchtsecco 0,1l | 2,00 € | 2,00 € |
 | Schoppen Wein 0,1l | 2,00 € | 2,00 € |
-| Flasche Wein/Sekt/Fruchtsecco | 10,00 € | 2,00 € |
+| Flasche Wein / Sekt / Fruchtsecco | 10,00 € | 2,00 € |
 | Desperados | 4,00 € | 2,00 € |
-| alkfrei 0,4l | 2,50 € | 2,00 € |
-| alkfrei 0,2l | 1,50 € | 2,00 € |
-| alkfrei Flasche | 6,00 € | 2,00 € |
+| alkoholfrei 0,4l | 2,50 € | 2,00 € |
+| alkoholfrei 0,2l | 1,50 € | 2,00 € |
+| alkoholfrei Flasche | 6,00 € | 2,00 € |
 | Mixgetränke | 6,00 € | 2,00 € |
 | Cocktails | 6,00 € | 2,00 € |
-| Mojito/Pina Colada alkfrei | 4,00 € | 2,00 € |
+| Cocktails (alkoholfrei) | 4,00 € | 2,00 € |
 | Pullchen | 2,50 € | 0,00 € |
 
 **Bier → Block „Bierwagen"** (Pfand 2,00 € je Produkt, außer Pullchen):
 
 | Name | Preis | Pfand |
 |------|------:|------:|
-| Bier/Radler 0,4l | 3,50 € | 2,00 € |
-| Bier/Radler 0,25l | 2,50 € | 2,00 € |
-| alkfrei 0,4l | 2,50 € | 2,00 € |
-| alkfrei 0,2l | 1,50 € | 2,00 € |
-| alkfrei Flasche | 6,00 € | 2,00 € |
+| Bier / Radler 0,4l | 3,50 € | 2,00 € |
+| Bier / Radler 0,25l | 2,50 € | 2,00 € |
+| alkoholfrei 0,4l | 2,50 € | 2,00 € |
+| alkoholfrei 0,2l | 1,50 € | 2,00 € |
+| alkoholfrei Flasche | 6,00 € | 2,00 € |
 | Pullchen | 2,50 € | 0,00 € |
 
 **Bier → Block „Badewannenrennen"** (kein Pfand):
 
 | Name | Preis | Pfand |
 |------|------:|------:|
-| Bier/Radler 0,4l | 3,50 € | 0,00 € |
-| Bier/Radler 0,2l | 2,00 € | 0,00 € |
-| Wein/Sekt/Fruchtsecco 0,2l | 3,00 € | 0,00 € |
-| alkfrei 0,4l | 2,50 € | 0,00 € |
-| alkfrei 0,2l | 1,50 € | 0,00 € |
+| Bier / Radler 0,4l | 3,50 € | 0,00 € |
+| Bier / Radler 0,2l | 2,00 € | 0,00 € |
+| Wein / Sekt / Fruchtsecco 0,2l | 3,00 € | 0,00 € |
+| alkoholfrei 0,4l | 2,50 € | 0,00 € |
+| alkoholfrei 0,2l | 1,50 € | 0,00 € |
 
 **Essen → Block „Bratbude"** (kein Pfand):
 
 | Name | Preis |
 |------|------:|
-| Bratwurst m Br | 3,50 € |
-| Steak m Br | 4,50 € |
-| Spieß m Br | 4,50 € |
+| Bratwurst mit Brötchen | 3,50 € |
+| Steak mit Brötchen | 4,50 € |
+| Spieß mit Brötchen | 4,50 € |
 | Hotdog | 3,00 € |
 | Pommes | 2,50 € |
 | Fischsemmel | 3,50 € |
-| Frühl.rolle 2 | 3,50 € |
-| Frühl.rolle 3 | 5,00 € |
+| Frühlingsrolle 2 Stück | 3,50 € |
+| Frühlingsrolle 3 Stück | 5,00 € |
 
 **Essen → Block „Crepe-Bude"** (kein Pfand):
 
 | Name | Preis |
 |------|------:|
 | Crepes Puderzucker | 2,50 € |
-| Crepes Nutella/Apfelmus | 3,50 € |
+| Crepes Nutella / Apfelmus | 3,50 € |
 | Crepes mit Käse | 3,50 € |
-| Crepes m. Käse u. Schinken | 4,00 € |
-| Waffel Zimt/Zucker | 3,00 € |
-| Waffel Nutella/Apfelmus | 4,00 € |
+| Crepes mit Käse & Schinken | 4,00 € |
+| Waffel Zimt / Zucker | 3,00 € |
+| Waffel Nutella / Apfelmus | 4,00 € |
 | Zuckerwatte | 2,00 € |
 
 ### Wichtige State-Variablen
@@ -196,6 +227,11 @@ und welche Blöcke existieren. Der aktuell angezeigte Block je Tab wird in
 | `pfandBerechnen` | ob Pfand auf Produkte aufgeschlagen wird (Toggle in Einstellungen, Default `true`)         |
 | `activeBlock`  | je Block-Tab der aktuell angezeigte Unterblock, z. B. `{ Bier: 'Bierwagen', Essen: 'Bratbude' }` |
 | `infoView`     | aktive Sub-View der Info-View: `'info'` (Standard) oder `'statistik'`                       |
+| `currentTheme` | aktives Farbthema: `'dark'` (Standard) \| `'light'`; gesetzt durch `loadThemePreference()` beim Start |
+
+Konstante **`THEME_STORAGE_KEY = 'kassenTheme'`** — `localStorage`-Schlüssel für die Theme-Präferenz.
+
+Konstante **`TAB_HEADING`** — ordnet flachen Tabs einen optionalen Überschriften-Text zu (z. B. `{ "Bar": "Getränke" }`); Block-Tabs verwenden stattdessen den Blocknamen als Überschrift.
 
 `cart`-Einträge haben die Form
 `{ name, preis, pfand, pfandOriginal?, isPfandAbzug? }`. Das Feld `pfandOriginal`
@@ -230,7 +266,7 @@ ausgeblendet, `.left` nimmt die volle Breite ein.
 
 - Zeigt eine Sub-Navigation (`.sub-nav`) mit zwei `.sub-nav-btn`-Buttons „Info" und
   „Statistik". Klick setzt `infoView` und rendert neu.
-- Bei `infoView === 'info'`: eine `.info-box` aus `INFO_TAB` mit Titel
+- Bei `infoView === 'info'`: eine `.info-box` aus `INFO_TAB` mit dem **Guttauer Wappen** (`.wappen-emblem`) ganz oben — als `<img src="wappen-512.png">` — sowie Titel
   (`.info-box-title`), Absätzen (`.info-box-text`) und
   Zwischenüberschriften (`.info-box-subtitle`).
 - Bei `infoView === 'statistik'`: das Statistik-Panel (siehe [Statistik](#statistik)).
@@ -273,15 +309,15 @@ Das Layout ist **mobile-first zweispaltig** — auch im Hochformat:
     `flex-direction: row` (Name | Preis | ✕ in einer Zeile).
 
 - **≥ 1024 px:** Produkt-Buttons noch größer (`min-height: 116px`, Schrift 21 px,
-  `border-radius: 16px`); Grid `repeat(auto-fill, minmax(180px, 1fr))`.
+  `border-radius: 16px`); Grid **maximal 3 Spalten** (`grid-template-columns: repeat(3, 1fr)`) — die Buttons strecken sich auf die volle verfügbare Breite, es erscheinen nie mehr als 3 Spalten. Auf Smartphones im Hochformat bleibt es bei einer Spalte.
 
 - **Gleiche Button-Höhe:** `.product-grid-inner` nutzt `grid-auto-rows: 1fr` und
   `.product-btn` hat `height: 100%` — alle Produkt-Buttons in einem Grid sind
   gleich hoch (bestimmt durch den höchsten Button). `min-height` dient als Untergrenze.
 
-- **WCAG-AA-Farben:** Bar-Buttons `#bd5200`/aktiv `#994200`, Bier-Buttons `#2e7d32`/aktiv `#1b5e20`
-  (für Lesbarkeit im Sonnenlicht abgedunkelt). CSS-Variablen `--orange`/`--green`
-  bleiben für Toggle, Summen-Leiste, `.btn-done` und `.change-result.positive` unverändert.
+- **Hell/Dunkel-Theme und WCAG-AA-Farben:** Alle Farben werden über CSS-Variablen gesteuert, die pro Theme definiert sind: `:root, :root[data-theme="dark"] { … }` (dunkle Palette: `--bg #10181b`, `--card-bg #1c272b`, `--text #f2f2f7` u. a.) und `:root[data-theme="light"] { … }` (helle Palette: `--bg #f2f2f7`, `--card-bg #ffffff`, `--text #111111` u. a.). Beide Themes sind WCAG-AA-konform — dunkel für den Barbetrieb am Abend, hell für den Außeneinsatz in der Sonne. Kategorie-Button-Farben (Bar: Orange-Familie, Bier: Grün-Familie, Essen: Grau/Blau-Familie) sind je Theme fein abgestimmt; die gemeinsamen CSS-Variablen `--orange`/`--green`/`--purple` werden von Toggle, Summen-Leiste, `.btn-done` und `.change-result.positive` genutzt.
+
+- **iOS/Android-Design-Pass (v9):** CSS entspricht dem iOS Human Interface Guidelines- und Material Design 3-Standard: System-Fontstack (`system-ui, -apple-system, …`), einheitliche Typskala, Touch-Targets ≥ 44 px / 48 px, konsistente Abstands-Skala, subtile Elevation/Oberflächen, schnelle zweckmäßige Übergänge (~150–200 ms). `@media (prefers-reduced-motion: reduce)` deaktiviert nicht-essentielle Animationen. iOS-Style-Switch und Segmented-Control sind poliert.
 
 - **Info- und Einstellungen-View:** `#rightCol` wird per Inline-Style auf `display: none`
   gesetzt (`updateLayoutForView()`), sodass die gesamte rechte Seite verborgen ist.
@@ -307,15 +343,20 @@ Das Layout ist **mobile-first zweispaltig** — auch im Hochformat:
 - **`renderProductTab()`** — rendert die Produkte des aktuellen Tabs in `#productList`:
   - Setzt `productListEl.setAttribute('data-tab', TAB_CLASS[currentTab])` für
     kategoriebasierte Button-Farben per CSS.
-  - **Array** → ein einfaches Grid (`product-grid-inner`).
+  - **Array** → ein einfaches Grid (`product-grid-inner`) mit einer `.block-heading`-Überschrift aus `TAB_HEADING[currentTab]` (z. B. „Getränke" für Bar).
   - **Block-Tab** (`isBlockTab(currentTab)` → wahr) → zeigt nur den via `getActiveBlock()`
     ermittelten Block mit einer `.block-heading`-Überschrift.
   - **Generisches Objekt** (kein Block-Tab-Eintrag in `BLOCK_TABS`) → alle Unterblöcke
     nacheinander, jeweils mit Überschrift.
 - **`renderInfoView()`** — baut in `#productList` die Sub-Navigation (`.sub-nav`)
   und je nach `infoView` die Info-Box aus `INFO_TAB` oder das Statistik-Panel.
+  Bei der Info-Box wird das Guttauer Wappen als `.wappen-emblem`
+  (`<img src="wappen-512.png">`) ganz oben (vor dem Titel) eingefügt.
 - **`renderSettingsView()`** — baut in `#productList` die `.settings-box` mit
-  Pfand-Toggle und segmentierten Block-Steuerelementen für jeden Block-Tab.
+  Darstellungs-Gruppe (Dunkler-Modus-Toggle via `addToggleRow`), Kassen-Gruppe
+  (Pfand-Toggle via `addToggleRow`) und segmentierten Block-Steuerelementen für
+  jeden Block-Tab (inkl. Hinweiszeile aus `BLOCK_TABS[tab].note` und
+  Blockbeschreibung aus `BLOCK_TABS[tab].blockDesc`).
 - **`makeProductButton(p)`** — erzeugt einen Produkt-Button; zeigt Name und
   **ausschließlich den Preis** (`formatEuro(p.preis)`) als Sub-Zeile. Pfand wird
   stattdessen im Warenkorb als „inkl. X,XX € Pfand"-Subzeile ausgewiesen.
@@ -535,7 +576,7 @@ Die Statistik ist über das ℹ-Icon und den Sub-Nav-Button „Statistik" erreic
   im `<head>` gesetzt.
 
 ### service-worker.js
-- **Cache-Name:** `kassensystem-v8`.
+- **Cache-Name:** `kassensystem-v9`.
 - **Installation (gehärtet):** `install` cacht Assets per `Promise.all(ASSETS.map(a => cache.add(a).catch(() => {})))` — ein einzelnes fehlendes Asset bricht den gesamten Install-Vorgang **nicht** mehr ab. `self.skipWaiting()` wird direkt (außerhalb von `waitUntil`) gerufen.
 - **Message-Handler:** Reagiert auf `postMessage('skipWaiting')` von der Seite (Update-Banner) mit `self.skipWaiting()` — aktiviert den wartenden SW sofort.
 - **Aktivierung:** `activate` löscht alte Caches und ruft `self.clients.claim()` innerhalb der `waitUntil`-Promise-Kette — deterministischer Ablauf.
@@ -550,12 +591,12 @@ Die Statistik ist über das ℹ-Icon und den Sub-Nav-Button „Statistik" erreic
   Treffer wird dieser geliefert, sonst aus dem Netz geholt und — sofern es
   sich um ein App-Shell-Asset handelt — in den Cache geschrieben (mit `.catch`-Fallback auf Cache-Eintrag bei Netzwerkfehler).
 - **Vorab gecachte Assets (`ASSETS`):** `index.html`, `manifest.json`,
-  `icon-192.png`, `icon-512.png`.
+  `icon-192.png`, `icon-512.png`, `wappen-192.png`, `wappen-512.png`.
 - **Update-Hinweis in der Seite:** `index.html` registriert den SW mit `updatefound`-Listener → zeigt bei installierter neuer Version das Banner `.update-banner` „Neue Version verfügbar. / Neu laden"; ein `controllerchange`-Listener lädt die Seite einmalig neu (verhindert „stale" App auf installierten Geräten).
 
 > **Cache-Busting beim Deployen:** Da `index.html` aggressiv gecacht wird,
 > muss bei Änderungen der **`CACHE_NAME` erhöht** werden (z. B. auf
-> `kassensystem-v9`), damit Geräte die neue Version laden. Sonst sehen bereits
+> `kassensystem-v10`), damit Geräte die neue Version laden. Sonst sehen bereits
 > installierte Geräte weiterhin den alten Stand. **Das ist der häufigste
 > Stolperstein bei Updates.**
 
@@ -583,8 +624,9 @@ referenziert, muss diese **vor** `INFO_TAB` im Quellcode stehen.
 2. In `TAB_CLASS` eine Tab-Farbklasse hinterlegen (sonst neutral/grau).
 3. Soll die neue Kategorie ein **Block-Tab** sein (d. h. nur ein Block wird
    gleichzeitig angezeigt, Auswahl über die Einstellungen), einen Eintrag in
-   **`BLOCK_TABS`** ergänzen mit `label`, `defaultBlock` und `blocks`-Array.
-   `isBlockTab()`, `getActiveBlock()`, `setActiveBlock()`, `renderSettingsView()`
+   **`BLOCK_TABS`** ergänzen mit `label`, `defaultBlock`, `blocks`-Array,
+   `note` (Hinweiszeile in den Einstellungen) und `blockDesc` (Beschreibungstexte
+   je Block). `isBlockTab()`, `getActiveBlock()`, `setActiveBlock()`, `renderSettingsView()`
    und `renderProductTab()` arbeiten generisch gegen `BLOCK_TABS` — keine
    weiteren Code-Änderungen nötig.
 
@@ -631,6 +673,8 @@ Pfand zusätzlich in dessen `pfand`-Feld — auch das bei einer Änderung anpass
   Stückelung beträgt **0,50 €** (50 Cent).
 - **Service-Worker-Caching** kann alte Stände „festhalten" → bei Updates
   `CACHE_NAME` erhöhen.
+- **Farbthema über `data-theme` und CSS-Variablen:** Das Hell/Dunkel-Theme wird per `data-theme`-Attribut auf `<html>` gesetzt (`'dark'` | `'light'`). Alle Farben sind als CSS-Variablen pro Theme definiert — nie Farben hartcodieren, immer `var(--…)` nutzen. Die Präferenz wird in `localStorage` unter dem Schlüssel `kassenTheme` gespeichert; beim ersten Start folgt die App `prefers-color-scheme`, fällt danach auf `'dark'` zurück.
+- **Guttauer Wappen als PNG im Info-Bereich:** Das Wappen liegt als `wappen-192.png` / `wappen-512.png` im Repo. `renderInfoView()` zeigt es als `<img class="wappen-emblem" src="wappen-512.png">` oben in der Info-Box. Die PNGs sind in der Service-Worker-`ASSETS`-Liste hinterlegt, daher offline verfügbar. Das **Favicon** ist davon getrennt: ein inline-SVG (vereinfachtes Schild + „€") als Data-URI im `<head>`.
 - **Einzeldatei-Architektur:** Alles in `index.html`. Kein Build, keine Module,
   keine Dependencies — Änderungen sind direkt und sofort wirksam.
 
