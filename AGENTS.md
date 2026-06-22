@@ -55,7 +55,7 @@ JavaScript-Logik sind in dieser einen Datei vereint. Es gibt keine separaten
 - **`#changeOverlay`** — Modal für die Wechselgeld-Berechnung. Enthält die benannten Elemente **`#overlayTotalLabel`** (Label-Span in der `.overlay-row.total`, wechselt zwischen „Zu zahlen" und „Auszahlung an Kunde") und **`#overlayInputWrap`** (Wrapper um das Eingabefeld, wird bei negativem Gesamtbetrag ausgeblendet).
 - **`#clearOverlay`** — Bestätigungs-Modal fürs Leeren der Bestellung. Gleiche CSS-Klassen (`.overlay`/`.overlay-card`/`.overlay-close-x`/`.overlay-buttons`) wie das Wechselgeld-Overlay. Enthält: `<h2>Bestellung leeren?</h2>`, einen Absatz `.overlay-confirm-text` „Möchtest du die komplette Bestellung wirklich leeren?", die Buttons `#clearCancelBtn` „Abbrechen" (`.btn-close`) und `#clearConfirmBtn` „Leeren" (`.btn-danger`) sowie `#clearCloseX` (✕).
 - **`#statsResetOverlay`** — Bestätigungs-Modal fürs Zurücksetzen der Statistik (gleiche Overlay-Klassen). Enthält: `<h2>Statistik zurücksetzen?</h2>`, „Abbrechen" (`.btn-close`) und „Zurücksetzen" (`.btn-danger`). Kein nativer `confirm()`-Aufruf.
-- **`#statsExportOverlay`** — Fallback-Modal für den Statistik-Export, wenn die Clipboard-API nicht verfügbar ist. Zeigt den Export-Text in einem readonly `<textarea>` zum manuellen Kopieren.
+- **`#statsExportOverlay`** — Modal für den Statistik-Export. Wird beim Tippen auf „Export" **immer** geöffnet (kein stiller Clipboard-Versuch vorab). Zeigt den Export-Text in einem readonly `<textarea>` sowie den Hinweis „Zum Sichern markieren & kopieren (z. B. in Notizen)". Der Button **`#statsExportCopyBtn`** „Kopieren" schreibt den Inhalt via `navigator.clipboard.writeText` in die Zwischenablage (Fallback: `select` + `document.execCommand('copy')`) und zeigt kurz „Kopiert!". „Schließen", ✕ und Klick auf den Hintergrund schließen das Overlay.
 - **`.sub-nav`** (innerhalb des Info-Tab-Inhalts) — kleine Unter-Navigation mit zwei `.sub-nav-btn`-Buttons („Info" / „Statistik"), die zwischen den beiden Sub-Views des Info-Reiters umschaltet. Nur auf dem Info-Tab sichtbar.
 
 ### Zentrale Datenstruktur: `PRODUKTE`
@@ -149,7 +149,7 @@ Reiter heißt jetzt einheitlich `"Info"`.
   - `absaetze` (Array) — jeder Eintrag ist entweder ein **String** (wird als
     Absatz `.info-box-text` gerendert) oder ein **Objekt `{ ueberschrift: "…" }`**
     (wird als Zwischenüberschrift `.info-box-subtitle` gerendert). So lassen
-    sich Abschnitte wie „Bedienung", „Pfand", „Essen", „Wechselgeld" strukturieren.
+    sich Abschnitte wie „Bedienung", „Pfand", „Essen", „Wechselgeld", „Statistik" strukturieren.
 - `renderProducts()` prüft **zuerst** `isInfoTab()` und rendert dann eine
   kleine Sub-Navigation (`.sub-nav` mit zwei `.sub-nav-btn`-Buttons „Info" und
   „Statistik") sowie den jeweils aktiven Sub-View: bei `infoView === 'info'`
@@ -330,29 +330,35 @@ Schließen verloren; der Export-Button ermöglicht dann die manuelle Sicherung.
   {
     version,
     produkte: { "<Produktname>": { anzahl, umsatzCents } },
-    einnahmenCents,   // Summe aller Produktpreise (ohne Pfand)
-    ausgabenCents,    // Summe aller Pfand-Rückgaben (positive Cent)
-    bons              // Anzahl abgeschlossener Bestellungen
+    einnahmenCents,        // Produktumsatz: Summe aller Produktpreise (ohne Pfand)
+    pfandEinnahmenCents,   // Pfand eingenommen: Summe der beim Verkauf aufgeschlagenen Pfandbeträge
+    ausgabenCents,         // Pfand ausgezahlt: Summe aller Pfand-Rückgaben (positive Cent)
+    bons                   // Anzahl abgeschlossener Bestellungen
   }
   ```
   - `produkte`: pro Produkt Verkaufsanzahl (`anzahl`) und Umsatz in Cent
     (`umsatzCents` = Anzahl × Preis, **ohne** Pfand-Anteil).
   - `einnahmenCents`: Summe der Produktpreise aller verkauften Positionen
-    (kein Pfand enthalten).
-  - `ausgabenCents`: Summe aller Pfand-Rückgabe-Beträge (positiver Cent-Wert).
+    (**Produktumsatz**, kein Pfand enthalten).
+  - `pfandEinnahmenCents`: **NEU** — Summe der beim Abschluss tatsächlich
+    aufgeschlagenen Pfandbeträge (`item.pfand`) über alle verkauften Positionen
+    (= **Pfand eingenommen**).
+  - `ausgabenCents`: Summe aller Pfand-Rückgabe-Beträge (= **Pfand ausgezahlt**,
+    positiver Cent-Wert).
   - `bons`: Zähler abgeschlossener Bestellungen.
 
 #### Funktionen
 
 | Funktion | Beschreibung |
 | -------- | ------------ |
-| `emptyStats()` | Liefert ein frisch genulltes Stats-Objekt. |
-| `loadStats()` | Liest + parst `localStorage`; füllt fehlende Felder defensiv; gibt `emptyStats()` bei Fehler/fehlendem Eintrag zurück. |
+| `emptyStats()` | Liefert ein frisch genulltes Stats-Objekt (inkl. `pfandEinnahmenCents: 0`). |
+| `loadStats()` | Liest + parst `localStorage`; füllt fehlende Felder defensiv via `Object.assign(emptyStats(), data)` (rückwärtskompatibel, setzt fehlendes `pfandEinnahmenCents` auf 0); gibt `emptyStats()` bei Fehler/fehlendem Eintrag zurück. |
 | `saveStats(stats)` | Persistiert als JSON; gibt `false` zurück bei Fehler (z. B. Storage voll / privater Modus). |
 | `statsStorageAvailable()` | Boolean: prüft, ob `localStorage` beschreibbar ist (z. B. `false` im privaten Modus). |
-| `recordSale()` | Aufgerufen beim Abschließen einer Bestellung: iteriert den Warenkorb — für jede normale Position (`!isPfandAbzug`) werden `produkte[name].anzahl` und `umsatzCents` sowie `einnahmenCents` inkrementiert; für `isPfandAbzug`-Einträge wird `ausgabenCents` um den Absolutbetrag erhöht; `bons` wird einmalig pro Bestellung hochgezählt. Leerer Warenkorb → kein Bon. |
+| `statsKassenbestandCents(stats)` | **NEU** — Hilfsfunktion: gibt `einnahmenCents + pfandEinnahmenCents − ausgabenCents` zurück = tatsächlicher Kassenbestand gesamt (Bargeld in der Kasse). Wird von UI und Export verwendet. |
+| `recordSale()` | Aufgerufen beim Abschließen einer Bestellung: iteriert den Warenkorb — für jede normale Position (`!isPfandAbzug`) werden `produkte[name].anzahl` und `umsatzCents` sowie `einnahmenCents` inkrementiert und **zusätzlich** `pfandEinnahmenCents += toCents(item.pfand \|\| 0)` akkumuliert; für `isPfandAbzug`-Einträge wird `ausgabenCents` um den Absolutbetrag erhöht; `bons` wird einmalig pro Bestellung hochgezählt. Leerer Warenkorb → kein Bon. |
 | `resetStats()` | Persistiert `emptyStats()` (setzt alle Werte auf null). |
-| `buildStatsExport()` | Gibt einen mehrzeiligen deutschen Zusammenfassungstext zurück (Produkt-Zeilen + Bestellungen / Einnahmen / Ausgaben / Netto) zur Sicherung oder Weitergabe. |
+| `buildStatsExport()` | Gibt einen mehrzeiligen deutschen Zusammenfassungstext zurück: Produkt-Zeilen, dann „Bestellungen gesamt", „Produktumsatz", „Pfand eingenommen", „Pfand ausgezahlt", „Pfand einbehalten" (`pfandEinnahmenCents − ausgabenCents`), „Kassenbestand gesamt" (`statsKassenbestandCents`). |
 
 #### Auslöser: Wann wird `recordSale()` gerufen?
 
@@ -370,9 +376,14 @@ setzt die Modul-Variable `infoView` und rendert neu.
 
 Bei `infoView === 'statistik'` wird ein Statistik-Panel gerendert:
 
-- **Zusammenfassungs-Karten** (`.stats-summary` / `.stat-card`): Bestellungen
-  (`bons`), Einnahmen Netto (`einnahmenCents − ausgabenCents`), Umsatz ohne
-  Pfand (`einnahmenCents`), Ausgaben Pfand (`ausgabenCents`).
+- **Zusammenfassungs-Karten** (`.stats-summary` / `.stat-card`): sechs Karten —
+  „Bestellungen" (`bons`), „Produktumsatz" (`formatCents(einnahmenCents)`),
+  „Pfand eingenommen" (`formatCents(pfandEinnahmenCents)`), „Pfand ausgezahlt"
+  (`formatCents(ausgabenCents)`), „Pfand einbehalten"
+  (`formatCents(pfandEinnahmenCents − ausgabenCents)`) und **„Kassenbestand gesamt"**
+  (`formatCents(statsKassenbestandCents(stats))`) — letztere hervorgehoben: volle
+  Breite (CSS-Klasse `.stat-card-full`, `grid-column: 1 / -1`), grün getönter
+  Hintergrund, größere Werteschrift. Sie ist die betonte Ergebnis-Kenngröße.
 - **Produkt-Liste** (`.stats-list-item`): Name × Anzahl + Umsatz, absteigend
   nach Anzahl sortiert. Bei keinen erfassten Produkten erscheint der Hinweis
   „Noch keine Verkäufe erfasst."
@@ -384,11 +395,14 @@ Bei `infoView === 'statistik'` wird ein Statistik-Panel gerendert:
   zurücksetzen?"; roter „Zurücksetzen"-Button, grauer „Abbrechen"-Button; kein
   nativer `confirm()`). Nach Bestätigung: `resetStats()` → Overlay schließen →
   neu rendern (leerer Zustand).
-- **Button „Export":** Versucht
-  `navigator.clipboard.writeText(buildStatsExport())`; bei Erfolg kurzes
-  „Kopiert!"-Feedback. Ist die Clipboard-API nicht verfügbar, öffnet das
-  Fallback-Overlay `#statsExportOverlay` mit dem Export-Text in einem readonly
-  `<textarea>` zum manuellen Kopieren.
+- **Button „Export":** Öffnet beim Tippen **immer** das Overlay
+  `#statsExportOverlay` mit dem Export-Text in einem readonly `<textarea>`
+  (so kann der Inhalt gelesen, markiert und kopiert werden) sowie dem Hinweis
+  „Zum Sichern markieren & kopieren (z. B. in Notizen)". Der Button
+  `#statsExportCopyBtn` „Kopieren" schreibt den Inhalt via
+  `navigator.clipboard.writeText` in die Zwischenablage (Fallback: `select` +
+  `document.execCommand('copy')`) und zeigt kurz „Kopiert!". „Schließen", ✕
+  und Klick auf den Hintergrund schließen das Overlay.
 - Alle Stats-UI-Elemente werden über `createElement`/`textContent` erzeugt
   (XSS-sicher, kein `innerHTML` mit ungeprüften Daten).
 
