@@ -1,2 +1,8 @@
 # macOS
 .DS_Store
+
+# Temporäre Skripte / Scratch-Artefakte (z. B. aus Tooling)
+patch.js
+rewrite*.py
+test_script.js
+*.tmp
