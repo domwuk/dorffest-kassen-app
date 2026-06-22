@@ -6,7 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Kasse">
-<meta name="theme-color" content="#16313b">
+<meta name="theme-color" content="#10181b" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Kassensystem</title>
 <link rel="manifest" href="manifest.json">
@@ -31,6 +32,11 @@
     --green-dark: #388e3c;
     --red: #e53935;
     --purple: #8b7ef8;
+    --green-tint: rgba(76, 175, 80, 0.1);
+    --green-border: rgba(76, 175, 80, 0.3);
+    --red-tint: rgba(229, 57, 53, 0.1);
+    --red-border: rgba(229, 57, 53, 0.3);
+    --orange-tint: rgba(232, 119, 46, 0.1);
 
     --bar-btn: #bd5200;
     --bar-btn-active: #994200;
@@ -69,6 +75,11 @@
     --green-dark: #2da94c;
     --red: #ff3b30;
     --purple: #6a5fc4;
+    --green-tint: rgba(52, 199, 89, 0.15);
+    --green-border: rgba(52, 199, 89, 0.4);
+    --red-tint: rgba(255, 59, 48, 0.12);
+    --red-border: rgba(255, 59, 48, 0.35);
+    --orange-tint: rgba(232, 119, 46, 0.15);
 
         --bar-btn: #bf4d00;
     --bar-btn-active: #993d00;
@@ -140,7 +151,7 @@
     font-weight: 700;
     color: #ffffff;
     background: var(--card-bg);
-    opacity: 0.5;
+    box-shadow: inset 0 0 0 40px rgba(0,0,0,0.35);
     cursor: pointer;
     white-space: nowrap;
     min-width: 70px;
@@ -148,6 +159,8 @@
     text-align: center;
     transition: all 0.15s ease;
   }
+  :root[data-theme="light"] .tab-btn { box-shadow: inset 0 0 0 40px rgba(0,0,0,0.15); }
+
   .tab-btn.active { 
     opacity: 1; 
     box-shadow: 0 4px 12px rgba(0,0,0,0.25); 
@@ -165,17 +178,18 @@
     align-items: center;
     justify-content: center;
     font-size: 20px;
-    color: var(--purple);
+    color: var(--text-muted);
     background: transparent;
     border-radius: 24px;
     cursor: pointer;
+    box-shadow: none !important;
     transition: all 0.15s ease;
   }
   .tab-icon:first-of-type { margin-left: auto; }
   .tab-icon.active {
     background: var(--purple);
     color: #ffffff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
   }
 
   /* Main area (Mobile First - Two Column) */
@@ -444,9 +458,9 @@
   .stat-card { background: var(--bg); padding: 16px; border-radius: 12px; text-align: center; border: 1px solid var(--border); }
   .stat-card-label { font-size: 14px; color: var(--text-muted); margin-bottom: 6px; }
   .stat-card-val { font-size: 20px; font-weight: 800; }
-  .stat-card-full { grid-column: 1 / -1; background: rgba(76, 175, 80, 0.1); border: 1px solid rgba(76, 175, 80, 0.3); }
+  .stat-card-full { grid-column: 1 / -1; background: var(--green-tint); border: 1px solid var(--green-border); }
   .stat-card-full .stat-card-val { font-size: 26px; color: var(--green); }
-  .stat-card-negative { background: rgba(229, 57, 53, 0.1); border: 1px solid rgba(229, 57, 53, 0.3); }
+  .stat-card-negative { background: var(--red-tint); border: 1px solid var(--red-border); }
   .stat-card-negative .stat-card-val { color: var(--red); }
   
   .stats-list { margin-bottom: 24px; border-top: 1px solid var(--border); }
@@ -458,7 +472,7 @@
   
   .stats-actions { display: flex; gap: 12px; }
   .stats-actions button {
-    flex: 1; padding: 16px; border: none; border-radius: 14px;
+    flex: 1; padding: 16px; border-radius: 14px;
     font-weight: 700; font-size: 17px; cursor: pointer; min-height: 52px;
     background: var(--bg); color: var(--text); border: 1px solid var(--border);
     transition: background-color 0.15s ease;
@@ -469,7 +483,7 @@
   
   .warning-note { background: rgba(229, 57, 53, 0.1); color: var(--red); padding: 16px; border-radius: 12px; font-size: 15px; font-weight: 600; margin-bottom: 24px; text-align: center; }
   .stats-stand { font-size: 14px; color: var(--text-muted); margin: -8px 0 20px; }
-  .stats-reminder { background: rgba(232, 119, 46, 0.1); color: var(--orange); padding: 14px; border-radius: 12px; font-size: 15px; margin-bottom: 24px; text-align: center; }
+  .stats-reminder { background: var(--orange-tint); color: var(--orange); padding: 14px; border-radius: 12px; font-size: 15px; margin-bottom: 24px; text-align: center; }
   .empty-hint { opacity: 0.6; font-size: 15px; text-align: center; padding: 24px; grid-column: 1 / -1; }
 
   /* Banners / Snackbars */
@@ -490,7 +504,7 @@
   .overlay {
     position: fixed; inset: 0; background: var(--overlay-bg);
     display: flex; align-items: center; justify-content: center;
-    z-index: 100; padding: 16px; backdrop-filter: blur(4px);
+    z-index: 2000; padding: 16px; backdrop-filter: blur(4px);
     transition: opacity 0.2s ease, visibility 0s;
   }
   .overlay.hidden { display: none; opacity: 0; }
@@ -594,7 +608,7 @@
 
     <div class="right" id="rightCol">
       <h2>Bestellung</h2>
-      <div class="cart" id="cart"></div>
+      <div class="cart" id="cart" aria-live="polite" aria-relevant="additions text"></div>
       <div class="cart-controls">
         <button class="neu-btn" id="neuBtn">Leeren</button>
         <div class="total-bar" id="totalBar" role="button" tabindex="0" aria-label="Wechselgeld berechnen">Gesamt: 0,00 €</div>
@@ -606,7 +620,7 @@
 
 <div class="overlay hidden" id="changeOverlay">
   <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="changeOverlayTitle">
-    <button class="overlay-close-x" id="overlayCloseX">✕</button>
+    <button class="overlay-close-x" id="overlayCloseX" aria-label="Schließen">✕</button>
     <h2 id="changeOverlayTitle">Wechselgeld</h2>
     <div class="overlay-row total">
       <span id="overlayTotalLabel">Zu zahlen</span>
@@ -630,7 +644,7 @@
 
 <div class="overlay hidden" id="clearOverlay">
   <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="clearOverlayTitle">
-    <button class="overlay-close-x" id="clearCloseX">✕</button>
+    <button class="overlay-close-x" id="clearCloseX" aria-label="Schließen">✕</button>
     <h2 id="clearOverlayTitle">Bestellung leeren?</h2>
     <p class="overlay-confirm-text">Möchtest du die komplette Bestellung wirklich leeren?</p>
     <p class="overlay-confirm-hint">Hinweis: Die Bestellung wird <strong>nicht</strong> als Verkauf gezählt. Zum Abschließen „Fertig" im Wechselgeld-Dialog nutzen.</p>
@@ -643,7 +657,7 @@
 
 <div class="overlay hidden" id="statsResetOverlay">
   <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="statsResetOverlayTitle">
-    <button class="overlay-close-x" id="statsResetCloseX">✕</button>
+    <button class="overlay-close-x" id="statsResetCloseX" aria-label="Schließen">✕</button>
     <h2 id="statsResetOverlayTitle">Statistik zurücksetzen?</h2>
     <p class="overlay-confirm-text">Möchtest du alle erfassten Verkäufe und Bons endgültig löschen?</p>
     <div class="overlay-buttons">
@@ -655,7 +669,7 @@
 
 <div class="overlay hidden" id="statsExportOverlay">
   <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="statsExportOverlayTitle">
-    <button class="overlay-close-x" id="statsExportCloseX">✕</button>
+    <button class="overlay-close-x" id="statsExportCloseX" aria-label="Schließen">✕</button>
     <h2 id="statsExportOverlayTitle">Export</h2>
     <p class="overlay-confirm-text" style="margin-top: -4px; margin-bottom: 12px; font-size: 14px;">Zum Sichern markieren & kopieren (z. B. in Notizen)</p>
     <textarea id="statsExportText" readonly class="export-textarea"></textarea>
@@ -770,7 +784,7 @@ const STATS_VERSION = 1;
 function emptyStats() {
   return {
     version: STATS_VERSION,
-    produkte: {},
+    produkte: Object.create(null),
     einnahmenCents: 0,
     pfandEinnahmenCents: 0,
     ausgabenCents: 0,
@@ -782,6 +796,9 @@ function emptyStats() {
 // Modus, voller Speicher), werden die Statistiken wenigstens für die laufende
 // Sitzung im RAM gehalten, statt verloren zu gehen. Der Export sichert sie dann.
 let memoryStats = null;
+// Wird true, wenn ein saveStats-Schreibversuch fehlschlug → loadStats liest
+// dann nicht aus einem ggf. veralteten localStorage, sondern aus dem RAM.
+let statsUseMemory = false;
 
 // Sichere Ganzzahl-Coercion (verhindert String-Konkatenation / NaN aus
 // beschädigten localStorage-Daten).
@@ -791,19 +808,27 @@ function toIntSafe(value) {
 }
 
 // Normalisiert ein (ggf. beschädigtes) Stats-Objekt defensiv: alle Zahlfelder
-// werden zu endlichen Ganzzahlen, produkte zu sauberen { anzahl, umsatzCents }.
+// werden zu endlichen Ganzzahlen, produkte zu sauberen { name, preisCents, anzahl, umsatzCents }.
+// Rückwärtskompatibel: alte Einträge (Schlüssel = Produktname, kein name-Feld)
+// werden erkannt und mit preisCents=0 beibehalten.
 function normalizeStats(data) {
-  const base = emptyStats();
+  const base = emptyStats(); // produkte is Object.create(null)
   if (!data || typeof data !== 'object') return base;
   base.einnahmenCents = toIntSafe(data.einnahmenCents);
   base.pfandEinnahmenCents = toIntSafe(data.pfandEinnahmenCents);
   base.ausgabenCents = toIntSafe(data.ausgabenCents);
   base.bons = toIntSafe(data.bons);
   if (data.produkte && typeof data.produkte === 'object') {
-    Object.keys(data.produkte).forEach(name => {
-      const entry = data.produkte[name];
+    Object.keys(data.produkte).forEach(key => {
+      const entry = data.produkte[key];
       if (!entry || typeof entry !== 'object') return;
-      base.produkte[name] = {
+      // Backward compat: old keys were the product name (no '|' separator,
+      // entry had no 'name' field). New keys are 'name|preisCents'.
+      const name = (typeof entry.name === 'string' && entry.name) ? entry.name : (key.split('|')[0] || key);
+      const preisCents = toIntSafe(entry.preisCents);
+      base.produkte[key] = {
+        name,
+        preisCents,
         anzahl: toIntSafe(entry.anzahl),
         umsatzCents: toIntSafe(entry.umsatzCents),
       };
@@ -813,6 +838,9 @@ function normalizeStats(data) {
 }
 
 function loadStats() {
+  // Nach einem fehlgeschlagenen Schreibversuch den RAM-Stand vorziehen, damit
+  // kein veralteter localStorage-Wert die aktuelleren In-Memory-Daten überschreibt.
+  if (statsUseMemory && memoryStats) return normalizeStats(memoryStats);
   try {
     const raw = localStorage.getItem(STATS_STORAGE_KEY);
     if (raw) return normalizeStats(JSON.parse(raw));
@@ -831,6 +859,7 @@ function saveStats(stats) {
     localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(stats));
     return true;
   } catch (e) {
+    statsUseMemory = true; // zukünftige loadStats-Aufrufe ignorieren localStorage
     return false; // z.B. Speicher voll / privater Modus → bleibt im Memory-Fallback
   }
 }
@@ -864,10 +893,12 @@ function recordSale() {
       return;
     }
     const name = item.name;
-    if (!stats.produkte[name]) stats.produkte[name] = { anzahl: 0, umsatzCents: 0 };
-    stats.produkte[name].anzahl += 1;
-    stats.produkte[name].umsatzCents += toCents(item.preis); // Preis OHNE Pfand
-    stats.einnahmenCents += toCents(item.preis);
+    const preisCents = toCents(item.preis);
+    const key = name + '|' + preisCents;
+    if (!stats.produkte[key]) stats.produkte[key] = { name, preisCents, anzahl: 0, umsatzCents: 0 };
+    stats.produkte[key].anzahl += 1;
+    stats.produkte[key].umsatzCents += preisCents; // Preis OHNE Pfand
+    stats.einnahmenCents += preisCents;
     stats.pfandEinnahmenCents += toCents(item.pfand || 0); // eingenommenes Pfand
     hatPosition = true;
   });
@@ -887,24 +918,28 @@ function statsKassenbestandCents(stats) {
 }
 
 // Exportiert die Statistik als lesbaren Text (für Sicherung/Weitergabe).
-function buildStatsExport() {
-  const stats = loadStats();
+// Optionaler stats-Parameter: wenn übergeben, wird dieser verwendet statt
+// loadStats() erneut aufzurufen (konsistenter Snapshot mit dem angezeigten Stand).
+function buildStatsExport(stats) {
+  stats = stats || loadStats();
   const kassenbestandCents = statsKassenbestandCents(stats);
+  const pfandSaldoCents = stats.pfandEinnahmenCents - stats.ausgabenCents;
   const lines = [];
   lines.push(`Statistik – ${INFO_TAB.titel}`);
   lines.push(`Stand: ${new Date().toLocaleString('de-DE')}`);
   lines.push('');
   lines.push('Verkäufe pro Produkt:');
   // Gleiche Sortierung wie in der UI: absteigend nach Anzahl.
-  const namen = Object.keys(stats.produkte).sort(
+  const keys = Object.keys(stats.produkte).sort(
     (a, b) => stats.produkte[b].anzahl - stats.produkte[a].anzahl
   );
-  if (namen.length === 0) {
+  if (keys.length === 0) {
     lines.push('  (noch keine Verkäufe)');
   } else {
-    namen.forEach(n => {
-      const p = stats.produkte[n];
-      lines.push(`  ${n}: ${p.anzahl}x  (${formatCents(p.umsatzCents)})`);
+    keys.forEach(k => {
+      const p = stats.produkte[k];
+      const displayName = p.name || k.split('|')[0] || k;
+      lines.push(`  ${displayName}: ${p.anzahl}x  (${formatCents(p.umsatzCents)})`);
     });
   }
   lines.push('');
@@ -912,7 +947,7 @@ function buildStatsExport() {
   lines.push(`Produktumsatz: ${formatCents(stats.einnahmenCents)}`);
   lines.push(`Pfand eingenommen: ${formatCents(stats.pfandEinnahmenCents)}`);
   lines.push(`Pfand ausgezahlt: ${formatCents(stats.ausgabenCents)}`);
-  lines.push(`Pfand einbehalten: ${formatCents(stats.pfandEinnahmenCents - stats.ausgabenCents)}`);
+  lines.push(`${pfandSaldoCents < 0 ? 'Pfand Fehlbetrag' : 'Pfand einbehalten'}: ${formatCents(pfandSaldoCents)}`);
   lines.push(`Kassenbestand gesamt: ${formatCents(kassenbestandCents)}`);
   return lines.join('\n');
 }
@@ -1008,9 +1043,11 @@ function getTheme() {
 function applyTheme() {
   // data-theme auf <html> steuert das Farbschema (CSS-Variablen je Theme).
   document.documentElement.setAttribute('data-theme', currentTheme);
+  void document.documentElement.offsetHeight; // Force reflow to prevent paint lag
+  
   // theme-color-Meta passend setzen (Statusleiste/Browser-UI).
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', currentTheme === 'light' ? '#f3f4f6' : '#16313b');
+  const metaColors = document.querySelectorAll('meta[name="theme-color"]');
+  metaColors.forEach(m => m.setAttribute('content', currentTheme === 'light' ? '#f2f2f7' : '#10181b'));
 }
 
 function setTheme(theme) {
@@ -1146,7 +1183,7 @@ function renderProductTab() {
       return;
     }
     // Überschrift über den Produkt-Buttons (analog „Bestellung").
-    const heading = document.createElement('div');
+    const heading = document.createElement('h3');
     heading.className = 'block-heading';
     heading.textContent = TAB_HEADING[currentTab] || currentTab;
     productListEl.appendChild(heading);
@@ -1158,7 +1195,7 @@ function renderProductTab() {
   } else if (isBlockTab(currentTab)) {
     // Block-Tab (Bier/Essen): nur den aktuell gewählten Block anzeigen.
     const blockName = getActiveBlock(currentTab);
-    const heading = document.createElement('div');
+    const heading = document.createElement('h3');
     heading.className = 'block-heading';
     heading.textContent = blockName;
     productListEl.appendChild(heading);
@@ -1170,7 +1207,7 @@ function renderProductTab() {
   } else {
     // Generischer Fall: Objekt mit Unterblöcken, alle gleichzeitig anzeigen.
     Object.keys(data).forEach(blockName => {
-      const heading = document.createElement('div');
+      const heading = document.createElement('h3');
       heading.className = 'block-heading';
       heading.textContent = blockName;
       productListEl.appendChild(heading);
@@ -1212,14 +1249,16 @@ function renderInfoView() {
     emblem.alt = 'Wappen der Gemeinde Guttau';
     emblem.width = 512;
     emblem.height = 512;
+    emblem.onerror = () => { emblem.style.display = 'none'; };
     box.appendChild(emblem);
-    const h = document.createElement('div');
+    const h = document.createElement('h2');
     h.className = 'info-box-title';
+    h.style.margin = '0 0 16px 0';
     h.textContent = INFO_TAB.titel;
     box.appendChild(h);
     INFO_TAB.absaetze.forEach(block => {
       if (block && typeof block === 'object' && block.ueberschrift) {
-        const sub = document.createElement('div');
+        const sub = document.createElement('h3');
         sub.className = 'info-box-subtitle';
         sub.textContent = block.ueberschrift;
         box.appendChild(sub);
@@ -1234,8 +1273,9 @@ function renderInfoView() {
     // Statistik View
     const stats = loadStats();
 
-    const h = document.createElement('div');
+    const h = document.createElement('h2');
     h.className = 'info-box-title';
+    h.style.margin = '0 0 16px 0';
     h.textContent = 'Statistik';
     box.appendChild(h);
 
@@ -1282,7 +1322,7 @@ function renderInfoView() {
       formatCents(pfandSaldoCents),
       pfandSaldoCents < 0 ? 'stat-card-negative' : ''
     ));
-    summary.appendChild(createStatCard('Kassenbestand gesamt', formatCents(statsKassenbestandCents(stats)), 'netto stat-card-full'));
+    summary.appendChild(createStatCard('Kassenbestand gesamt', formatCents(statsKassenbestandCents(stats)), 'stat-card-full'));
     box.appendChild(summary);
 
     const listDiv = document.createElement('div');
@@ -1301,7 +1341,7 @@ function renderInfoView() {
         row.className = 'stats-list-item';
         const nameEl = document.createElement('div');
         nameEl.className = 'sl-name';
-        nameEl.textContent = n;
+        nameEl.textContent = p.name || n.split('|')[0] || n;
         const anzEl = document.createElement('div');
         anzEl.className = 'sl-anzahl';
         anzEl.textContent = p.anzahl + 'x';
@@ -1325,7 +1365,7 @@ function renderInfoView() {
     const exportBtn = document.createElement('button');
     exportBtn.className = 'btn-done';
     exportBtn.textContent = 'Export';
-    exportBtn.onclick = () => { openStatsExportOverlay(buildStatsExport()); };
+    exportBtn.onclick = () => { openStatsExportOverlay(buildStatsExport(stats)); };
     actions.appendChild(resetBtn);
     actions.appendChild(exportBtn);
     box.appendChild(actions);
@@ -1348,8 +1388,9 @@ function renderSettingsView() {
   box.appendChild(h);
 
   // Hilfsfunktion: Toggle-Zeile mit Schalter LINKS, Beschriftung rechts daneben
-  // (linksbündig). Optionaler Hilfetext unter der Zeile.
-  function addToggleRow(labelText, checked, onChange, hint) {
+  // (linksbündig). Optionaler Hilfetext unter der Zeile. id: stabiler Bezeichner
+  // für das aria-labelledby-Attribut (kein Math.random mehr).
+  function addToggleRow(labelText, checked, onChange, hint, id) {
     const row = document.createElement('div');
     row.className = 'settings-row settings-row-toggle';
     const sw = document.createElement('label');
@@ -1364,7 +1405,7 @@ function renderSettingsView() {
     const lbl = document.createElement('span');
     lbl.className = 'settings-label';
     lbl.textContent = labelText;
-    const lblId = 'setlbl-' + Math.random().toString(36).slice(2, 8);
+    const lblId = 'settings-label-' + (id || labelText.toLowerCase().replace(/\s+/g, '-'));
     lbl.id = lblId;
     input.setAttribute('aria-labelledby', lblId);
     input.onchange = () => onChange(input.checked);
@@ -1380,7 +1421,7 @@ function renderSettingsView() {
   }
 
   // 1) Darstellung: Hell-/Dunkel-Modus
-  const groupAnzeige = document.createElement('div');
+  const groupAnzeige = document.createElement('h3');
   groupAnzeige.className = 'settings-group-label';
   groupAnzeige.textContent = 'Darstellung';
   box.appendChild(groupAnzeige);
@@ -1388,11 +1429,12 @@ function renderSettingsView() {
     'Dunkler Modus',
     getTheme() === 'dark',
     (checked) => setTheme(checked ? 'dark' : 'light'),
-    'Abends in der Bar dunkel, tagsüber draußen hell.'
+    'Abends in der Bar dunkel, tagsüber draußen hell.',
+    'theme'
   );
 
   // 2) Pfand berechnen (global)
-  const groupKasse = document.createElement('div');
+  const groupKasse = document.createElement('h3');
   groupKasse.className = 'settings-group-label';
   groupKasse.textContent = 'Kasse';
   box.appendChild(groupKasse);
@@ -1400,14 +1442,15 @@ function renderSettingsView() {
     'Pfand berechnen',
     pfandBerechnen,
     (checked) => { pfandBerechnen = checked; applyPfandToCart(); },
-    'Schlägt beim Antippen automatisch das Becher-Pfand auf.'
+    'Schlägt beim Antippen automatisch das Becher-Pfand auf.',
+    'pfand'
   );
 
   // 3) Block-Auswahl je Block-Tab (Bier, Essen) als segmentierte Buttons + Erklärung.
   Object.keys(BLOCK_TABS).forEach(tab => {
     if (!isBlockTab(tab)) return;
     const cfg = BLOCK_TABS[tab];
-    const grpLbl = document.createElement('div');
+    const grpLbl = document.createElement('h3');
     grpLbl.className = 'settings-group-label';
     grpLbl.textContent = cfg.label;
     box.appendChild(grpLbl);
@@ -1473,11 +1516,6 @@ function applyPfandToCart() {
   renderCart();
 }
 
-function removeItem(index) {
-  cart.splice(index, 1);
-  renderCart();
-}
-
 // Schlüssel zum Gruppieren identischer Positionen (gleicher Name + gleicher
 // effektiver Pfand + gleiche Art). Pfand-Rückgaben werden eigenständig gruppiert.
 function cartGroupKey(item) {
@@ -1501,14 +1539,26 @@ function removeOneOfGroup(key) {
 
 // ---- Rückgängig-Snackbar beim Entfernen ----
 let undoTimer = null;
-function showUndoSnackbar(removedItem, originalIndex) {
-  const existing = document.getElementById('undoSnackbar');
-  if (existing) existing.remove();
+
+// Entfernt eine eventuell noch sichtbare Undo-Snackbar und bricht den
+// Auto-Dismiss-Timer ab. Muss vor jedem Overlay-Öffnen und vor resetCart()
+// aufgerufen werden, damit "Rückgängig" keinen abgeschlossenen Warenkorb
+// nachträglich verändert.
+function dismissUndoSnackbar() {
+  const el = document.getElementById('undoSnackbar');
+  if (el) el.remove();
   if (undoTimer) { clearTimeout(undoTimer); undoTimer = null; }
+}
+
+function showUndoSnackbar(removedItem, originalIndex) {
+  // Erst eine ggf. noch laufende Snackbar sauber entfernen (kein Stacking/Timer-Leak).
+  dismissUndoSnackbar();
 
   const bar = document.createElement('div');
   bar.id = 'undoSnackbar';
   bar.className = 'undo-snackbar';
+  bar.setAttribute('role', 'status');
+  bar.setAttribute('aria-live', 'polite');
   const txt = document.createElement('span');
   txt.textContent = `„${removedItem.name}" entfernt`;
   const btn = document.createElement('button');
@@ -1592,6 +1642,24 @@ function renderCart() {
 
 // ---- Warenkorb-Persistenz über sessionStorage (überlebt App-Wechsel, nicht App-Kill) ----
 const CART_SESSION_KEY = 'kassenCart';
+
+// Normalisiert einen aus sessionStorage wiederhergestellten Cart-Eintrag.
+// Gibt ein bereinigtes Objekt zurück oder null, wenn der Eintrag ungültig ist.
+function normalizeCartItem(it) {
+  if (!it || typeof it !== 'object') return null;
+  const name = String(it.name ?? '');
+  if (!name) return null;
+  const preis = Number(it.preis);
+  if (!Number.isFinite(preis)) return null;
+  const pfand = Number.isFinite(Number(it.pfand)) ? Number(it.pfand) : 0;
+  const isPfandAbzug = !!it.isPfandAbzug;
+  const result = { name, preis, pfand, isPfandAbzug };
+  if (!isPfandAbzug) {
+    result.pfandOriginal = Number.isFinite(Number(it.pfandOriginal)) ? Number(it.pfandOriginal) : pfand;
+  }
+  return result;
+}
+
 function persistCart() {
   try { sessionStorage.setItem(CART_SESSION_KEY, JSON.stringify(cart)); } catch (e) {}
 }
@@ -1600,7 +1668,9 @@ function restoreCart() {
     const raw = sessionStorage.getItem(CART_SESSION_KEY);
     if (!raw) return;
     const data = JSON.parse(raw);
-    if (Array.isArray(data)) cart = data;
+    if (Array.isArray(data)) {
+      cart = data.map(normalizeCartItem).filter(Boolean);
+    }
   } catch (e) {}
 }
 
@@ -1609,6 +1679,30 @@ function updateTotal() {
 }
 
 // ---- Wechselgeld-Overlay ----
+let overlayReturnFocusEl = null;
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Tab') {
+    const openOverlay = document.querySelector('.overlay:not(.hidden)');
+    if (openOverlay) {
+      const focusables = Array.from(openOverlay.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'));
+      if (focusables.length) {
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      } else {
+        e.preventDefault();
+      }
+    }
+  }
+});
+
 const changeOverlay = document.getElementById('changeOverlay');
 const overlayTotalEl = document.getElementById('overlayTotal');
 const overlayTotalLabelEl = document.getElementById('overlayTotalLabel');
@@ -1617,13 +1711,20 @@ const receivedInput = document.getElementById('receivedInput');
 const changeResultEl = document.getElementById('changeResult');
 const quickAmountsEl = document.getElementById('quickAmounts');
 
+// Expliziter Modus des Wechselgeld-Overlays (nicht aus CSS-Sichtbarkeit ableiten).
+// 'positive' = normaler Kassiervorgang | 'zero' = Abschluss ohne Zahlung | 'payout' = Auszahlung
+let changeMode = 'positive';
+
 function openChangeOverlay() {
+  overlayReturnFocusEl = document.activeElement;
+  dismissUndoSnackbar();
   const totalCents = getCurrentTotalCents();
   // Leerer Warenkorb: nichts zu kassieren/abzuschließen.
   if (cart.length === 0) return;
 
   // Negativer Gesamtbetrag (viel Pfand zurück) = Auszahlung an den Kunden.
   if (totalCents < 0) {
+    changeMode = 'payout';
     const payoutCents = Math.abs(totalCents);
     overlayTotalLabelEl.textContent = 'Auszahlung an Kunde';
     overlayTotalEl.textContent = formatCents(payoutCents);
@@ -1638,6 +1739,7 @@ function openChangeOverlay() {
   // Gesamtbetrag genau 0 (z.B. Pfand-Rückgabe = Warenwert): nichts zu
   // kassieren, aber Bestellung kann abgeschlossen werden (zählt in Statistik).
   if (totalCents === 0) {
+    changeMode = 'zero';
     overlayTotalLabelEl.textContent = 'Zu zahlen';
     overlayTotalEl.textContent = formatCents(0);
     overlayInputWrapEl.style.display = 'none';
@@ -1649,6 +1751,7 @@ function openChangeOverlay() {
   }
 
   // Positiver Gesamtbetrag = normaler Kassiervorgang mit Wechselgeld.
+  changeMode = 'positive';
   overlayTotalLabelEl.textContent = 'Zu zahlen';
   overlayInputWrapEl.style.display = '';
   quickAmountsEl.style.display = '';
@@ -1691,15 +1794,19 @@ function openChangeOverlay() {
 }
 
 function closeChangeOverlay() {
+  if (overlayReturnFocusEl && overlayReturnFocusEl.focus) { overlayReturnFocusEl.focus(); overlayReturnFocusEl = null; }
   changeOverlay.classList.add('hidden');
 }
 
 function parseEuroCents(value) {
-  const raw = value.trim().replace(',', '.');
+  const raw = value.trim();
   if (raw === '') return null;
-  const amount = Number(raw);
-  if (!Number.isFinite(amount) || amount < 0) return null;
-  return Math.round(amount * 100);
+  // Exakt eine optionale Dezimalstelle (Komma oder Punkt), max. 2 Nachkommastellen.
+  // Kein wissenschaftliche Notation, keine Buchstaben, maximal 9 Vorkommastellen.
+  if (!/^\d{1,9}([.,]\d{1,2})?$/.test(raw)) return null;
+  const num = Number(raw.replace(',', '.'));
+  if (!Number.isFinite(num) || num < 0) return null;
+  return Math.round(num * 100);
 }
 
 function calcChange() {
@@ -1721,13 +1828,16 @@ function calcChange() {
 }
 
 totalBarEl.onclick = openChangeOverlay;
+totalBarEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openChangeOverlay(); }
+});
 receivedInput.addEventListener('input', calcChange);
 document.getElementById('overlayCloseX').onclick = closeChangeOverlay;
 document.getElementById('overlayDoneBtn').onclick = () => {
-  // Im normalen Kassiermodus (positiver Betrag, Eingabefeld sichtbar) erst
-  // abschließen, wenn ein ausreichender Betrag gegeben wurde. So wird kein
-  // Verkauf versehentlich bei „Fehlt …" oder leerem Feld gebucht.
-  if (overlayInputWrapEl.style.display !== 'none') {
+  // Im normalen Kassiermodus (positiver Betrag) erst abschließen, wenn ein
+  // ausreichender Betrag gegeben wurde. So wird kein Verkauf versehentlich
+  // bei „Fehlt …" oder leerem Feld gebucht.
+  if (changeMode === 'positive') {
     const receivedCents = parseEuroCents(receivedInput.value);
     if (receivedCents === null || receivedCents < getCurrentTotalCents()) {
       changeResultEl.textContent = 'Bitte ausreichenden Betrag eingeben.';
@@ -1745,6 +1855,7 @@ changeOverlay.addEventListener('click', (e) => {
 });
 
 function resetCart() {
+  dismissUndoSnackbar();
   cart = [];
   renderCart();
 }
@@ -1761,9 +1872,12 @@ pfandMinusBtn.onclick = () => {
 };
 const clearOverlay = document.getElementById('clearOverlay');
 function openClearOverlay() {
+  overlayReturnFocusEl = document.activeElement;
+  dismissUndoSnackbar();
   clearOverlay.classList.remove('hidden');
 }
 function closeClearOverlay() {
+  if (overlayReturnFocusEl && overlayReturnFocusEl.focus) { overlayReturnFocusEl.focus(); overlayReturnFocusEl = null; }
   clearOverlay.classList.add('hidden');
 }
 document.getElementById('clearCloseX').onclick = closeClearOverlay;
@@ -1778,8 +1892,10 @@ clearOverlay.addEventListener('click', (e) => {
 
 
 const statsResetOverlay = document.getElementById('statsResetOverlay');
-function openStatsResetOverlay() { statsResetOverlay.classList.remove('hidden'); }
-function closeStatsResetOverlay() { statsResetOverlay.classList.add('hidden'); }
+function openStatsResetOverlay() {
+  overlayReturnFocusEl = document.activeElement; dismissUndoSnackbar(); statsResetOverlay.classList.remove('hidden'); }
+function closeStatsResetOverlay() {
+  if (overlayReturnFocusEl && overlayReturnFocusEl.focus) { overlayReturnFocusEl.focus(); overlayReturnFocusEl = null; } statsResetOverlay.classList.add('hidden'); }
 
 document.getElementById('statsResetCloseX').onclick = closeStatsResetOverlay;
 document.getElementById('statsResetCancelBtn').onclick = closeStatsResetOverlay;
@@ -1795,6 +1911,8 @@ statsResetOverlay.addEventListener('click', (e) => {
 const statsExportOverlay = document.getElementById('statsExportOverlay');
 const statsExportText = document.getElementById('statsExportText');
 function openStatsExportOverlay(text) {
+  overlayReturnFocusEl = document.activeElement;
+  dismissUndoSnackbar();
   statsExportText.value = text;
   statsExportOverlay.classList.remove('hidden');
   setTimeout(() => {
@@ -1803,7 +1921,8 @@ function openStatsExportOverlay(text) {
     statsExportText.setSelectionRange(0, 99999); // iOS Safari braucht das für volle Auswahl
   }, 100);
 }
-function closeStatsExportOverlay() { statsExportOverlay.classList.add('hidden'); }
+function closeStatsExportOverlay() {
+  if (overlayReturnFocusEl && overlayReturnFocusEl.focus) { overlayReturnFocusEl.focus(); overlayReturnFocusEl = null; } statsExportOverlay.classList.add('hidden'); }
 
 document.getElementById('statsExportCloseX').onclick = closeStatsExportOverlay;
 document.getElementById('statsExportCancelBtn').onclick = closeStatsExportOverlay;
@@ -1863,6 +1982,10 @@ document.addEventListener('keydown', (e) => {
 
 // Service Worker für Offline-Nutzung registrieren + Update-Hinweis anzeigen.
 if ('serviceWorker' in navigator) {
+  // Vor der Registrierung merken, ob bereits ein Controller aktiv ist.
+  // Beim allerersten Install (hadController=false) soll KEIN automatischer
+  // Reload stattfinden, da sonst der frisch befüllte Warenkorb verloren geht.
+  const hadController = !!navigator.serviceWorker.controller;
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('service-worker.js').then((reg) => {
       // Neue Version gefunden → wenn aktiv, Banner „Neu laden" zeigen.
@@ -1878,9 +2001,12 @@ if ('serviceWorker' in navigator) {
     }).catch(() => {});
     // Nach Aktivierung eines wartenden SW einmalig neu laden, damit die neue
     // Version sofort greift (verhindert „stale" App auf installierten Geräten).
+    // Beim ersten Install (hadController=false) kein Reload – würde die App
+    // unnötig neu starten und den Sitzungs-Warenkorb nicht schonen.
     let refreshing = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (refreshing) return;
+      if (!hadController) return;
       refreshing = true;
       window.location.reload();
     });
