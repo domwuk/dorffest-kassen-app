@@ -162,27 +162,38 @@ Das Layout ist **mobile-first** und vollständig responsiv:
 
 - **Hochformat / < 700 px (Standard):** Einspaltig. `.right` hat `display: contents`,
   sodass seine Kinder (Bestellung-Überschrift, Bestellungs-Liste, `.cart-controls`)
-  direkt in den Spaltenfluss eingebettet werden. Reihenfolge im Scroll-Bereich:
+  direkt in den Spaltenfluss eingebettet werden. Reihenfolge:
   Tabs → Toggle-Zeile → Produktgitter → Pfand-Rückgabe-Button (unmittelbar darunter,
   kein toter Leerraum) → Bestellung-Überschrift → Bestellungs-Liste → `.cart-controls`.
-  Die `.cart-controls`-Leiste („Leeren" + Gesamt) ist `position: sticky; bottom: -12px`,
-  damit sie beim Scrollen stets am unteren Bildschirmrand erreichbar bleibt.
+  **Kein Seiten-Scroll:** `.main` ist `overflow-y: hidden` und füllt die Viewport-Höhe.
+  Stattdessen scrollen **`.left` (Produkte) und `#cart` (Bestellung) unabhängig
+  intern** (`overflow-y: auto`, `flex: 1 1 0`, `min-height: 0`); `.left` bekommt
+  etwas mehr Höhe (`flex-grow` ~1.4) als der Warenkorb (~1.0). Die `.cart-controls`-Leiste
+  („Leeren" + Gesamt) ist `flex: none` am Ende von `.main` und dadurch **immer
+  sichtbar** (kein Sticky-Hack nötig).
 
 - **Querformat / ≥ 700 px (`@media (min-width: 700px), (orientation: landscape)`):**
   Zweispaltig — Produkte links (`.left`), Bestellung rechts (`#rightCol` mit
-  `display: flex`). Beide Spalten scrollen unabhängig. `.cart-controls` ist
-  dann `position: static` (kein Sticky) am Ende der rechten Spalte.
+  `display: flex`). Beide Spalten scrollen unabhängig intern; `.cart-controls` ist
+  am Ende der rechten Spalte. Der Warenkorb füllt die Spaltenhöhe.
+
+- **Gleiche Button-Höhe:** `.product-grid-inner` nutzt `grid-auto-rows: 1fr` und
+  `.product-btn` hat `height: 100%` — dadurch sind **alle Produkt-Buttons gleich hoch**
+  (bestimmt durch den Button mit dem längsten/umbruchstärksten Text). `min-height`
+  dient als Untergrenze.
 
 - **Pfand-Rückgabe-Button:** Sitzt direkt unter dem Produktgitter (`.product-grid`
-  ist `flex: none`, kein erzwungenes Strecken) — der frühere große Leerraum
-  ist damit behoben.
+  ist `flex: none`, kein erzwungenes Strecken) — kein toter Leerraum.
 
-- **Bestellungs-Liste:** Ohne `max-height`-Begrenzung, bleibt auch bei kleinen
-  Bildschirmgrößen gut lesbar.
+- **Bestellungs-Liste (`#cart`):** `flex: 1 1 0` — **füllt den verfügbaren Platz**
+  zwischen Produkten und Summen-Leiste (auch wenn leer, kein schmaler Streifen) und
+  **scrollt intern**, wenn mehr Positionen vorhanden sind, als angezeigt werden können.
+  Keine `max-height`-Begrenzung.
 
 - **Info-Tab:** `#rightCol` wird per Inline-Style auf `display: none` gesetzt
   (`updateLayoutForTab()`), sodass die gesamte rechte Seite (Bestellung-Überschrift,
-  Liste, `.cart-controls`) verborgen ist. `.left` wird auf volle Breite ausgedehnt.
+  Liste, `.cart-controls`) verborgen ist. `.left` wird auf volle Breite ausgedehnt
+  (`flex: 1 1 100%`) und zeigt die Info-Box.
 
 ### Render-Funktionen
 
