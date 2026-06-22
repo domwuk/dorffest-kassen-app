@@ -11,39 +11,101 @@
 <title>Kassensystem</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%20120%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M5%2C5%20L95%2C5%20L95%2C70%20C95%2C95%2050%2C115%2050%2C115%20C50%2C115%205%2C95%205%2C70%20Z%22%20fill%3D%22%23FBE324%22%20stroke%3D%22%2316313B%22%20stroke-width%3D%224%22/%3E%0A%20%20%20%20%3Ctext%20x%3D%2250%22%20y%3D%2282%22%20font-family%3D%22sans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2276%22%20fill%3D%22%2316313B%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3E%E2%82%AC%3C/text%3E%0A%3C/svg%3E">
 <style>
-  :root {
-    --bg: #16313b;
-    --bg-2: #1c3f4a;
+  :root,
+  :root[data-theme="dark"] {
+    --bg: #10181b;
+    --bg-2: #162227;
+    --card-bg: #1c272b;
+    --card-bg-elevated: #263339;
+    --text: #f2f2f7;
+    --text-muted: #a0aab0;
+    --border: rgba(255, 255, 255, 0.12);
+    --shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    --overlay-bg: rgba(0, 0, 0, 0.8);
+    
     --orange: #e8772e;
     --orange-dark: #d4651f;
-    --red: #d33a2c;
-    --purple: #6a5fc4;
-    --green: #6fbf3f;
-    --green-dark: #5da035;
-    --grey: #4a4a4a;
-    --essen-btn: #596a72;
-    --essen-btn-active: #4a585f;
+    --green: #4caf50;
+    --green-dark: #388e3c;
+    --red: #e53935;
+    --purple: #8b7ef8;
+
     --bar-btn: #bd5200;
     --bar-btn-active: #994200;
     --bier-btn: #2e7d32;
     --bier-btn-active: #1b5e20;
-    --card-bg: #ffffff;
-    --text-light: #f2f2f2;
+    --essen-btn: #475a63;
+    --essen-btn-active: #3a4951;
+    
+    --segmented-bg: rgba(255, 255, 255, 0.1);
+    --segmented-active-bg: rgba(255, 255, 255, 0.15);
+    --segmented-text: #a0aab0;
+    --segmented-active-text: #ffffff;
+    
+    --switch-bg: #4a585f;
+    --switch-thumb: #ffffff;
+    
+    --btn-close-bg: #4a585f;
+    --btn-done-bg: #4caf50;
+    --btn-done-text: #111111;
   }
+
+  :root[data-theme="light"] {
+    --bg: #f2f2f7;
+    --bg-2: #e5e5ea;
+    --card-bg: #ffffff;
+    --card-bg-elevated: #ffffff;
+    --text: #111111;
+    --text-muted: #6b6b70;
+    --border: rgba(0, 0, 0, 0.1);
+    --shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    --overlay-bg: rgba(0, 0, 0, 0.4);
+
+    --orange: #d4651f;
+    --orange-dark: #b34700;
+    --green: #34c759;
+    --green-dark: #2da94c;
+    --red: #ff3b30;
+    --purple: #6a5fc4;
+
+        --bar-btn: #bf4d00;
+    --bar-btn-active: #993d00;
+    --bier-btn: #2e7d32;
+    --bier-btn-active: #1b5e20;
+    --essen-btn: #596a72;
+    --essen-btn-active: #4a585f;
+
+    --segmented-bg: #e4e4e9;
+    --segmented-active-bg: #ffffff;
+    --segmented-text: #6b6b70;
+    --segmented-active-text: #111111;
+    
+    --switch-bg: #d1d1d6;
+    --switch-thumb: #ffffff;
+    
+    --btn-close-bg: #aeaeb2;
+    --btn-done-bg: #34c759;
+    --btn-done-text: #111111;
+  }
+
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  
   html, body {
     margin: 0; padding: 0;
-    width: 100%;
-    height: 100%;
-    height: 100dvh;
+    width: 100%; height: 100%; height: 100dvh;
     overflow: hidden;
     background: var(--bg);
-    color: var(--text-light);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--text);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     overscroll-behavior: none;
     user-select: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
+  
+  *:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+
   #app {
     position: fixed;
     top: 0; right: 0; bottom: 0; left: 0;
@@ -67,45 +129,61 @@
     padding: 10px 8px 6px;
     overflow-x: auto;
     align-items: center;
+    -webkit-overflow-scrolling: touch;
   }
   .tab-btn {
     flex: 1;
     padding: 14px 10px;
     border: none;
     border-radius: 24px;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
-    color: white;
-    background: var(--grey);
-    opacity: 0.6;
+    color: #ffffff;
+    background: var(--card-bg);
+    opacity: 0.5;
     cursor: pointer;
     white-space: nowrap;
     min-width: 70px;
+    min-height: 48px;
     text-align: center;
+    transition: all 0.15s ease;
   }
+  .tab-btn.active { 
+    opacity: 1; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25); 
+  }
+  .tab-bar { background: var(--bar-btn); }
+  .tab-bier { background: var(--bier-btn); }
+  .tab-essen { background: var(--essen-btn); }
+  
   .tab-icon {
     flex: 0 0 auto;
-    min-width: 46px;
+    min-width: 48px;
+    min-height: 48px;
     padding: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 20px;
+    color: var(--purple);
+    background: transparent;
+    border-radius: 24px;
+    cursor: pointer;
+    transition: all 0.15s ease;
   }
-  .tab-icon:first-of-type {
-    margin-left: auto; /* Push icons to the right */
+  .tab-icon:first-of-type { margin-left: auto; }
+  .tab-icon.active {
+    background: var(--purple);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   }
-  .tab-btn.active { opacity: 1; box-shadow: 0 0 0 2px rgba(255,255,255,0.5) inset; }
-  .tab-bar { background: var(--bar-btn); }
-  .tab-bier { background: var(--bier-btn); }
-  .tab-essen { background: var(--grey); }
-  .tab-info { background: var(--purple); }
-      /* Main area (Mobile First - Two Column) */
+
+  /* Main area (Mobile First - Two Column) */
   .main {
     flex: 1;
     display: flex;
     flex-direction: row;
-    gap: 10px;
+    gap: 12px;
     padding: 0 8px calc(8px + env(safe-area-inset-bottom));
     min-height: 0;
     overflow-y: hidden;
@@ -113,9 +191,9 @@
   .left {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    flex: 1.1 1 0; /* ~52% width (Produkte etwas mehr als Warenkorb) */
-    min-width: 0;  /* erlaubt der Flex-Ratio zu greifen (sonst erzwingt Inhalt die Breite) */
+    gap: 12px;
+    flex: 1.1 1 0;
+    min-width: 0;
     min-height: 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -125,43 +203,47 @@
   .product-grid {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
     flex: none;
   }
   .product-grid-inner {
     display: grid;
-    grid-template-columns: 1fr; /* Single column stack of buttons in portrait */
+    grid-template-columns: 1fr;
     grid-auto-rows: 1fr;
-    gap: 8px;
+    gap: 10px;
   }
   .block-heading {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    opacity: 0.75;
+    opacity: 0.8;
     margin-bottom: -4px;
   }
   .product-btn {
     border: none;
-    color: white;
+    color: #ffffff;
     font-weight: 700;
-    font-size: 15px;
-    padding: 12px 6px;
-    border-radius: 10px;
+    font-size: 16px;
+    padding: 14px 12px;
+    border-radius: 14px;
     text-align: center;
     cursor: pointer;
-    min-height: 60px;
-    height: 100%; /* Ensure stretching */
+    min-height: 64px;
+    height: 100%; 
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    line-height: 1.15;
-    background: var(--grey);
+    line-height: 1.25;
+    background: var(--card-bg);
+    transition: transform 0.1s ease, filter 0.1s ease;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    box-shadow: var(--shadow);
   }
+  .product-btn:active { transform: scale(0.97); filter: brightness(0.9); }
   
-  /* Category Colors for Buttons */
   #productList[data-tab="tab-bar"] .product-btn { background: var(--bar-btn); }
   #productList[data-tab="tab-bar"] .product-btn:active { background: var(--bar-btn-active); }
   #productList[data-tab="tab-bier"] .product-btn { background: var(--bier-btn); }
@@ -171,157 +253,76 @@
 
   .product-sub {
     font-weight: 400;
-    font-size: 13px;
-    opacity: 0.85;
+    font-size: 14px;
+    opacity: 0.9;
     display: block;
     margin-top: 4px;
   }
-  .empty-hint {
-    opacity: 0.6;
-    font-size: 14px;
-    text-align: center;
-    padding: 20px;
-    grid-column: 1 / -1;
-  }
-  .info-box {
-    background: var(--card-bg);
-    color: #222;
-    border-radius: 12px;
-    padding: 22px 20px;
-  }
-  .info-box-title {
-    font-size: 22px;
-    font-weight: 800;
-    margin-bottom: 12px;
-  }
-  .info-box-text {
-    margin: 0 0 10px;
-    font-size: 15px;
-    line-height: 1.45;
-  }
-  .info-box-text:last-child { margin-bottom: 0; }
-  .info-box-subtitle {
-    font-size: 16px;
-    font-weight: 800;
-    margin: 18px 0 8px;
-    color: var(--orange-dark);
-  }
+  
   .pfand-btn-main {
     background: var(--red);
-    border: none;
-    color: white;
+    color: #ffffff;
     font-weight: 800;
-    font-size: 19px;
+    font-size: 18px;
     padding: 18px;
-    border-radius: 12px;
+    border-radius: 14px;
+    border: none;
     cursor: pointer;
     display: block;
     width: 100%;
     flex: none;
+    min-height: 60px;
+    box-shadow: var(--shadow);
+    transition: filter 0.15s ease, transform 0.1s ease;
   }
-  .pfand-btn-main:active { filter: brightness(0.9); }
+  .pfand-btn-main:active { filter: brightness(0.9); transform: scale(0.98); }
 
+  /* Right / Cart Area */
   .right {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    flex: 1 1 0; /* ~44% width */
-    min-width: 0;  /* erlaubt der Flex-Ratio zu greifen (sonst erzwingt Inhalt die Breite) */
+    gap: 10px;
+    flex: 1 1 0;
+    min-width: 0;
     min-height: 0;
   }
   .right h2 {
     margin: 0;
-    font-size: 16px;
+    font-size: 17px;
     flex: none;
   }
   .cart {
     background: var(--card-bg);
-    color: #222;
-    border-radius: 12px;
-    padding: 6px;
+    color: var(--text);
+    border-radius: 16px;
+    padding: 8px;
     flex: 1 1 0;
-    min-height: 0;
+    min-height: 80px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    box-shadow: var(--shadow);
   }
-  /* Cart Item - Mobile Stacked Layout */
   .cart-item {
     display: flex;
-    flex-direction: column; /* Stack vertically on narrow screens */
+    flex-direction: column;
     gap: 4px;
-    padding: 10px 8px;
-    border-bottom: 1px solid #eee;
-    font-size: 15px;
+    padding: 12px 8px;
+    border-bottom: 1px solid var(--border);
+    font-size: 16px;
   }
   .cart-item:last-child { border-bottom: none; }
-  .cart-item-top { 
-    display: block; 
-    width: 100%;
-  }
-  .cart-item .ci-name { 
-    font-weight: 700; 
-    line-height: 1.3;
-    overflow-wrap: normal; /* Normal wrapping, no mid-word break unless huge token */
-    word-break: normal;
-  }
-  .cart-pfand-line { 
-    font-size: 13px; 
-    opacity: 0.65; 
-    line-height: 1.2;
-    margin-top: 2px;
-    /* Removed nowrap/ellipsis so it fully wraps naturally */
-  }
-  .cart-item-bottom {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    margin-top: 2px;
-  }
-  .cart-item .ci-price { 
-    font-weight: 800; 
-    color: var(--orange-dark); /* Highlight price slightly */
-  }
+  .cart-item-top { display: block; width: 100%; }
+  .cart-item .ci-name { font-weight: 700; line-height: 1.3; overflow-wrap: normal; word-break: normal; }
+  .cart-pfand-line { font-size: 14px; color: var(--text-muted); line-height: 1.3; margin-top: 4px; }
+  .cart-item-bottom { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 6px; }
+  .cart-item .ci-price { font-weight: 800; color: var(--text); font-size: 16px; }
   .cart-item .ci-remove {
-    background: none;
-    border: none;
-    color: #c0392b;
-    font-size: 22px; /* Large touch target */
-    padding: 4px 10px; /* Big padding for ease */
-    margin-right: -4px; /* Pull right to align */
-    cursor: pointer;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 40px;
-    min-width: 40px;
+    background: transparent; border: none; color: var(--red);
+    font-size: 24px; padding: 6px 12px; margin-right: -8px; margin-top: -6px; margin-bottom: -6px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    min-height: 44px; min-width: 44px; border-radius: 8px; transition: background-color 0.15s ease;
   }
-
-  .neu-btn {
-    background: var(--purple);
-    border: none;
-    color: white;
-    font-weight: 700;
-    font-size: 16px;
-    padding: 16px 14px;
-    border-radius: 12px;
-    cursor: pointer;
-  }
-  .total-bar {
-    background: var(--orange);
-    border-radius: 12px;
-    padding: 20px 14px;
-    text-align: center;
-    font-size: 24px;
-    font-weight: 800;
-    cursor: pointer;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .total-bar:active { filter: brightness(0.95); }
+  .cart-item .ci-remove:active { background-color: rgba(229, 57, 53, 0.15); }
 
   .cart-controls {
     display: flex;
@@ -331,445 +332,252 @@
   }
   .cart-controls .neu-btn {
     width: 100%;
-    padding: 12px;
+    background: transparent;
+    border: 2px solid var(--border);
+    color: var(--text);
+    font-weight: 700;
+    font-size: 16px;
+    padding: 14px;
+    border-radius: 14px;
+    cursor: pointer;
+    min-height: 52px;
+    transition: background-color 0.15s ease;
   }
+  .cart-controls .neu-btn:active { background: var(--border); }
+  
   .cart-controls .total-bar {
     width: 100%;
+    background: var(--orange);
+    color: #ffffff;
     min-height: 64px;
-    font-size: 20px;
-    padding: 12px;
-  }
-
-
-  /* Settings View */
-  .settings-box {
-    background: var(--card-bg);
-    color: #222;
-    border-radius: 12px;
-    padding: 22px 20px;
-  }
-  .settings-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 0;
-    border-bottom: 1px solid #eee;
-  }
-  .settings-row:last-child {
-    border-bottom: none;
-  }
-  .settings-label {
-    font-size: 17px;
-    font-weight: 600;
-  }
-  .settings-group-label {
-    font-size: 14px;
+    font-size: 22px;
+    padding: 16px;
+    border-radius: 14px;
+    text-align: center;
     font-weight: 800;
-    text-transform: uppercase;
-    color: var(--orange-dark);
-    margin: 24px 0 10px;
-    letter-spacing: 0.05em;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: filter 0.15s ease, transform 0.1s ease;
+  }
+  .cart-controls .total-bar:active { filter: brightness(0.9); transform: scale(0.98); }
+
+  /* Info & Settings Views */
+  .info-box, .settings-box {
+    background: var(--card-bg);
+    color: var(--text);
+    border-radius: 16px;
+    padding: 24px 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .wappen-emblem {
+    display: block;
+    margin: 0 auto 24px;
+    height: 120px;
+    width: auto;
+    max-width: 100%;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+  }
+  @media (min-width: 700px) {
+    .wappen-emblem { height: 140px; margin-bottom: 32px; }
+  }
+  .info-box-title { text-align: center; } /* Center title to match emblem */
+  .info-box-title { font-size: 24px; font-weight: 800; margin-bottom: 16px; }
+  .info-box-text { margin: 0 0 12px; font-size: 16px; line-height: 1.5; }
+  .info-box-text:last-child { margin-bottom: 0; }
+  .info-box-subtitle { font-size: 18px; font-weight: 800; margin: 24px 0 10px; color: var(--orange); }
+
+  .settings-row-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .settings-row-toggle:last-child { border-bottom: none; }
+  .settings-label { font-size: 17px; font-weight: 600; flex: 1; }
+  .settings-group-label {
+    font-size: 14px; font-weight: 800; text-transform: uppercase;
+    color: var(--orange); margin: 28px 0 12px; letter-spacing: 0.05em;
   }
   .settings-group-label:first-child { margin-top: 0; }
-  .segmented {
-    display: flex;
-    background: #e4e4e4;
-    border-radius: 10px;
-    padding: 4px;
-    gap: 4px;
+  .settings-hint, .settings-block-desc { font-size: 14px; color: var(--text-muted); margin-top: 8px; line-height: 1.4; }
+
+  /* Switch */
+  .switch { position: relative; width: 52px; height: 32px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .slider {
+    position: absolute; cursor: pointer; inset: 0;
+    background-color: var(--switch-bg); border-radius: 32px; transition: background-color 0.2s ease;
   }
-  .segmented-btn {
-    flex: 1;
-    border: none;
-    background: transparent;
-    padding: 12px 8px;
-    font-size: 15px;
-    font-weight: 700;
-    color: #666;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
+  .slider:before {
+    position: absolute; content: ""; height: 28px; width: 28px; left: 2px; bottom: 2px;
+    background-color: var(--switch-thumb); border-radius: 50%;
+    transition: transform 0.2s cubic-bezier(0.2, 0.85, 0.32, 1.2);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   }
-  .segmented-btn.active {
-    background: #fff;
-    color: #111;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  }
-  
-  /* Re-add switch styles specifically for settings row since .pfand-row was removed */
-  .switch { position: relative; width: 50px; height: 30px; }
-  .switch input { opacity: 0; width: 0; height: 0; }
-  .slider { position: absolute; cursor: pointer; inset: 0; background-color: #555; border-radius: 30px; transition: 0.2s; }
-  .slider:before { position: absolute; content: ""; height: 24px; width: 24px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.2s; }
-  input:checked + .slider { background-color: var(--orange); }
+  input:checked + .slider { background-color: var(--green); }
   input:checked + .slider:before { transform: translateX(20px); }
 
-  /* Wechselgeld-Overlay */
-  .overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(10, 20, 25, 0.92);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    padding: 16px;
+  /* Segmented Control */
+  .segmented { display: flex; background: var(--segmented-bg); border-radius: 12px; padding: 4px; gap: 4px; }
+  .segmented-btn {
+    flex: 1; border: none; background: transparent; padding: 12px 8px;
+    font-size: 16px; font-weight: 700; color: var(--segmented-text);
+    border-radius: 10px; cursor: pointer; transition: all 0.2s ease; min-height: 44px;
   }
-  .overlay.hidden { display: none; }
-  .overlay-card {
-    position: relative;
-    background: var(--bg-2);
-    border-radius: 18px;
-    padding: 24px 20px;
-    width: 100%;
-    max-width: 440px;
-    max-height: 95vh;
-    overflow-y: auto;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-  }
-  .overlay-card h2 {
-    margin: 0 0 18px;
-    font-size: 22px;
-    text-align: center;
-  }
-  .overlay-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 17px;
-    margin-bottom: 10px;
-    padding: 4px 0;
-  }
-  .overlay-row.total { font-weight: 800; font-size: 20px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 12px; margin-top: 4px; }
-  .overlay-input-wrap {
-    margin: 18px 0;
-  }
-  .overlay-input-wrap label {
-    display: block;
-    font-size: 15px;
-    opacity: 0.8;
-    margin-bottom: 8px;
-  }
-  #receivedInput {
-    width: 100%;
-    font-size: 32px;
-    font-weight: 700;
-    padding: 16px;
-    border-radius: 12px;
-    border: none;
-    text-align: center;
-    background: white;
-    color: #222;
-  }
-  .quick-amounts {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(75px, 1fr));
-    gap: 10px;
-    margin: 16px 0;
-  }
-  .quick-amounts button {
-    background: var(--grey);
-    border: none;
-    color: white;
-    font-weight: 700;
-    font-size: 15px;
-    padding: 14px 4px;
-    border-radius: 10px;
-    cursor: pointer;
-  }
-  .quick-amounts button:active { filter: brightness(1.3); }
-  .change-result {
-    text-align: center;
-    font-size: 30px;
-    font-weight: 800;
-    padding: 16px;
-    border-radius: 12px;
-    margin: 16px 0;
-    background: rgba(255,255,255,0.06);
-  }
-  .change-result.negative { color: #ff8a7a; }
-  .change-result.positive { color: #8fe88a; }
-  .overlay-buttons {
-    display: flex;
-    gap: 10px;
-    margin-top: 12px;
-  }
-  .overlay-buttons button {
-    flex: 1;
-    padding: 16px;
-    border: none;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 17px;
-    cursor: pointer;
-  }
-  .btn-close { background: var(--grey); color: white; }
-  .btn-done { background: var(--green); color: #1a1a1a; }
-  .btn-danger { background: var(--red); color: white; }
-  .overlay-confirm-text {
-    font-size: 16px;
-    line-height: 1.5;
-    text-align: center;
-    margin: 10px 0 12px;
-    opacity: 0.9;
-  }
-  .overlay-confirm-hint {
-    font-size: 13px;
-    line-height: 1.45;
-    text-align: center;
-    margin: 0 0 22px;
-    padding: 8px 10px;
-    border-radius: 8px;
-    background: rgba(211, 58, 44, 0.14);
-    color: #f3b6b0;
-  }
-  .overlay-confirm-hint strong { color: #fff; }
-  .export-textarea {
-    width: 100%;
-    height: 200px;
-    background: rgba(255,255,255,0.05);
-    color: white;
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 8px;
-    padding: 12px;
-    font-size: 13px;
-    font-family: monospace;
-    resize: none;
-    margin-bottom: 16px;
-  }
-  .export-textarea:focus { outline: none; border-color: var(--orange); }
+  .segmented-btn.active { background: var(--segmented-active-bg); color: var(--segmented-active-text); box-shadow: var(--shadow); }
 
-  .sub-nav {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
+  /* Sub-nav (Info/Statistik) */
+  .sub-nav { display: flex; gap: 6px; margin-bottom: 24px; background: var(--bg); padding: 6px; border-radius: 14px; }
   .sub-nav-btn {
-    flex: 1;
-    padding: 12px;
-    background: rgba(255,255,255,0.1);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
+    flex: 1; padding: 14px; background: transparent; color: var(--text-muted);
+    border: none; border-radius: 10px; font-size: 16px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s ease;
   }
-  .sub-nav-btn.active {
-    background: var(--purple);
-    box-shadow: 0 0 0 2px rgba(255,255,255,0.5) inset;
-  }
+  .sub-nav-btn.active { background: var(--card-bg-elevated); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
-  .stats-summary {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  .stat-card {
-    background: rgba(0,0,0,0.05);
-    padding: 14px;
-    border-radius: 10px;
-    text-align: center;
-  }
-  .stat-card-label {
-    font-size: 13px;
-    opacity: 0.7;
-    margin-bottom: 4px;
-  }
-  .stat-card-val {
-    font-size: 18px;
-    font-weight: 800;
-  }
-  .stat-card.netto .stat-card-val { color: #2c8c1e; }
-  .stat-card-full { grid-column: 1 / -1; background: rgba(44, 140, 30, 0.08); border: 1px solid rgba(44, 140, 30, 0.3); }
-  .stat-card-negative { background: rgba(211, 58, 44, 0.10); border: 1px solid rgba(211, 58, 44, 0.35); }
-  .stat-card-negative .stat-card-val { color: #f3b6b0; }
-  .stat-card-full .stat-card-val { font-size: 24px; }
+  /* Statistik */
+  .stats-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+  .stat-card { background: var(--bg); padding: 16px; border-radius: 12px; text-align: center; border: 1px solid var(--border); }
+  .stat-card-label { font-size: 14px; color: var(--text-muted); margin-bottom: 6px; }
+  .stat-card-val { font-size: 20px; font-weight: 800; }
+  .stat-card-full { grid-column: 1 / -1; background: rgba(76, 175, 80, 0.1); border: 1px solid rgba(76, 175, 80, 0.3); }
+  .stat-card-full .stat-card-val { font-size: 26px; color: var(--green); }
+  .stat-card-negative { background: rgba(229, 57, 53, 0.1); border: 1px solid rgba(229, 57, 53, 0.3); }
+  .stat-card-negative .stat-card-val { color: var(--red); }
   
-  .stats-list {
-    margin-bottom: 20px;
-  }
-  .stats-list-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px solid #eee;
-    font-size: 15px;
-  }
+  .stats-list { margin-bottom: 24px; border-top: 1px solid var(--border); }
+  .stats-list-item { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 16px; }
   .stats-list-item:last-child { border-bottom: none; }
   .stats-list-item .sl-name { font-weight: 600; flex: 1; }
-  .stats-list-item .sl-anzahl { width: 50px; text-align: right; opacity: 0.8; }
-  .stats-list-item .sl-umsatz { width: 80px; text-align: right; font-weight: 700; }
+  .stats-list-item .sl-anzahl { width: 50px; text-align: right; color: var(--text-muted); }
+  .stats-list-item .sl-umsatz { width: 90px; text-align: right; font-weight: 700; }
   
-  .stats-actions {
-    display: flex;
-    gap: 10px;
-  }
+  .stats-actions { display: flex; gap: 12px; }
   .stats-actions button {
-    flex: 1;
-    padding: 14px;
-    border: none;
-    border-radius: 10px;
-    font-weight: 700;
-    font-size: 15px;
-    cursor: pointer;
+    flex: 1; padding: 16px; border: none; border-radius: 14px;
+    font-weight: 700; font-size: 17px; cursor: pointer; min-height: 52px;
+    background: var(--bg); color: var(--text); border: 1px solid var(--border);
+    transition: background-color 0.15s ease;
   }
-  .warning-note {
-    background: rgba(211, 58, 44, 0.1);
-    color: #c0392b;
-    padding: 12px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 16px;
-    text-align: center;
-  }
-  .stats-stand {
-    font-size: 12px;
-    opacity: 0.6;
-    margin: -4px 0 12px;
-  }
-  .stats-reminder {
-    background: rgba(232, 119, 46, 0.12);
-    color: #f0b07e;
-    padding: 10px 12px;
-    border-radius: 8px;
-    font-size: 13px;
-    margin-bottom: 16px;
-    text-align: center;
-  }
-  .update-banner {
-    position: fixed;
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: calc(12px + env(safe-area-inset-bottom));
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: #1c3f4a;
-    color: #fff;
-    border: 1px solid rgba(255,255,255,0.18);
-    padding: 12px 16px;
-    border-radius: 12px;
-    box-shadow: 0 6px 24px rgba(0,0,0,0.4);
-    font-size: 14px;
-    max-width: calc(100vw - 24px);
-  }
-  .update-banner button {
-    background: var(--orange);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 14px;
-    font-weight: 700;
-    font-size: 14px;
-    cursor: pointer;
-  }
-  .undo-snackbar {
-    position: fixed;
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: calc(80px + env(safe-area-inset-bottom));
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    background: #1c3f4a;
-    color: #fff;
-    border: 1px solid rgba(255,255,255,0.18);
-    padding: 12px 16px;
-    border-radius: 12px;
-    box-shadow: 0 6px 24px rgba(0,0,0,0.4);
-    font-size: 14px;
-    max-width: calc(100vw - 24px);
-  }
-  .undo-snackbar button {
-    background: transparent;
-    color: var(--orange);
-    border: none;
-    font-weight: 800;
-    font-size: 14px;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .overlay-close-x {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: none;
-    border: none;
-    color: rgba(255,255,255,0.7);
-    font-size: 26px;
-    line-height: 1;
-    padding: 8px 12px;
-    cursor: pointer;
-  }
-  .overlay-close-x:active { color: white; }
+  .stats-actions button:active { background: var(--border); }
+  .stats-actions .btn-done { background: var(--orange); color: #fff; border: none; }
+  .stats-actions .btn-done:active { filter: brightness(0.9); }
+  
+  .warning-note { background: rgba(229, 57, 53, 0.1); color: var(--red); padding: 16px; border-radius: 12px; font-size: 15px; font-weight: 600; margin-bottom: 24px; text-align: center; }
+  .stats-stand { font-size: 14px; color: var(--text-muted); margin: -8px 0 20px; }
+  .stats-reminder { background: rgba(232, 119, 46, 0.1); color: var(--orange); padding: 14px; border-radius: 12px; font-size: 15px; margin-bottom: 24px; text-align: center; }
+  .empty-hint { opacity: 0.6; font-size: 15px; text-align: center; padding: 24px; grid-column: 1 / -1; }
 
-  /* Querformat / größere Viewports: größere Buttons, mehrspaltiges Grid,
-     Warenkorb-Zeilen wieder einzeilig (genug Platz). */
+  /* Banners / Snackbars */
+  .update-banner, .undo-snackbar {
+    position: fixed; left: 50%; transform: translateX(-50%); z-index: 1000;
+    display: flex; align-items: center; gap: 16px;
+    background: var(--card-bg-elevated); color: var(--text);
+    border: 1px solid var(--border); padding: 12px 16px; border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3); font-size: 15px; width: max-content;
+    max-width: calc(100vw - 32px);
+  }
+  .update-banner { bottom: calc(16px + env(safe-area-inset-bottom)); }
+  .undo-snackbar { bottom: calc(100px + env(safe-area-inset-bottom)); }
+  .update-banner button { background: var(--orange); color: #fff; border: none; border-radius: 8px; padding: 10px 16px; font-weight: 700; font-size: 15px; cursor: pointer; min-height: 40px; }
+  .undo-snackbar button { background: transparent; color: var(--orange); border: none; font-weight: 800; font-size: 15px; cursor: pointer; white-space: nowrap; padding: 8px; min-height: 40px; }
+
+  /* Overlays */
+  .overlay {
+    position: fixed; inset: 0; background: var(--overlay-bg);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100; padding: 16px; backdrop-filter: blur(4px);
+    transition: opacity 0.2s ease, visibility 0s;
+  }
+  .overlay.hidden { display: none; opacity: 0; }
+  .overlay-card {
+    position: relative; background: var(--card-bg-elevated); color: var(--text);
+    border-radius: 24px; padding: 24px; width: 100%; max-width: 440px; max-height: 95vh;
+    overflow-y: auto; box-shadow: 0 16px 40px rgba(0,0,0,0.3);
+  }
+  .overlay-card h2 { margin: 0 0 20px; font-size: 22px; text-align: center; }
+  .overlay-row { display: flex; justify-content: space-between; font-size: 18px; margin-bottom: 12px; padding: 4px 0; }
+  .overlay-row.total { font-weight: 800; font-size: 22px; border-top: 1px solid var(--border); padding-top: 16px; margin-top: 8px; }
+  
+  .overlay-input-wrap label { display: block; font-size: 15px; color: var(--text-muted); margin-bottom: 8px; }
+  #receivedInput {
+    width: 100%; font-size: 34px; font-weight: 800; padding: 16px;
+    border-radius: 14px; border: 2px solid var(--border);
+    text-align: center; background: var(--bg); color: var(--text);
+    transition: border-color 0.2s ease;
+  }
+  #receivedInput:focus { outline: none; border-color: var(--purple); }
+  
+  .quick-amounts { display: grid; grid-template-columns: repeat(auto-fit, minmax(75px, 1fr)); gap: 10px; margin: 20px 0; }
+  .quick-amounts button {
+    background: var(--bg); color: var(--text); border: 1px solid var(--border);
+    font-weight: 700; font-size: 16px; padding: 16px 4px; border-radius: 12px;
+    cursor: pointer; transition: background-color 0.15s ease; min-height: 48px;
+  }
+  .quick-amounts button:active { background: var(--border); }
+  
+  .change-result { text-align: center; font-size: 28px; font-weight: 800; padding: 16px; border-radius: 14px; margin: 20px 0; background: rgba(0,0,0,0.05); }
+  .change-result.negative { color: var(--red); background: rgba(229, 57, 53, 0.1); }
+  .change-result.positive { color: var(--green); background: rgba(76, 175, 80, 0.1); }
+  
+  .overlay-buttons { display: flex; gap: 12px; margin-top: 16px; }
+  .overlay-buttons button {
+    flex: 1; padding: 18px; border: none; border-radius: 14px;
+    font-weight: 700; font-size: 18px; cursor: pointer; transition: filter 0.15s ease;
+    min-height: 56px;
+  }
+  .overlay-buttons button:active { filter: brightness(0.9); }
+  .btn-close { background: var(--btn-close-bg); color: #fff; }
+  .btn-done { background: var(--btn-done-bg); color: var(--btn-done-text); }
+  .btn-danger { background: var(--red); color: white; }
+  
+  .overlay-close-x {
+    position: absolute; top: 12px; right: 12px; background: transparent; border: none;
+    color: var(--text-muted); font-size: 24px; line-height: 1; padding: 12px;
+    border-radius: 50%; cursor: pointer; min-height: 48px; min-width: 48px;
+    display: flex; align-items: center; justify-content: center; transition: color 0.15s ease;
+  }
+  .overlay-close-x:active { background: var(--border); color: var(--text); }
+  
+  .overlay-confirm-text { font-size: 17px; line-height: 1.5; text-align: center; margin: 10px 0 20px; color: var(--text); }
+  .overlay-confirm-hint {
+    font-size: 14px; line-height: 1.45; text-align: center; margin: 0 0 24px;
+    padding: 12px; border-radius: 10px; background: rgba(229, 57, 53, 0.1); color: var(--red);
+  }
+  .overlay-confirm-hint strong { font-weight: 800; }
+  
+  .export-textarea {
+    width: 100%; height: 200px; background: var(--bg); color: var(--text);
+    border: 1px solid var(--border); border-radius: 12px; padding: 16px;
+    font-size: 14px; font-family: ui-monospace, monospace; resize: none; margin-bottom: 20px;
+  }
+  .export-textarea:focus { outline: none; border-color: var(--purple); }
+
+  /* Media Queries */
   @media (min-width: 700px), (orientation: landscape) {
-    .left {
-      flex: 1.3 1 0;
-      padding-right: 12px;
-    }
-    .product-grid-inner {
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    }
-    .product-btn {
-      font-size: 19px;
-      padding: 22px 14px;
-      min-height: 96px;
-    }
-    .product-sub {
-      font-size: 16px;
-      margin-top: 8px;
-    }
-    .total-bar {
-      min-height: 96px;
-      font-size: 24px;
-    }
-    /* Warenkorb-Zeilen wieder einzeilig (Name | Preis | ✕) */
-    .cart-item {
-      flex-direction: row;
-      align-items: center;
-      gap: 12px;
-    }
-    .cart-item-top {
-      flex: 1;
-      width: auto;
-    }
-    .cart-item-bottom {
-      width: auto;
-      margin-top: 0;
-      gap: 12px;
-    }
-    .cart-item .ci-remove {
-      margin-right: 0;
-    }
+    .left { flex: 1.3 1 0; padding-right: 12px; }
+    .product-grid-inner { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .product-btn { font-size: 18px; padding: 18px 14px; min-height: 84px; border-radius: 14px; }
+    .product-sub { font-size: 15px; margin-top: 6px; }
+    .total-bar { min-height: 80px; font-size: 24px; }
+    .cart-item { flex-direction: row; align-items: center; gap: 12px; }
+    .cart-item-top { flex: 1; width: auto; }
+    .cart-item-bottom { width: auto; margin-top: 0; gap: 12px; justify-content: flex-end; }
+    .cart-item .ci-remove { margin-right: 0; margin-top: 0; margin-bottom: 0; }
   }
 
   @media (min-width: 1024px) {
-    .product-grid-inner {
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    }
-    .product-btn {
-      font-size: 21px;
-      padding: 28px 16px;
-      min-height: 116px;
-      border-radius: 16px;
-    }
-    .product-sub {
-      font-size: 17px;
-      margin-top: 10px;
-    }
+    .product-grid-inner { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .product-btn { font-size: 20px; padding: 22px 16px; min-height: 100px; border-radius: 16px; }
+    .product-sub { font-size: 16px; margin-top: 8px; }
   }
 
-  @media (max-width: 360px) {
-    .quick-amounts {
-      grid-template-columns: repeat(2, 1fr);
-    }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
   }
 </style>
 </head>
@@ -864,53 +672,53 @@
 // ---------------------------------------------------------
 const PRODUKTE = {
   "Bar": [
-    { name: "Glas Sekt/Fruchtsecco 0,1l", preis: 2.0, pfand: 2.0 },
+    { name: "Glas Sekt / Fruchtsecco 0,1l", preis: 2.0, pfand: 2.0 },
     { name: "Schoppen Wein 0,1l", preis: 2.0, pfand: 2.0 },
-    { name: "Flasche Wein/Sekt/Fruchtsecco", preis: 10.0, pfand: 2.0 },
+    { name: "Flasche Wein / Sekt / Fruchtsecco", preis: 10.0, pfand: 2.0 },
     { name: "Desperados", preis: 4.0, pfand: 2.0 },
-    { name: "alkfrei 0,4l", preis: 2.5, pfand: 2.0 },
-    { name: "alkfrei 0,2l", preis: 1.5, pfand: 2.0 },
-    { name: "alkfrei Flasche", preis: 6.0, pfand: 2.0 },
+    { name: "alkoholfrei 0,4l", preis: 2.5, pfand: 2.0 },
+    { name: "alkoholfrei 0,2l", preis: 1.5, pfand: 2.0 },
+    { name: "alkoholfrei Flasche", preis: 6.0, pfand: 2.0 },
     { name: "Mixgetränke", preis: 6.0, pfand: 2.0 },
     { name: "Cocktails", preis: 6.0, pfand: 2.0 },
-    { name: "Mojito/Pina Colada alkfrei", preis: 4.0, pfand: 2.0 },
+    { name: "Cocktails (alkoholfrei)", preis: 4.0, pfand: 2.0 },
     { name: "Pullchen", preis: 2.5, pfand: 0.0 },
   ],
   "Bier": {
     "Bierwagen": [
-      { name: "Bier/Radler 0,4l", preis: 3.5, pfand: 2.0 },
-      { name: "Bier/Radler 0,25l", preis: 2.5, pfand: 2.0 },
-      { name: "alkfrei 0,4l", preis: 2.5, pfand: 2.0 },
-      { name: "alkfrei 0,2l", preis: 1.5, pfand: 2.0 },
-      { name: "alkfrei Flasche", preis: 6.0, pfand: 2.0 },
+      { name: "Bier / Radler 0,4l", preis: 3.5, pfand: 2.0 },
+      { name: "Bier / Radler 0,25l", preis: 2.5, pfand: 2.0 },
+      { name: "alkoholfrei 0,4l", preis: 2.5, pfand: 2.0 },
+      { name: "alkoholfrei 0,2l", preis: 1.5, pfand: 2.0 },
+      { name: "alkoholfrei Flasche", preis: 6.0, pfand: 2.0 },
       { name: "Pullchen", preis: 2.5, pfand: 0.0 },
     ],
     "Badewannenrennen": [
-      { name: "Bier/Radler 0,4l", preis: 3.5, pfand: 0.0 },
-      { name: "Bier/Radler 0,2l", preis: 2.0, pfand: 0.0 },
-      { name: "Wein/Sekt/Fruchtsecco 0,2l", preis: 3.0, pfand: 0.0 },
-      { name: "alkfrei 0,4l", preis: 2.5, pfand: 0.0 },
-      { name: "alkfrei 0,2l", preis: 1.5, pfand: 0.0 },
+      { name: "Bier / Radler 0,4l", preis: 3.5, pfand: 0.0 },
+      { name: "Bier / Radler 0,2l", preis: 2.0, pfand: 0.0 },
+      { name: "Wein / Sekt / Fruchtsecco 0,2l", preis: 3.0, pfand: 0.0 },
+      { name: "alkoholfrei 0,4l", preis: 2.5, pfand: 0.0 },
+      { name: "alkoholfrei 0,2l", preis: 1.5, pfand: 0.0 },
     ],
   },
   "Essen": {
     "Bratbude": [
-      { name: "Bratwurst m Br", preis: 3.5, pfand: 0.0 },
-      { name: "Steak m Br", preis: 4.5, pfand: 0.0 },
-      { name: "Spieß m Br", preis: 4.5, pfand: 0.0 },
+      { name: "Bratwurst mit Brötchen", preis: 3.5, pfand: 0.0 },
+      { name: "Steak mit Brötchen", preis: 4.5, pfand: 0.0 },
+      { name: "Spieß mit Brötchen", preis: 4.5, pfand: 0.0 },
       { name: "Hotdog", preis: 3.0, pfand: 0.0 },
       { name: "Pommes", preis: 2.5, pfand: 0.0 },
       { name: "Fischsemmel", preis: 3.5, pfand: 0.0 },
-      { name: "Frühl.rolle 2", preis: 3.5, pfand: 0.0 },
-      { name: "Frühl.rolle 3", preis: 5.0, pfand: 0.0 },
+      { name: "Frühlingsrolle 2 Stück", preis: 3.5, pfand: 0.0 },
+      { name: "Frühlingsrolle 3 Stück", preis: 5.0, pfand: 0.0 },
     ],
     "Crepe-Bude": [
       { name: "Crepes Puderzucker", preis: 2.5, pfand: 0.0 },
-      { name: "Crepes Nutella/Apfelmus", preis: 3.5, pfand: 0.0 },
+      { name: "Crepes Nutella / Apfelmus", preis: 3.5, pfand: 0.0 },
       { name: "Crepes mit Käse", preis: 3.5, pfand: 0.0 },
-      { name: "Crepes m. Käse u. Schinken", preis: 4.0, pfand: 0.0 },
-      { name: "Waffel Zimt/Zucker", preis: 3.0, pfand: 0.0 },
-      { name: "Waffel Nutella/Apfelmus", preis: 4.0, pfand: 0.0 },
+      { name: "Crepes mit Käse & Schinken", preis: 4.0, pfand: 0.0 },
+      { name: "Waffel Zimt / Zucker", preis: 3.0, pfand: 0.0 },
+      { name: "Waffel Nutella / Apfelmus", preis: 4.0, pfand: 0.0 },
       { name: "Zuckerwatte", preis: 2.0, pfand: 0.0 },
     ],
   },
@@ -923,8 +731,26 @@ const PFAND_RUECKGABE_EURO = 2.0;
 // (Essen: Bratbude/Crepe-Bude; Bier: Bierwagen/Badewannenrennen.)
 // Pfand bleibt rein produktbasiert (jedes Produkt trägt sein eigenes pfand).
 const BLOCK_TABS = {
-  "Bier": { label: "Bier-Bereich", defaultBlock: "Bierwagen", blocks: ["Bierwagen", "Badewannenrennen"] },
-  "Essen": { label: "Essensstand", defaultBlock: "Bratbude", blocks: ["Bratbude", "Crepe-Bude"] },
+  "Bier": {
+    label: "Bier-Bereich",
+    defaultBlock: "Bierwagen",
+    blocks: ["Bierwagen", "Badewannenrennen"],
+    note: "Zwei Ausschank-Bereiche mit eigener Karte.",
+    blockDesc: {
+      "Bierwagen": "Mit Pfand (2,00 € je Becher).",
+      "Badewannenrennen": "Ohne Pfand – eigene Getränkeauswahl.",
+    },
+  },
+  "Essen": {
+    label: "Essensstand",
+    defaultBlock: "Bratbude",
+    blocks: ["Bratbude", "Crepe-Bude"],
+    note: "Zwei Stände – kein Pfand.",
+    blockDesc: {
+      "Bratbude": "Herzhaft: Bratwurst, Steak, Pommes …",
+      "Crepe-Bude": "Süß: Crepes, Waffeln, Zuckerwatte.",
+    },
+  },
 };
 
 // ---------------------------------------------------------
@@ -1138,6 +964,9 @@ function getCurrentTotalCents() {
 }
 
 const TAB_CLASS = { "Bar": "tab-bar", "Bier": "tab-bier", "Essen": "tab-essen" };
+// Überschrift über den Produkt-Buttons je Tab (für flache Kategorien wie Bar;
+// Block-Tabs nutzen stattdessen den Blocknamen als Überschrift).
+const TAB_HEADING = { "Bar": "Getränke" };
 
 let infoView = 'info';                 // 'info' | 'statistik' (Unter-Ansicht der Info-View)
 let currentView = 'products';          // 'products' | 'info' | 'settings'
@@ -1146,6 +975,52 @@ let cart = []; // { name, preis, pfand, pfandOriginal, isPfandAbzug }
 let pfandBerechnen = true;
 // Pro Block-Tab der aktuell angezeigte Unterblock.
 let activeBlock = { "Bier": "Bierwagen", "Essen": "Bratbude" };
+
+// ---------------------------------------------------------
+// THEME (Hell/Dunkel) — Standard dunkel; folgt beim ersten Start der
+// Geräte-Einstellung (prefers-color-scheme), manuell umschaltbar,
+// Auswahl wird in localStorage gespeichert.
+// ---------------------------------------------------------
+const THEME_STORAGE_KEY = 'kassenTheme';
+
+function systemPrefersLight() {
+  try {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+  } catch (e) {
+    return false;
+  }
+}
+
+function loadThemePreference() {
+  let stored = null;
+  try { stored = localStorage.getItem(THEME_STORAGE_KEY); } catch (e) { /* privater Modus */ }
+  if (stored === 'dark' || stored === 'light') return stored;
+  // Keine gespeicherte Wahl → Gerät fragen, sonst dunkel (Bar-Standard).
+  return systemPrefersLight() ? 'light' : 'dark';
+}
+
+let currentTheme = loadThemePreference();
+
+function getTheme() {
+  return currentTheme;
+}
+
+function applyTheme() {
+  // data-theme auf <html> steuert das Farbschema (CSS-Variablen je Theme).
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  // theme-color-Meta passend setzen (Statusleiste/Browser-UI).
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', currentTheme === 'light' ? '#f3f4f6' : '#16313b');
+}
+
+function setTheme(theme) {
+  currentTheme = (theme === 'light') ? 'light' : 'dark';
+  try { localStorage.setItem(THEME_STORAGE_KEY, currentTheme); } catch (e) { /* privater Modus */ }
+  applyTheme();
+}
+
+// Theme sofort anwenden (vor dem ersten Render, vermeidet Aufblitzen).
+applyTheme();
 
 const tabsEl = document.getElementById('tabs');
 const productListEl = document.getElementById('productList');
@@ -1270,6 +1145,12 @@ function renderProductTab() {
       productListEl.appendChild(hint);
       return;
     }
+    // Überschrift über den Produkt-Buttons (analog „Bestellung").
+    const heading = document.createElement('div');
+    heading.className = 'block-heading';
+    heading.textContent = TAB_HEADING[currentTab] || currentTab;
+    productListEl.appendChild(heading);
+
     const grid = document.createElement('div');
     grid.className = 'product-grid-inner';
     data.forEach(p => grid.appendChild(makeProductButton(p)));
@@ -1325,6 +1206,13 @@ function renderInfoView() {
   box.className = 'info-box';
 
   if (infoView === 'info') {
+    const emblem = document.createElement('img');
+    emblem.className = 'wappen-emblem';
+    emblem.src = 'wappen-512.png';
+    emblem.alt = 'Wappen der Gemeinde Guttau';
+    emblem.width = 512;
+    emblem.height = 512;
+    box.appendChild(emblem);
     const h = document.createElement('div');
     h.className = 'info-box-title';
     h.textContent = INFO_TAB.titel;
@@ -1459,29 +1347,63 @@ function renderSettingsView() {
   h.textContent = 'Einstellungen';
   box.appendChild(h);
 
-  // 1) Pfand berechnen (global)
-  const pfandRowEl = document.createElement('div');
-  pfandRowEl.className = 'settings-row';
-  const pfandLbl = document.createElement('span');
-  pfandLbl.className = 'settings-label';
-  pfandLbl.id = 'setPfandLabel';
-  pfandLbl.textContent = 'Pfand berechnen';
-  const sw = document.createElement('label');
-  sw.className = 'switch';
-  const swInput = document.createElement('input');
-  swInput.type = 'checkbox';
-  swInput.checked = pfandBerechnen;
-  swInput.setAttribute('aria-labelledby', 'setPfandLabel');
-  swInput.onchange = () => { pfandBerechnen = swInput.checked; applyPfandToCart(); };
-  const swSpan = document.createElement('span');
-  swSpan.className = 'slider';
-  sw.appendChild(swInput);
-  sw.appendChild(swSpan);
-  pfandRowEl.appendChild(pfandLbl);
-  pfandRowEl.appendChild(sw);
-  box.appendChild(pfandRowEl);
+  // Hilfsfunktion: Toggle-Zeile mit Schalter LINKS, Beschriftung rechts daneben
+  // (linksbündig). Optionaler Hilfetext unter der Zeile.
+  function addToggleRow(labelText, checked, onChange, hint) {
+    const row = document.createElement('div');
+    row.className = 'settings-row settings-row-toggle';
+    const sw = document.createElement('label');
+    sw.className = 'switch';
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.checked = checked;
+    const span = document.createElement('span');
+    span.className = 'slider';
+    sw.appendChild(input);
+    sw.appendChild(span);
+    const lbl = document.createElement('span');
+    lbl.className = 'settings-label';
+    lbl.textContent = labelText;
+    const lblId = 'setlbl-' + Math.random().toString(36).slice(2, 8);
+    lbl.id = lblId;
+    input.setAttribute('aria-labelledby', lblId);
+    input.onchange = () => onChange(input.checked);
+    row.appendChild(lbl);   // Beschriftung links (Apple-iOS-Standard)
+    row.appendChild(sw);    // Schalter rechts
+    box.appendChild(row);
+    if (hint) {
+      const hintEl = document.createElement('div');
+      hintEl.className = 'settings-hint';
+      hintEl.textContent = hint;
+      box.appendChild(hintEl);
+    }
+  }
 
-  // 2) Block-Auswahl je Block-Tab (Bier, Essen) als segmentierte Buttons.
+  // 1) Darstellung: Hell-/Dunkel-Modus
+  const groupAnzeige = document.createElement('div');
+  groupAnzeige.className = 'settings-group-label';
+  groupAnzeige.textContent = 'Darstellung';
+  box.appendChild(groupAnzeige);
+  addToggleRow(
+    'Dunkler Modus',
+    getTheme() === 'dark',
+    (checked) => setTheme(checked ? 'dark' : 'light'),
+    'Abends in der Bar dunkel, tagsüber draußen hell.'
+  );
+
+  // 2) Pfand berechnen (global)
+  const groupKasse = document.createElement('div');
+  groupKasse.className = 'settings-group-label';
+  groupKasse.textContent = 'Kasse';
+  box.appendChild(groupKasse);
+  addToggleRow(
+    'Pfand berechnen',
+    pfandBerechnen,
+    (checked) => { pfandBerechnen = checked; applyPfandToCart(); },
+    'Schlägt beim Antippen automatisch das Becher-Pfand auf.'
+  );
+
+  // 3) Block-Auswahl je Block-Tab (Bier, Essen) als segmentierte Buttons + Erklärung.
   Object.keys(BLOCK_TABS).forEach(tab => {
     if (!isBlockTab(tab)) return;
     const cfg = BLOCK_TABS[tab];
@@ -1489,6 +1411,13 @@ function renderSettingsView() {
     grpLbl.className = 'settings-group-label';
     grpLbl.textContent = cfg.label;
     box.appendChild(grpLbl);
+
+    if (cfg.note) {
+      const note = document.createElement('div');
+      note.className = 'settings-hint';
+      note.textContent = cfg.note;
+      box.appendChild(note);
+    }
 
     const seg = document.createElement('div');
     seg.className = 'segmented';
@@ -1500,6 +1429,15 @@ function renderSettingsView() {
       seg.appendChild(b);
     });
     box.appendChild(seg);
+
+    // Beschreibung des aktuell gewählten Blocks.
+    const activeDesc = cfg.blockDesc && cfg.blockDesc[getActiveBlock(tab)];
+    if (activeDesc) {
+      const desc = document.createElement('div');
+      desc.className = 'settings-block-desc';
+      desc.textContent = activeDesc;
+      box.appendChild(desc);
+    }
   });
 
   productListEl.appendChild(box);
