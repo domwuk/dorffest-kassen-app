@@ -64,12 +64,13 @@
   .tabs {
     display: flex;
     gap: 8px;
-    padding: 10px 12px 6px;
+    padding: 10px 8px 6px;
     overflow-x: auto;
+    align-items: center;
   }
   .tab-btn {
     flex: 1;
-    padding: 14px 10px; /* larger touch target */
+    padding: 14px 10px;
     border: none;
     border-radius: 24px;
     font-size: 15px;
@@ -80,66 +81,46 @@
     cursor: pointer;
     white-space: nowrap;
     min-width: 70px;
+    text-align: center;
+  }
+  .tab-icon {
+    flex: 0 0 auto;
+    min-width: 46px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+  .tab-icon:first-of-type {
+    margin-left: auto; /* Push icons to the right */
   }
   .tab-btn.active { opacity: 1; box-shadow: 0 0 0 2px rgba(255,255,255,0.5) inset; }
   .tab-bar { background: var(--bar-btn); }
   .tab-bier { background: var(--bier-btn); }
   .tab-essen { background: var(--grey); }
   .tab-info { background: var(--purple); }
-
-  /* Pfand toggle row */
-  .pfand-row {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 12px;
-    padding: 6px 16px 10px;
-    font-size: 15px;
-    font-weight: 600;
-  }
-  .switch {
-    position: relative;
-    width: 50px;
-    height: 30px;
-  }
-  .switch input { opacity: 0; width: 0; height: 0; }
-  .slider {
-    position: absolute; cursor: pointer; inset: 0;
-    background-color: #555;
-    border-radius: 30px;
-    transition: 0.2s;
-  }
-  .slider:before {
-    position: absolute;
-    content: "";
-    height: 24px; width: 24px;
-    left: 3px; bottom: 3px;
-    background-color: white;
-    border-radius: 50%;
-    transition: 0.2s;
-  }
-  input:checked + .slider { background-color: var(--orange); }
-  input:checked + .slider:before { transform: translateX(20px); }
-
-      /* Main area (Mobile First - Single Column) */
+      /* Main area (Mobile First - Two Column) */
   .main {
     flex: 1;
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 0 12px calc(8px + env(safe-area-inset-bottom));
+    flex-direction: row;
+    gap: 10px;
+    padding: 0 8px calc(8px + env(safe-area-inset-bottom));
     min-height: 0;
-    overflow-y: hidden; /* Requirement 3: page does not scroll */
+    overflow-y: hidden;
   }
   .left {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    flex: 0 1 auto; /* Hug content; don't stretch, but allow shrinking */
+    flex: 1.1 1 0; /* ~52% width (Produkte etwas mehr als Warenkorb) */
+    min-width: 0;  /* erlaubt der Flex-Ratio zu greifen (sonst erzwingt Inhalt die Breite) */
     min-height: 0;
-    overflow-y: auto; /* Scroll internally */
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     padding-bottom: 4px;
+    padding-right: 4px;
   }
   .product-grid {
     display: flex;
@@ -149,8 +130,8 @@
   }
   .product-grid-inner {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-auto-rows: 1fr; /* Requirement 1: Equal height buttons across all rows */
+    grid-template-columns: 1fr; /* Single column stack of buttons in portrait */
+    grid-auto-rows: 1fr;
     gap: 8px;
   }
   .block-heading {
@@ -241,12 +222,16 @@
   .pfand-btn-main:active { filter: brightness(0.9); }
 
   .right {
-    display: contents; /* Flatten into .main on mobile */
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1 1 0; /* ~44% width */
+    min-width: 0;  /* erlaubt der Flex-Ratio zu greifen (sonst erzwingt Inhalt die Breite) */
+    min-height: 0;
   }
   .right h2 {
-    display: block;
     margin: 0;
-    font-size: 17px;
+    font-size: 16px;
     flex: none;
   }
   .cart {
@@ -254,33 +239,64 @@
     color: #222;
     border-radius: 12px;
     padding: 6px;
-    flex: 1 1 0; /* Fill remaining space down to checkout bar */
-    min-height: 80px; /* Ensure cart stays usable when products are many */
-    overflow-y: auto; /* Cart internal scroll */
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
+  /* Cart Item - Mobile Stacked Layout */
   .cart-item {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column; /* Stack vertically on narrow screens */
+    gap: 4px;
     padding: 10px 8px;
     border-bottom: 1px solid #eee;
     font-size: 15px;
   }
   .cart-item:last-child { border-bottom: none; }
-  .cart-item > div:first-child { flex: 1; min-width: 0; padding-right: 8px; }
-  .cart-item .ci-name { font-weight: 600; overflow-wrap: break-word; word-break: break-word; line-height: 1.3; }
-  .cart-item .ci-price { white-space: nowrap; margin-left: auto; font-weight: 600; }
+  .cart-item-top { 
+    display: block; 
+    width: 100%;
+  }
+  .cart-item .ci-name { 
+    font-weight: 700; 
+    line-height: 1.3;
+    overflow-wrap: normal; /* Normal wrapping, no mid-word break unless huge token */
+    word-break: normal;
+  }
+  .cart-pfand-line { 
+    font-size: 13px; 
+    opacity: 0.65; 
+    line-height: 1.2;
+    margin-top: 2px;
+    /* Removed nowrap/ellipsis so it fully wraps naturally */
+  }
+  .cart-item-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-top: 2px;
+  }
+  .cart-item .ci-price { 
+    font-weight: 800; 
+    color: var(--orange-dark); /* Highlight price slightly */
+  }
   .cart-item .ci-remove {
     background: none;
     border: none;
     color: #c0392b;
-    font-size: 20px;
-    padding: 0 4px;
-    margin-left: 10px;
+    font-size: 22px; /* Large touch target */
+    padding: 4px 10px; /* Big padding for ease */
+    margin-right: -4px; /* Pull right to align */
     cursor: pointer;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    min-width: 40px;
   }
-  .cart-pfand-line { font-size: 13px; opacity: 0.65; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 
   .neu-btn {
     background: var(--purple);
@@ -309,18 +325,84 @@
 
   .cart-controls {
     display: flex;
-    gap: 10px;
-    flex: none; /* Fix to bottom in flex column */
+    flex-direction: column;
+    gap: 8px;
+    flex: none;
   }
   .cart-controls .neu-btn {
-    display: block;
-    flex: 0 0 auto;
-    min-width: 90px;
+    width: 100%;
+    padding: 12px;
   }
   .cart-controls .total-bar {
-    flex: 1;
-    margin-top: 0;
+    width: 100%;
+    min-height: 64px;
+    font-size: 20px;
+    padding: 12px;
   }
+
+
+  /* Settings View */
+  .settings-box {
+    background: var(--card-bg);
+    color: #222;
+    border-radius: 12px;
+    padding: 22px 20px;
+  }
+  .settings-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid #eee;
+  }
+  .settings-row:last-child {
+    border-bottom: none;
+  }
+  .settings-label {
+    font-size: 17px;
+    font-weight: 600;
+  }
+  .settings-group-label {
+    font-size: 14px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--orange-dark);
+    margin: 24px 0 10px;
+    letter-spacing: 0.05em;
+  }
+  .settings-group-label:first-child { margin-top: 0; }
+  .segmented {
+    display: flex;
+    background: #e4e4e4;
+    border-radius: 10px;
+    padding: 4px;
+    gap: 4px;
+  }
+  .segmented-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 12px 8px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #666;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .segmented-btn.active {
+    background: #fff;
+    color: #111;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  
+  /* Re-add switch styles specifically for settings row since .pfand-row was removed */
+  .switch { position: relative; width: 50px; height: 30px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; cursor: pointer; inset: 0; background-color: #555; border-radius: 30px; transition: 0.2s; }
+  .slider:before { position: absolute; content: ""; height: 24px; width: 24px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.2s; }
+  input:checked + .slider { background-color: var(--orange); }
+  input:checked + .slider:before { transform: translateX(20px); }
 
   /* Wechselgeld-Overlay */
   .overlay {
@@ -625,30 +707,12 @@
   }
   .overlay-close-x:active { color: white; }
 
+  /* Querformat / größere Viewports: größere Buttons, mehrspaltiges Grid,
+     Warenkorb-Zeilen wieder einzeilig (genug Platz). */
   @media (min-width: 700px), (orientation: landscape) {
-    .main {
-      flex-direction: row;
-      overflow-y: hidden;
-    }
     .left {
       flex: 1.3 1 0;
-      overflow-y: auto;
-      padding-right: 8px;
-    }
-    .right {
-      display: flex;
-      flex: 1 1 0;
-      flex-direction: column;
-      gap: 10px;
-      min-height: 0;
-    }
-    .right h2 {
-      margin: 0;
-      font-size: 17px;
-    }
-    .cart {
-      flex: 1 1 0;
-      overflow-y: auto;
+      padding-right: 12px;
     }
     .product-grid-inner {
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -662,15 +726,27 @@
       font-size: 16px;
       margin-top: 8px;
     }
-    .cart-controls {
-      flex-direction: column;
-    }
-    .cart-controls .neu-btn {
-      flex: none;
-      width: 100%;
-    }
     .total-bar {
       min-height: 96px;
+      font-size: 24px;
+    }
+    /* Warenkorb-Zeilen wieder einzeilig (Name | Preis | ✕) */
+    .cart-item {
+      flex-direction: row;
+      align-items: center;
+      gap: 12px;
+    }
+    .cart-item-top {
+      flex: 1;
+      width: auto;
+    }
+    .cart-item-bottom {
+      width: auto;
+      margin-top: 0;
+      gap: 12px;
+    }
+    .cart-item .ci-remove {
+      margin-right: 0;
     }
   }
 
@@ -701,14 +777,6 @@
 <div id="app">
 
   <div class="tabs" id="tabs"></div>
-
-  <div class="pfand-row" id="pfandRow">
-    <span id="pfandRowLabel">Pfand berechnen</span>
-    <label class="switch">
-      <input type="checkbox" id="pfandToggle" aria-labelledby="pfandRowLabel" checked>
-      <span class="slider"></span>
-    </label>
-  </div>
 
   <div class="main">
     <div class="left">
@@ -796,23 +864,35 @@
 // ---------------------------------------------------------
 const PRODUKTE = {
   "Bar": [
-    { name: "Glas Sekt/Hugo 0,1l", preis: 2.0, pfand: 2.0 },
+    { name: "Glas Sekt/Fruchtsecco 0,1l", preis: 2.0, pfand: 2.0 },
     { name: "Schoppen Wein 0,1l", preis: 2.0, pfand: 2.0 },
-    { name: "Flasche Wein/Sekt/Hugo", preis: 10.0, pfand: 2.0 },
-    { name: "Despo", preis: 4.0, pfand: 2.0 },
+    { name: "Flasche Wein/Sekt/Fruchtsecco", preis: 10.0, pfand: 2.0 },
+    { name: "Desperados", preis: 4.0, pfand: 2.0 },
+    { name: "alkfrei 0,4l", preis: 2.5, pfand: 2.0 },
+    { name: "alkfrei 0,2l", preis: 1.5, pfand: 2.0 },
+    { name: "alkfrei Flasche", preis: 6.0, pfand: 2.0 },
     { name: "Mixgetränke", preis: 6.0, pfand: 2.0 },
     { name: "Cocktails", preis: 6.0, pfand: 2.0 },
-    { name: "alkfrei Cocktails", preis: 4.0, pfand: 2.0 },
+    { name: "Mojito/Pina Colada alkfrei", preis: 4.0, pfand: 2.0 },
     { name: "Pullchen", preis: 2.5, pfand: 0.0 },
   ],
-  "Bier": [
-    { name: "Bier/Radler 0,4l", preis: 3.5, pfand: 2.0 },
-    { name: "Bier/Radler 0,25l", preis: 2.5, pfand: 2.0 },
-    { name: "alkfrei 0,4l", preis: 2.5, pfand: 2.0 },
-    { name: "alkfrei 0,25l", preis: 1.5, pfand: 2.0 },
-    { name: "alkfrei Flasche", preis: 6.0, pfand: 2.0 },
-    { name: "Pullchen", preis: 2.5, pfand: 0.0 },
-  ],
+  "Bier": {
+    "Bierwagen": [
+      { name: "Bier/Radler 0,4l", preis: 3.5, pfand: 2.0 },
+      { name: "Bier/Radler 0,25l", preis: 2.5, pfand: 2.0 },
+      { name: "alkfrei 0,4l", preis: 2.5, pfand: 2.0 },
+      { name: "alkfrei 0,2l", preis: 1.5, pfand: 2.0 },
+      { name: "alkfrei Flasche", preis: 6.0, pfand: 2.0 },
+      { name: "Pullchen", preis: 2.5, pfand: 0.0 },
+    ],
+    "Badewannenrennen": [
+      { name: "Bier/Radler 0,4l", preis: 3.5, pfand: 0.0 },
+      { name: "Bier/Radler 0,2l", preis: 2.0, pfand: 0.0 },
+      { name: "Wein/Sekt/Fruchtsecco 0,2l", preis: 3.0, pfand: 0.0 },
+      { name: "alkfrei 0,4l", preis: 2.5, pfand: 0.0 },
+      { name: "alkfrei 0,2l", preis: 1.5, pfand: 0.0 },
+    ],
+  },
   "Essen": {
     "Bratbude": [
       { name: "Bratwurst m Br", preis: 3.5, pfand: 0.0 },
@@ -827,24 +907,25 @@ const PRODUKTE = {
     "Crepe-Bude": [
       { name: "Crepes Puderzucker", preis: 2.5, pfand: 0.0 },
       { name: "Crepes Nutella/Apfelmus", preis: 3.5, pfand: 0.0 },
+      { name: "Crepes mit Käse", preis: 3.5, pfand: 0.0 },
       { name: "Crepes m. Käse u. Schinken", preis: 4.0, pfand: 0.0 },
       { name: "Waffel Zimt/Zucker", preis: 3.0, pfand: 0.0 },
       { name: "Waffel Nutella/Apfelmus", preis: 4.0, pfand: 0.0 },
-      { name: "Waffel m. Käse u. Schinken", preis: 4.5, pfand: 0.0 },
       { name: "Zuckerwatte", preis: 2.0, pfand: 0.0 },
     ],
   },
-  // "Info" ist KEINE Produktkategorie, sondern ein Info-/Über-Reiter
-  // (entspricht dem "APP Informationen"-Tab der Android-Vorlage).
-  // Inhalt wird über INFO_TAB gesteuert, nicht über Produkte.
-  "Info": { info: true },
 };
 
 // Konfigurierbare Konstanten (vermeiden Hartkodierung an mehreren Stellen)
 const PFAND_RUECKGABE_EURO = 2.0;
-const ESSEN_TAB = 'Essen';
-const ESSEN_BLOCK_STANDARD = 'Bratbude';   // Toggle aus
-const ESSEN_BLOCK_TOGGLE = 'Crepe-Bude';   // Toggle an
+
+// Block-Tabs: Kategorien, die per Auswahl genau EINEN Unterblock anzeigen.
+// (Essen: Bratbude/Crepe-Bude; Bier: Bierwagen/Badewannenrennen.)
+// Pfand bleibt rein produktbasiert (jedes Produkt trägt sein eigenes pfand).
+const BLOCK_TABS = {
+  "Bier": { label: "Bier-Bereich", defaultBlock: "Bierwagen", blocks: ["Bierwagen", "Badewannenrennen"] },
+  "Essen": { label: "Essensstand", defaultBlock: "Bratbude", blocks: ["Bratbude", "Crepe-Bude"] },
+};
 
 // ---------------------------------------------------------
 // STATISTIK — persistente Verkaufszahlen (localStorage, offline)
@@ -1056,60 +1137,61 @@ function getCurrentTotalCents() {
   );
 }
 
-const TAB_CLASS = { "Bar": "tab-bar", "Bier": "tab-bier", "Essen": "tab-essen", "Info": "tab-info" };
+const TAB_CLASS = { "Bar": "tab-bar", "Bier": "tab-bier", "Essen": "tab-essen" };
 
-let infoView = 'info';
-let currentTab = Object.keys(PRODUKTE)[0];
-let cart = []; // { name, preis, pfand, isPfandAbzug }
+let infoView = 'info';                 // 'info' | 'statistik' (Unter-Ansicht der Info-View)
+let currentView = 'products';          // 'products' | 'info' | 'settings'
+let currentTab = Object.keys(PRODUKTE)[0]; // zuletzt gewählter Produkt-Tab
+let cart = []; // { name, preis, pfand, pfandOriginal, isPfandAbzug }
 let pfandBerechnen = true;
-let essenZeigeCrepeBude = false; // false = Bratbude, true = Crepe-Bude
+// Pro Block-Tab der aktuell angezeigte Unterblock.
+let activeBlock = { "Bier": "Bierwagen", "Essen": "Bratbude" };
 
 const tabsEl = document.getElementById('tabs');
 const productListEl = document.getElementById('productList');
 const cartEl = document.getElementById('cart');
 const totalBarEl = document.getElementById('totalBar');
-const pfandToggle = document.getElementById('pfandToggle');
-const pfandRowLabel = document.getElementById('pfandRowLabel');
 
-function isEssenTab() {
-  return currentTab === ESSEN_TAB && !Array.isArray(PRODUKTE[ESSEN_TAB]);
+function isBlockTab(tab) {
+  return !!BLOCK_TABS[tab] && PRODUKTE[tab] && !Array.isArray(PRODUKTE[tab]);
 }
 
-function isInfoTab() {
+function getActiveBlock(tab) {
+  const cfg = BLOCK_TABS[tab];
+  if (!cfg) return null;
+  const blocks = PRODUKTE[tab] && !Array.isArray(PRODUKTE[tab]) ? Object.keys(PRODUKTE[tab]) : [];
+  if (activeBlock[tab] && blocks.includes(activeBlock[tab])) return activeBlock[tab];
+  if (cfg.defaultBlock && blocks.includes(cfg.defaultBlock)) return cfg.defaultBlock;
+  return blocks[0] || null;
+}
+
+function setActiveBlock(tab, blockName) {
+  const blocks = PRODUKTE[tab] && !Array.isArray(PRODUKTE[tab]) ? Object.keys(PRODUKTE[tab]) : [];
+  if (blocks.includes(blockName)) activeBlock[tab] = blockName;
+}
+
+// Liste der aktuell sichtbaren Produkte (für Pfand-Button-Sichtbarkeit etc.).
+function currentProductList() {
   const data = PRODUKTE[currentTab];
-  return !!(data && !Array.isArray(data) && data.info);
-}
-
-function updateToggleForTab() {
-  // Auf dem Info-Reiter hat der Toggle keine Funktion → ganze Zeile ausblenden.
-  const pfandRow = document.getElementById('pfandRow');
-  if (isInfoTab()) {
-    pfandRow.style.display = 'none';
-    return;
-  }
-  pfandRow.style.display = '';
-  if (isEssenTab()) {
-    // Label benennt die Funktion; der Toggle-State zeigt, ob sie aktiv ist.
-    pfandRowLabel.textContent = 'Crepe-Bude anzeigen';
-    pfandToggle.checked = essenZeigeCrepeBude;
-  } else {
-    pfandRowLabel.textContent = 'Pfand berechnen';
-    pfandToggle.checked = pfandBerechnen;
-  }
+  if (Array.isArray(data)) return data;
+  if (isBlockTab(currentTab)) return data[getActiveBlock(currentTab)] || [];
+  // generisches Objekt: alle Blöcke zusammen
+  return Object.keys(data || {}).reduce((acc, b) => acc.concat(Array.isArray(data[b]) ? data[b] : []), []);
 }
 
 function updatePfandButtonVisibility() {
   const pfandBtn = document.getElementById('pfandMinusBtn');
-  // Kein Pfand-Button bei Essen und auf dem Info-Reiter.
-  pfandBtn.style.display = (isEssenTab() || isInfoTab()) ? 'none' : '';
+  // Pfand-Rückgabe nur im Produkt-View und nur wenn die aktuelle Liste Pfand-Produkte hat.
+  const show = currentView === 'products' && currentProductList().some(p => (p.pfand || 0) > 0);
+  pfandBtn.style.display = show ? '' : 'none';
 }
 
-function updateLayoutForTab() {
-  // Auf dem Info-Reiter nur die Info-Box zeigen: rechte Spalte
-  // (Einkaufswagen, „Neu“, Gesamt) ausblenden, linke Spalte voll nutzen.
+function updateLayoutForView() {
+  // Info- und Settings-View sind Vollbild: rechte Spalte (Warenkorb) ausblenden,
+  // linke Spalte voll nutzen. Im Produkt-View normales Layout.
   const rightCol = document.getElementById('rightCol');
   const leftCol = document.querySelector('.left');
-  if (isInfoTab()) {
+  if (currentView === 'info' || currentView === 'settings') {
     rightCol.style.display = 'none';
     leftCol.style.flex = '1 1 100%';
   } else {
@@ -1118,195 +1200,67 @@ function updateLayoutForTab() {
   }
 }
 
-function renderTabs() {
-  tabsEl.innerHTML = '';
-  Object.keys(PRODUKTE).forEach(tab => {
-    const btn = document.createElement('button');
-    btn.className = 'tab-btn ' + (TAB_CLASS[tab] || '') + (tab === currentTab ? ' active' : '');
-    btn.textContent = tab;
-    btn.onclick = () => { currentTab = tab; renderTabs(); updateToggleForTab(); renderProducts(); updatePfandButtonVisibility(); updateLayoutForTab(); };
-    tabsEl.appendChild(btn);
-  });
+// Zentrale Re-Render-Funktion: hält Tabs, Inhalt, Layout und Pfand-Button konsistent.
+function renderApp() {
+  renderTabs();
+  renderContent();
+  updateLayoutForView();
+  updatePfandButtonVisibility();
 }
 
-function renderProducts() {
+function renderTabs() {
+  tabsEl.innerHTML = '';
+  // Produkt-Tabs (Bar, Bier, Essen) mit Text.
+  Object.keys(PRODUKTE).forEach(tab => {
+    const btn = document.createElement('button');
+    const active = currentView === 'products' && tab === currentTab;
+    btn.className = 'tab-btn ' + (TAB_CLASS[tab] || '') + (active ? ' active' : '');
+    btn.textContent = tab;
+    btn.onclick = () => { currentView = 'products'; currentTab = tab; renderApp(); };
+    tabsEl.appendChild(btn);
+  });
+  // Icon-Buttons rechts: Info (i) und Einstellungen (Zahnrad).
+  const infoBtn = document.createElement('button');
+  infoBtn.className = 'tab-btn tab-icon' + (currentView === 'info' ? ' active' : '');
+  infoBtn.setAttribute('aria-label', 'Info');
+  infoBtn.title = 'Info';
+  infoBtn.textContent = 'ℹ';
+  infoBtn.onclick = () => { currentView = 'info'; renderApp(); };
+  tabsEl.appendChild(infoBtn);
+
+  const setBtn = document.createElement('button');
+  setBtn.className = 'tab-btn tab-icon' + (currentView === 'settings' ? ' active' : '');
+  setBtn.setAttribute('aria-label', 'Einstellungen');
+  setBtn.title = 'Einstellungen';
+  setBtn.textContent = '⚙';
+  setBtn.onclick = () => { currentView = 'settings'; renderApp(); };
+  tabsEl.appendChild(setBtn);
+}
+
+function makeProductButton(p) {
+  const btn = document.createElement('button');
+  btn.className = 'product-btn';
+  btn.appendChild(document.createTextNode(p.name));
+  const sub = document.createElement('span');
+  sub.className = 'product-sub';
+  // Pfand wird nur im Warenkorb ausgewiesen, nicht auf dem Button (kürzeres Layout).
+  sub.textContent = formatEuro(p.preis);
+  btn.appendChild(sub);
+  btn.onclick = () => addToCart(p);
+  return btn;
+}
+
+// Dispatcher: rendert je nach currentView Produkte, Info oder Einstellungen.
+function renderContent() {
+  if (currentView === 'info') { renderInfoView(); return; }
+  if (currentView === 'settings') { renderSettingsView(); return; }
+  renderProductTab();
+}
+
+function renderProductTab() {
   productListEl.innerHTML = '';
   productListEl.setAttribute('data-tab', TAB_CLASS[currentTab] || '');
   const data = PRODUKTE[currentTab];
-
-  function makeButton(p, showPfand) {
-    const btn = document.createElement('button');
-    btn.className = 'product-btn';
-    btn.appendChild(document.createTextNode(p.name));
-    const sub = document.createElement('span');
-    sub.className = 'product-sub';
-    // Pfand wird nur im Warenkorb ausgewiesen, nicht auf dem Button (kürzeres Layout).
-    sub.textContent = formatEuro(p.preis);
-    btn.appendChild(sub);
-    btn.onclick = () => addToCart(p, showPfand);
-    return btn;
-  }
-
-  if (isInfoTab()) {
-    // Sub-Nav (Info / Statistik)
-    const nav = document.createElement('div');
-    nav.className = 'sub-nav';
-    
-    const btnInfo = document.createElement('button');
-    btnInfo.className = 'sub-nav-btn' + (infoView === 'info' ? ' active' : '');
-    btnInfo.textContent = 'Info';
-    btnInfo.onclick = () => { infoView = 'info'; renderProducts(); };
-    nav.appendChild(btnInfo);
-    
-    const btnStat = document.createElement('button');
-    btnStat.className = 'sub-nav-btn' + (infoView === 'statistik' ? ' active' : '');
-    btnStat.textContent = 'Statistik';
-    btnStat.onclick = () => { infoView = 'statistik'; renderProducts(); };
-    nav.appendChild(btnStat);
-    
-    productListEl.appendChild(nav);
-
-    const box = document.createElement('div');
-    box.className = 'info-box';
-
-    if (infoView === 'info') {
-      const h = document.createElement('div');
-      h.className = 'info-box-title';
-      h.textContent = INFO_TAB.titel;
-      box.appendChild(h);
-      INFO_TAB.absaetze.forEach(block => {
-        if (block && typeof block === 'object' && block.ueberschrift) {
-          const sub = document.createElement('div');
-          sub.className = 'info-box-subtitle';
-          sub.textContent = block.ueberschrift;
-          box.appendChild(sub);
-        } else {
-          const p = document.createElement('p');
-          p.className = 'info-box-text';
-          p.textContent = block;
-          box.appendChild(p);
-        }
-      });
-    } else {
-      // Statistik View
-      const stats = loadStats();
-      
-      const h = document.createElement('div');
-      h.className = 'info-box-title';
-      h.textContent = 'Statistik';
-      box.appendChild(h);
-
-      // „Stand"-Zeitstempel, damit man (auch im Export) Erfassungszeitpunkte unterscheiden kann.
-      const stand = document.createElement('div');
-      stand.className = 'stats-stand';
-      stand.textContent = 'Stand: ' + new Date().toLocaleString('de-DE');
-      box.appendChild(stand);
-
-      if (!statsStorageAvailable()) {
-        const warn = document.createElement('div');
-        warn.className = 'warning-note';
-        warn.textContent = 'Hinweis: Speicher nicht verfügbar (z.B. privater Modus). Daten gehen nach Neustart verloren.';
-        box.appendChild(warn);
-      } else if (stats.bons > 0) {
-        // Erinnerung: iOS kann Speicher nach ~7 Tagen Inaktivität löschen → Export sichert.
-        const remind = document.createElement('div');
-        remind.className = 'stats-reminder';
-        remind.textContent = 'Tipp: Statistik regelmäßig per „Export" sichern (z. B. in Notizen).';
-        box.appendChild(remind);
-      }
-      
-      const summary = document.createElement('div');
-      summary.className = 'stats-summary';
-      
-      const createStatCard = (lbl, val, xtraCls='') => {
-        const c = document.createElement('div');
-        c.className = 'stat-card ' + xtraCls;
-        const l = document.createElement('div');
-        l.className = 'stat-card-label';
-        l.textContent = lbl;
-        const v = document.createElement('div');
-        v.className = 'stat-card-val';
-        v.textContent = val;
-        c.appendChild(l);
-        c.appendChild(v);
-        return c;
-      };
-      
-      summary.appendChild(createStatCard('Bestellungen', stats.bons));
-      summary.appendChild(createStatCard('Produktumsatz', formatCents(stats.einnahmenCents)));
-      summary.appendChild(createStatCard('Pfand eingenommen', formatCents(stats.pfandEinnahmenCents)));
-      summary.appendChild(createStatCard('Pfand ausgezahlt', formatCents(stats.ausgabenCents)));
-      // Pfand-Saldo: positiv = einbehalten, negativ = Fehlbetrag (mehr ausgezahlt
-      // als eingenommen) → eigenes Label + roter Hinweis statt verwirrend grün.
-      const pfandSaldoCents = stats.pfandEinnahmenCents - stats.ausgabenCents;
-      summary.appendChild(createStatCard(
-        pfandSaldoCents < 0 ? 'Pfand Fehlbetrag' : 'Pfand einbehalten',
-        formatCents(pfandSaldoCents),
-        pfandSaldoCents < 0 ? 'stat-card-negative' : ''
-      ));
-      summary.appendChild(createStatCard('Kassenbestand gesamt', formatCents(statsKassenbestandCents(stats)), 'netto stat-card-full'));
-      box.appendChild(summary);
-      
-      const listDiv = document.createElement('div');
-      listDiv.className = 'stats-list';
-      
-      const prodNames = Object.keys(stats.produkte).sort((a,b) => stats.produkte[b].anzahl - stats.produkte[a].anzahl);
-      
-      if (prodNames.length === 0) {
-        const hint = document.createElement('div');
-        hint.className = 'empty-hint';
-        hint.style.padding = '10px 0';
-        hint.textContent = 'Noch keine Verkäufe erfasst.';
-        listDiv.appendChild(hint);
-      } else {
-        prodNames.forEach(n => {
-          const p = stats.produkte[n];
-          const row = document.createElement('div');
-          row.className = 'stats-list-item';
-          
-          const nameEl = document.createElement('div');
-          nameEl.className = 'sl-name';
-          nameEl.textContent = n;
-          
-          const anzEl = document.createElement('div');
-          anzEl.className = 'sl-anzahl';
-          anzEl.textContent = p.anzahl + 'x';
-          
-          const umsEl = document.createElement('div');
-          umsEl.className = 'sl-umsatz';
-          umsEl.textContent = formatCents(p.umsatzCents);
-          
-          row.appendChild(nameEl);
-          row.appendChild(anzEl);
-          row.appendChild(umsEl);
-          listDiv.appendChild(row);
-        });
-      }
-      box.appendChild(listDiv);
-      
-      const actions = document.createElement('div');
-      actions.className = 'stats-actions';
-      
-      const resetBtn = document.createElement('button');
-      resetBtn.className = 'btn-close';
-      resetBtn.textContent = 'Zurücksetzen';
-      resetBtn.onclick = openStatsResetOverlay;
-      
-      const exportBtn = document.createElement('button');
-      exportBtn.className = 'btn-done';
-      exportBtn.textContent = 'Export';
-      exportBtn.onclick = () => {
-        openStatsExportOverlay(buildStatsExport());
-      };
-      
-      actions.appendChild(resetBtn);
-      actions.appendChild(exportBtn);
-      box.appendChild(actions);
-    }
-    
-    productListEl.appendChild(box);
-    return;
-  }
 
   if (Array.isArray(data)) {
     if (data.length === 0) {
@@ -1318,11 +1272,11 @@ function renderProducts() {
     }
     const grid = document.createElement('div');
     grid.className = 'product-grid-inner';
-    data.forEach(p => grid.appendChild(makeButton(p, pfandBerechnen)));
+    data.forEach(p => grid.appendChild(makeProductButton(p)));
     productListEl.appendChild(grid);
-  } else if (isEssenTab()) {
-    // Essen: Toggle steuert, welcher Block angezeigt wird (kein Pfand bei Essen)
-    const blockName = essenZeigeCrepeBude ? ESSEN_BLOCK_TOGGLE : ESSEN_BLOCK_STANDARD;
+  } else if (isBlockTab(currentTab)) {
+    // Block-Tab (Bier/Essen): nur den aktuell gewählten Block anzeigen.
+    const blockName = getActiveBlock(currentTab);
     const heading = document.createElement('div');
     heading.className = 'block-heading';
     heading.textContent = blockName;
@@ -1330,10 +1284,10 @@ function renderProducts() {
 
     const grid = document.createElement('div');
     grid.className = 'product-grid-inner';
-    (data[blockName] || []).forEach(p => grid.appendChild(makeButton(p, false)));
+    (Array.isArray(data[blockName]) ? data[blockName] : []).forEach(p => grid.appendChild(makeProductButton(p)));
     productListEl.appendChild(grid);
   } else {
-    // Generischer Fall: Objekt mit Unterblöcken, alle gleichzeitig anzeigen
+    // Generischer Fall: Objekt mit Unterblöcken, alle gleichzeitig anzeigen.
     Object.keys(data).forEach(blockName => {
       const heading = document.createElement('div');
       heading.className = 'block-heading';
@@ -1342,19 +1296,224 @@ function renderProducts() {
 
       const grid = document.createElement('div');
       grid.className = 'product-grid-inner';
-      (Array.isArray(data[blockName]) ? data[blockName] : []).forEach(p => grid.appendChild(makeButton(p, pfandBerechnen)));
+      (Array.isArray(data[blockName]) ? data[blockName] : []).forEach(p => grid.appendChild(makeProductButton(p)));
       productListEl.appendChild(grid);
     });
   }
 }
 
-function addToCart(p, includePfand = pfandBerechnen) {
-  // pfandOriginal merkt sich den Produkt-Pfand, damit der Pfand-Toggle
-  // auch nachträglich (bei bereits hinzugefügten Positionen) wirken kann.
+// Info-View (über das ℹ-Icon): Sub-Navigation Info / Statistik.
+function renderInfoView() {
+  productListEl.innerHTML = '';
+  productListEl.removeAttribute('data-tab');
+
+  const nav = document.createElement('div');
+  nav.className = 'sub-nav';
+  const btnInfo = document.createElement('button');
+  btnInfo.className = 'sub-nav-btn' + (infoView === 'info' ? ' active' : '');
+  btnInfo.textContent = 'Info';
+  btnInfo.onclick = () => { infoView = 'info'; renderInfoView(); };
+  nav.appendChild(btnInfo);
+  const btnStat = document.createElement('button');
+  btnStat.className = 'sub-nav-btn' + (infoView === 'statistik' ? ' active' : '');
+  btnStat.textContent = 'Statistik';
+  btnStat.onclick = () => { infoView = 'statistik'; renderInfoView(); };
+  nav.appendChild(btnStat);
+  productListEl.appendChild(nav);
+
+  const box = document.createElement('div');
+  box.className = 'info-box';
+
+  if (infoView === 'info') {
+    const h = document.createElement('div');
+    h.className = 'info-box-title';
+    h.textContent = INFO_TAB.titel;
+    box.appendChild(h);
+    INFO_TAB.absaetze.forEach(block => {
+      if (block && typeof block === 'object' && block.ueberschrift) {
+        const sub = document.createElement('div');
+        sub.className = 'info-box-subtitle';
+        sub.textContent = block.ueberschrift;
+        box.appendChild(sub);
+      } else {
+        const p = document.createElement('p');
+        p.className = 'info-box-text';
+        p.textContent = block;
+        box.appendChild(p);
+      }
+    });
+  } else {
+    // Statistik View
+    const stats = loadStats();
+
+    const h = document.createElement('div');
+    h.className = 'info-box-title';
+    h.textContent = 'Statistik';
+    box.appendChild(h);
+
+    const stand = document.createElement('div');
+    stand.className = 'stats-stand';
+    stand.textContent = 'Stand: ' + new Date().toLocaleString('de-DE');
+    box.appendChild(stand);
+
+    if (!statsStorageAvailable()) {
+      const warn = document.createElement('div');
+      warn.className = 'warning-note';
+      warn.textContent = 'Hinweis: Speicher nicht verfügbar (z.B. privater Modus). Daten gehen nach Neustart verloren.';
+      box.appendChild(warn);
+    } else if (stats.bons > 0) {
+      const remind = document.createElement('div');
+      remind.className = 'stats-reminder';
+      remind.textContent = 'Tipp: Statistik regelmäßig per „Export" sichern (z. B. in Notizen).';
+      box.appendChild(remind);
+    }
+
+    const summary = document.createElement('div');
+    summary.className = 'stats-summary';
+    const createStatCard = (lbl, val, xtraCls='') => {
+      const c = document.createElement('div');
+      c.className = 'stat-card ' + xtraCls;
+      const l = document.createElement('div');
+      l.className = 'stat-card-label';
+      l.textContent = lbl;
+      const v = document.createElement('div');
+      v.className = 'stat-card-val';
+      v.textContent = val;
+      c.appendChild(l);
+      c.appendChild(v);
+      return c;
+    };
+
+    summary.appendChild(createStatCard('Bestellungen', stats.bons));
+    summary.appendChild(createStatCard('Produktumsatz', formatCents(stats.einnahmenCents)));
+    summary.appendChild(createStatCard('Pfand eingenommen', formatCents(stats.pfandEinnahmenCents)));
+    summary.appendChild(createStatCard('Pfand ausgezahlt', formatCents(stats.ausgabenCents)));
+    const pfandSaldoCents = stats.pfandEinnahmenCents - stats.ausgabenCents;
+    summary.appendChild(createStatCard(
+      pfandSaldoCents < 0 ? 'Pfand Fehlbetrag' : 'Pfand einbehalten',
+      formatCents(pfandSaldoCents),
+      pfandSaldoCents < 0 ? 'stat-card-negative' : ''
+    ));
+    summary.appendChild(createStatCard('Kassenbestand gesamt', formatCents(statsKassenbestandCents(stats)), 'netto stat-card-full'));
+    box.appendChild(summary);
+
+    const listDiv = document.createElement('div');
+    listDiv.className = 'stats-list';
+    const prodNames = Object.keys(stats.produkte).sort((a,b) => stats.produkte[b].anzahl - stats.produkte[a].anzahl);
+    if (prodNames.length === 0) {
+      const hint = document.createElement('div');
+      hint.className = 'empty-hint';
+      hint.style.padding = '10px 0';
+      hint.textContent = 'Noch keine Verkäufe erfasst.';
+      listDiv.appendChild(hint);
+    } else {
+      prodNames.forEach(n => {
+        const p = stats.produkte[n];
+        const row = document.createElement('div');
+        row.className = 'stats-list-item';
+        const nameEl = document.createElement('div');
+        nameEl.className = 'sl-name';
+        nameEl.textContent = n;
+        const anzEl = document.createElement('div');
+        anzEl.className = 'sl-anzahl';
+        anzEl.textContent = p.anzahl + 'x';
+        const umsEl = document.createElement('div');
+        umsEl.className = 'sl-umsatz';
+        umsEl.textContent = formatCents(p.umsatzCents);
+        row.appendChild(nameEl);
+        row.appendChild(anzEl);
+        row.appendChild(umsEl);
+        listDiv.appendChild(row);
+      });
+    }
+    box.appendChild(listDiv);
+
+    const actions = document.createElement('div');
+    actions.className = 'stats-actions';
+    const resetBtn = document.createElement('button');
+    resetBtn.className = 'btn-close';
+    resetBtn.textContent = 'Zurücksetzen';
+    resetBtn.onclick = openStatsResetOverlay;
+    const exportBtn = document.createElement('button');
+    exportBtn.className = 'btn-done';
+    exportBtn.textContent = 'Export';
+    exportBtn.onclick = () => { openStatsExportOverlay(buildStatsExport()); };
+    actions.appendChild(resetBtn);
+    actions.appendChild(exportBtn);
+    box.appendChild(actions);
+  }
+
+  productListEl.appendChild(box);
+}
+
+// Einstellungen-View (über das ⚙-Icon): Pfand-Schalter + Block-Auswahl je Tab.
+function renderSettingsView() {
+  productListEl.innerHTML = '';
+  productListEl.removeAttribute('data-tab');
+
+  const box = document.createElement('div');
+  box.className = 'info-box settings-box';
+
+  const h = document.createElement('div');
+  h.className = 'info-box-title';
+  h.textContent = 'Einstellungen';
+  box.appendChild(h);
+
+  // 1) Pfand berechnen (global)
+  const pfandRowEl = document.createElement('div');
+  pfandRowEl.className = 'settings-row';
+  const pfandLbl = document.createElement('span');
+  pfandLbl.className = 'settings-label';
+  pfandLbl.id = 'setPfandLabel';
+  pfandLbl.textContent = 'Pfand berechnen';
+  const sw = document.createElement('label');
+  sw.className = 'switch';
+  const swInput = document.createElement('input');
+  swInput.type = 'checkbox';
+  swInput.checked = pfandBerechnen;
+  swInput.setAttribute('aria-labelledby', 'setPfandLabel');
+  swInput.onchange = () => { pfandBerechnen = swInput.checked; applyPfandToCart(); };
+  const swSpan = document.createElement('span');
+  swSpan.className = 'slider';
+  sw.appendChild(swInput);
+  sw.appendChild(swSpan);
+  pfandRowEl.appendChild(pfandLbl);
+  pfandRowEl.appendChild(sw);
+  box.appendChild(pfandRowEl);
+
+  // 2) Block-Auswahl je Block-Tab (Bier, Essen) als segmentierte Buttons.
+  Object.keys(BLOCK_TABS).forEach(tab => {
+    if (!isBlockTab(tab)) return;
+    const cfg = BLOCK_TABS[tab];
+    const grpLbl = document.createElement('div');
+    grpLbl.className = 'settings-group-label';
+    grpLbl.textContent = cfg.label;
+    box.appendChild(grpLbl);
+
+    const seg = document.createElement('div');
+    seg.className = 'segmented';
+    Object.keys(PRODUKTE[tab]).forEach(blockName => {
+      const b = document.createElement('button');
+      b.className = 'segmented-btn' + (getActiveBlock(tab) === blockName ? ' active' : '');
+      b.textContent = blockName;
+      b.onclick = () => { setActiveBlock(tab, blockName); renderSettingsView(); };
+      seg.appendChild(b);
+    });
+    box.appendChild(seg);
+  });
+
+  productListEl.appendChild(box);
+}
+
+function addToCart(p) {
+  // addToCart ist die einzige Stelle, die über Pfand entscheidet (vermeidet
+  // veraltete Closures, wenn Pfand aus der Einstellungen-Ansicht geändert wird).
+  // pfandOriginal merkt sich den Produkt-Pfand, damit der Pfand-Schalter auch
+  // nachträglich (bei bereits hinzugefügten Positionen) wirken kann.
   cart.push({
     name: p.name,
     preis: p.preis,
-    pfand: includePfand ? p.pfand : 0,
+    pfand: pfandBerechnen ? (p.pfand || 0) : 0,
     pfandOriginal: p.pfand || 0,
   });
   renderCart();
@@ -1384,7 +1543,10 @@ function removeItem(index) {
 // Schlüssel zum Gruppieren identischer Positionen (gleicher Name + gleicher
 // effektiver Pfand + gleiche Art). Pfand-Rückgaben werden eigenständig gruppiert.
 function cartGroupKey(item) {
-  return `${item.isPfandAbzug ? 'A' : 'P'}|${item.name}|${toCents(item.pfand || 0)}`;
+  // Preis im Schlüssel, damit gleichnamige Positionen mit unterschiedlichem
+  // Preis (z.B. gleicher Produktname in verschiedenen Bereichen) nicht
+  // fälschlich zu einer Zeile mit falscher Summe zusammengefasst werden.
+  return `${item.isPfandAbzug ? 'A' : 'P'}|${item.name}|${toCents(item.preis)}|${toCents(item.pfand || 0)}`;
 }
 
 // Entfernt EINE Position der angegebenen Gruppe (die zuletzt hinzugefügte).
@@ -1450,37 +1612,40 @@ function renderCart() {
     const row = document.createElement('div');
     row.className = 'cart-item';
 
-    const left = document.createElement('div');
+    const topDiv = document.createElement('div');
+    topDiv.className = 'cart-item-top';
     const name = document.createElement('div');
     name.className = 'ci-name';
     name.textContent = g.count > 1 ? `${g.count}× ${g.name}` : g.name;
-    left.appendChild(name);
+    topDiv.appendChild(name);
     if (g.pfand > 0) {
       const pf = document.createElement('div');
       pf.className = 'cart-pfand-line';
       pf.textContent = g.count > 1
         ? `inkl. ${formatEuro(g.pfand)} Pfand / Stück`
         : `inkl. ${formatEuro(g.pfand)} Pfand`;
-      left.appendChild(pf);
+      topDiv.appendChild(pf);
     }
 
-    const right = document.createElement('div');
-    right.style.display = 'flex';
-    right.style.alignItems = 'center';
+    const bottomDiv = document.createElement('div');
+    bottomDiv.className = 'cart-item-bottom';
+    
     const price = document.createElement('span');
     price.className = 'ci-price';
     // Zeilensumme = (Preis + Pfand) × Menge
     price.textContent = formatCents((g.preisCents + toCents(g.pfand)) * g.count);
+    
     const rm = document.createElement('button');
     rm.className = 'ci-remove';
     rm.setAttribute('aria-label', g.count > 1 ? 'Eine Position entfernen' : 'Entfernen');
     rm.textContent = '✕';
     rm.onclick = () => removeOneOfGroup(g.key);
-    right.appendChild(price);
-    right.appendChild(rm);
+    
+    bottomDiv.appendChild(price);
+    bottomDiv.appendChild(rm);
 
-    row.appendChild(left);
-    row.appendChild(right);
+    row.appendChild(topDiv);
+    row.appendChild(bottomDiv);
     cartEl.appendChild(row);
   });
   updateTotal();
@@ -1683,7 +1848,7 @@ document.getElementById('statsResetCancelBtn').onclick = closeStatsResetOverlay;
 document.getElementById('statsResetConfirmBtn').onclick = () => {
   closeStatsResetOverlay();
   resetStats();
-  renderProducts();
+  renderContent();
 };
 statsResetOverlay.addEventListener('click', (e) => {
   if (e.target === statsResetOverlay) closeStatsResetOverlay();
@@ -1741,24 +1906,9 @@ document.getElementById('neuBtn').onclick = () => {
     openClearOverlay();
   }
 };
-pfandToggle.onchange = () => {
-  if (isEssenTab()) {
-    essenZeigeCrepeBude = pfandToggle.checked;
-    updateToggleForTab();
-    renderProducts();
-  } else {
-    pfandBerechnen = pfandToggle.checked;
-    renderProducts();
-    applyPfandToCart(); // bestehende Warenkorb-Positionen dynamisch anpassen
-  }
-};
 
-renderTabs();
-updateToggleForTab();
-updatePfandButtonVisibility();
-updateLayoutForTab();
-renderProducts();
 restoreCart(); // ggf. Warenkorb aus der laufenden Sitzung wiederherstellen
+renderApp();   // Tabs + Inhalt + Layout + Pfand-Button konsistent rendern
 renderCart();
 
 // Escape schließt das jeweils offene Overlay (Tastatur-Bedienbarkeit).
